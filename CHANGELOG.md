@@ -4,12 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Add bronze scale, an extra scale item required to enter deep water (logic is experimental).
+
 ### Changed
 
 - Cloaked items are now progressive when relevant.
 
 ### Fixed
 
+- Fix a bug that could cause the player to be stuck on the Moon in ER.
 - Fix cloaked items rotation in MM.
 
 ## [29.0] - 2025-08-15
