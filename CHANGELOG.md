@@ -6,14 +6,22 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Add tree shuffle in Ocarina of Time and Majora's Mask.
+- Add rock shuffle in Ocarina of Time and Majora's Mask.
+- Add a transcendent fairy item, which counts as every stray fairy at once.
+- Add a setting to make OoT Ice Arrow behave like in MM, creating walkable ice platforms on water (no logic yet).
+- Add the ability to split songs into invividually shuffled notes (thanks @ebrown38).
 - Add bronze scale, an extra scale item required to enter deep water (logic is experimental).
 
 ### Changed
 
+- Separate settings for keeping ammo/rupees and bottle contents through cycle resets in MM.
+- The Skeleton key has a new, custom model (thanks Dahni).
 - Cloaked items are now progressive when relevant.
 
 ### Fixed
 
+- Fix a vanilla bug causing the final chest in Secret Shrine to sometimes not spawn.
 - Fix a bug that could cause the player to be stuck on the Moon in ER.
 - Fix cloaked items rotation in MM.
 

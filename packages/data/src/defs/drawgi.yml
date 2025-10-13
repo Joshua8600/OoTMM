@@ -170,23 +170,18 @@
 - { id: OOT_NUT_UPGRADE, func: CustomNut, params: [0x6000e90, 1] }
 - { id: OOT_NUT_UPGRADE2, func: CustomNut, params: [0x6000e90, 2] }
 - { id: SPIN_UPGRADE, func: CustomSpin, params: [0x6000998, 0x6000850, 0x6000960] }
-- { id: MM_STRAY_FAIRY, func: CustomStrayFairy, params: [0] }
+- { id: STRAY_FAIRY, func: CustomStrayFairy, params: [0] }
 - { id: MM_GS_TOKEN_SWAMP, func: CustomGS, params: [1] }
 - { id: MM_GS_TOKEN_OCEAN, func: CustomGS, params: [2] }
-- { id: MM_STRAY_FAIRY_WF, func: CustomStrayFairy, params: [1] }
-- { id: MM_STRAY_FAIRY_SH, func: CustomStrayFairy, params: [2] }
-- { id: MM_STRAY_FAIRY_GB, func: CustomStrayFairy, params: [3] }
-- { id: MM_STRAY_FAIRY_ST, func: CustomStrayFairy, params: [4] }
-- { id: MM_STRAY_FAIRY_TOWN, func: CustomStrayFairy, params: [5] }
 - { id: MILK, func: CustomPotion, params: [3] }
 - { id: MM_CHATEAU, func: CustomPotion, params: [4] }
 - { id: MM_OWL, func: CustomOwl, params: [0x6003770] }
 - { id: TRIFORCE, func: Triforce, params: [TRIFORCE_0] }
 - { id: TRIFORCE_FULL, func: TriforceFull, params: [TRIFORCE_0] }
+- { id: SKELETON_KEY, func: Opa0, params: [SKELETON_KEY_0] }
 - { id: MASK_MAJORA, func: MaskMajora, params: [GI_MASK_MAJORA_0] }
 - { id: OOT_RUPEE_SILVER, func: SilverRupee, params: [0] }
 - { id: SOUL, func: CustomGS, params: [3] }
-- { id: SKELETON_KEY, func: CustomSmallKey, params: [0x6000800, 1] }
 - { id: COIN_YELLOW, func: Coin, params: [0x060005e0, 0x06000560, 0x06000768] }
 - { id: COIN_RED, func: Coin, params: [0x060005e0, 0x06000580, 0x06000768] }
 - { id: COIN_GREEN, func: Coin, params: [0x060005e0, 0x060005a0, 0x06000768] }

@@ -23,7 +23,7 @@
     RUPEES: "is_spring || (can_break_snowballs && (second_day || final_day)) || (can_break_snowballs && can_use_light_arrows && first_day && soul_tektite)"
     FAIRY: "true"
   locations:
-    "Mountain Village Waterfall Chest": "is_spring && can_use_lens && (can_swim || has(MASK_DEKU) || can_hookshot)"
+    "Mountain Village Waterfall Chest": "is_spring && can_use_lens && (can_swim || has(MASK_DEKU) || has_hover_boots || can_hookshot)"
     "Mountain Village Don Gero Mask": "is_winter && soul_goron && event(GORON_FOOD)"
     "Mountain Village Frog Choir HP": "is_spring && event(FROG_1) && event(FROG_2) && event(FROG_3) && event(FROG_4)"
     "Mountain Village Pot": "scarecrow_hookshot || short_hook_anywhere"
@@ -66,6 +66,11 @@
     "Mountain Village Keaton Grass Reward 7": "is_spring && keaton_grass_hard"
     "Mountain Village Keaton Grass Reward 8": "is_spring && keaton_grass_hard"
     "Mountain Village Keaton Grass Reward 9": "is_spring && keaton_grass_hard"
+    "Mountain Village Rock Ground 1": "is_spring"
+    "Mountain Village Rock Ground 2": "is_spring"
+    "Mountain Village Rock Ground 3": "is_spring"
+    "Mountain Village Rock Ground 4": "is_spring"
+    "Mountain Village Rock Ground 5": "is_spring"
     "Mountain Village Rupee": "is_spring && (has_mask_goron || can_hammer)"
     "Mountain Village Hive": "is_spring && (break_hive || (has_bombchu && trick(MM_HIVE_BOMBCHU)))"
     "Mountain Village Potted Plant 1 Pot": "is_day"
@@ -182,6 +187,8 @@
   locations:
     "Mountain Village Small Snowball Cliff 1": "is_winter"
     "Mountain Village Small Snowball Cliff 2": "is_winter"
+    "Mountain Village Rock Cliff 1": "is_spring"
+    "Mountain Village Rock Cliff 2": "is_spring"
 
 "Near Goron Graveyard":
   region: MOUNTAIN_VILLAGE
