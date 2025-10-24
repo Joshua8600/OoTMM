@@ -1,11 +1,11 @@
 <p align="center">
-  <img alt="OoTMM Logo" with="256" height="256" src="https://raw.githubusercontent.com/OoTMM/OoTMM/master/packages/gui/app/assets/logo.png"/>
+  <img alt="OoTMM Logo" with="256" height="256" src="https://raw.githubusercontent.com/OoTMM/OoTMM/master/packages/web/src/assets/logo.png"/>
   <p align="center">The Ocarina of Time/Majora's Mask Combo Randomizer</p>
 </p>
 
 ![badge-version](https://img.shields.io/github/v/tag/OoTMM/OoTMM?label=version&sort=semver)
 ![badge-license](https://img.shields.io/github/license/OoTMM/OoTMM)
-![badge-build](https://img.shields.io/github/actions/workflow/status/OoTMM/OoTMM/ci.yml?branch=develop)
+![badge-build](https://img.shields.io/github/actions/workflow/status/OoTMM/OoTMM/ci.yml?branch=master)
 ![badge-stars](https://img.shields.io/github/stars/OoTMM/OoTMM)
 ![badge-discord](https://discordapp.com/api/guilds/1004394204992118935/widget.png?style=shield)
 

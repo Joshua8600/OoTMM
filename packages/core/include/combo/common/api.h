@@ -67,6 +67,9 @@ void            DynaPoly_UpdateBgActorTransforms(PlayState* play, DynaCollisionC
 void    CollisionHeader_GetVirtual(void* colHeader, CollisionHeader** dest);
 void    Interface_UpdateButtonsPart2(PlayState* play);
 
+u32 SurfaceType_GetConveyorSpeed(CollisionContext* colCtx, CollisionPoly* poly, s32 bgId);
+u32 SurfaceType_GetConveyorDirection(CollisionContext* colCtx, CollisionPoly* poly, s32 bgId);
+
 int    LoadFile(void* dst, u32 vromAddr, u32 size);
 
 void    Actor_Noop(Actor* actor, PlayState* play);
@@ -99,7 +102,7 @@ void    Actor_SetScale(Actor* actor, float scale);
 void    Actor_SetFocus(Actor* actor, float height);
 void    Actor_OfferCarry(Actor* actor, PlayState* play);
 void    ActorEnableTalk(Actor* actor, PlayState* play, float range);
-void    ActorEnableTalkEx(Actor* actor, PlayState* play, float range, u32 unk);
+void    Actor_OfferTalkExchangeEquiCylinder(Actor* actor, PlayState* play, float range, u32 unk);
 void    Actor_UpdateBgCheckInfo(PlayState* play, Actor* actor, float unk_3, float unk_4, float unk_5, u32 unk_6);
 void    Actor_MoveWithGravity(Actor* actor);
 #define Actor_MoveXZGravity Actor_MoveWithGravity
@@ -116,7 +119,6 @@ u32     Flags_GetSwitch(PlayState* play, int flag);
 u32     Flags_SetSwitch(PlayState* play, int flag);
 void    ClearSwitchFlag(PlayState* play, int flag);
 void    SetRoomClear(PlayState* play, int flag);
-u32     GetRoomClearFlag(PlayState* play, int flag);
 s32     Flags_GetClear(PlayState* play, s32 roomNumber);
 
 
@@ -184,7 +186,7 @@ void SpawnSomeDust(PlayState* play, Vec3f* pos, float unk1, int unk2, int unk3, 
 
 f32 Rand_CenteredFloat(f32 scale);
 
-int GetActiveItem(PlayState* play);
+s8 Actor_GetPlayerExchangeItemId(PlayState* play);
 
 #if defined(GAME_MM)
 void AddMagic(PlayState* play, s16 amount);
@@ -429,6 +431,7 @@ s32     SkelAnime_Update(SkelAnime* skelAnime);
 void    Animation_Change(SkelAnime* skelAnime, AnimationHeader* animation, f32 playSpeed, f32 startFrame, f32 endFrame, u8 mode, f32 morphFrames);
 
 void EffectSsIceSmoke_Spawn(PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel, s16 scale);
+void EffectSsIceBlock_Spawn(PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel, s16 scale);
 void EffectSsKiraKira_SpawnDispersed(PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel, Color_RGBA8* primColor, Color_RGBA8* envColor, s16 scale, s32 life);
 void Actor_SpawnIceEffects(PlayState* play, Actor* actor, Vec3f bodyPartsPos[], s32 bodyPartsCount, s32 effectsPerBodyPart, f32 scale, f32 scaleRange);
 
@@ -484,9 +487,14 @@ EntranceTableEntry* Entrance_GetTableEntry(u16 entrance);
 
 extern u8 gWeatherMode;
 
+void SkinMatrix_Vec3fMtxFMultXYZW(MtxF* mf, Vec3f* src, Vec3f* xyzDest, f32* wDest);
+
+#if defined(GAME_OOT)
+# define WaterBox_GetSurface1_2 WaterBox_GetSurface1
+#endif
+
 #if defined(GAME_MM)
 # define func_800A8150 Item_CollectibleDropTable
-void SkinMatrix_Vec3fMtxFMultXYZW(MtxF* mf, Vec3f* src, Vec3f* xyzDest, f32* wDest);
 void func_800B1210(struct PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel, s16 scale, s16 scaleStep);
 #endif
 
@@ -507,10 +515,11 @@ s32 DynaPolyActor_TransformCarriedActor(CollisionContext* colCtx, s32 bgId, Acto
 s32 WaterBox_GetSurface1(PlayState* play, CollisionContext* colCtx, f32 x, f32 z, f32* ySurface, WaterBox** outWaterBox);
 f32 Math3D_Vec3fMagnitude(Vec3f* vec);
 
+void DynaPolyActor_LoadMesh(PlayState* play, DynaPolyActor* dynaActor, CollisionHeader* meshHeader);
+extern Vec3f gZeroVec3f;
 
 #if defined(GAME_MM)
 extern u8 gSceneSeqState;
-extern Vec3f gZeroVec3f;
 
 Actor* SubS_FindActor(PlayState* play, Actor* actorListStart, u8 actorCategory, s16 actorId);
 void SubS_TimePathing_FillKnots(f32 knots[], s32 order, s32 numPoints);
@@ -520,7 +529,6 @@ void Environment_StartTime(void);
 void Environment_StopTime(void);
 void Audio_PlaySfx_MessageCancel(void);
 void Audio_PlaySfx_MessageDecide(void);
-void DynaPolyActor_LoadMesh(PlayState* play, DynaPolyActor* dynaActor, CollisionHeader* meshHeader);
 Path* SubS_GetAdditionalPath(PlayState* play, u8 pathIndex, s32 limit);
 void Math_Vec3s_ToVec3f(Vec3f* dest, Vec3s* src);
 void Interface_InitMinigame(PlayState* play);

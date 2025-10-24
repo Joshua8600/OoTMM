@@ -328,11 +328,20 @@ Actor* Actor_SpawnWrapper(ActorContext* actorCtx, PlayState *play, short actorId
         return NULL;
     }
 
-    /* Inert grass */
-    if (actorId == ACTOR_OBJ_HANA && ((variable & 3) == 2))
+    /* Inert grass & rocks */
+    if (actorId == ACTOR_OBJ_HANA)
     {
-        actorId = ACTOR_EN_KUSA;
-        variable = 0xff00;
+        switch (variable & 3)
+        {
+        case 1:
+            actorId = ACTOR_EN_ISHI;
+            variable = 0x200;
+            break;
+        case 2:
+            actorId = ACTOR_EN_KUSA;
+            variable = 0xff00;
+            break;
+        }
     }
 
     if (Config_Flag(CFG_OOT_OPEN_MASK_SHOP) && play->sceneId == SCE_OOT_MARKET_CHILD_NIGHT && actorId == ACTOR_EN_DOOR)
@@ -354,7 +363,7 @@ static int GetRoomClearFlagForActor(PlayState* play, int flag)
 {
     int res;
 
-    res = GetRoomClearFlag(play, flag);
+    res = Flags_GetClear(play, flag);
     if (Config_Flag(CFG_ER_WALLMASTERS) && sActorIdToSpawn == ACTOR_EN_WALLMAS)
         res = 0;
     return res;

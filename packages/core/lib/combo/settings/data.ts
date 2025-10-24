@@ -214,6 +214,7 @@ export const SETTINGS = [{
   values: [
     { value: 'songLocations', name: 'Song Locations', description: 'Only locations that contain songs in the vanilla games will have songs.' },
     { value: 'anywhere', name: 'Anywhere', description: 'Songs can be placed anywhere.' },
+    { value: 'notes', name: 'Notes', description: 'Songs are split into individual notes, which are then placed anywhere.' },
   ],
   default: 'songLocations'
 }, {
@@ -669,6 +670,28 @@ export const SETTINGS = [{
   cond: hasOoT,
   default: 'none'
 }, {
+  key: 'shuffleRocksOot',
+  name: 'Rock Shuffle (OoT)',
+  category: 'main.shuffle',
+  type: 'boolean',
+  description: 'Controls whether or not the rocks are shuffled (OoT)',
+  default: false,
+  cond: hasOoT,
+}, {
+  key: 'shuffleRocksMm',
+  name: 'Rock Shuffle (MM)',
+  category: 'main.shuffle',
+  type: 'enum',
+  description: 'Controls whether or not the rocks are shuffled (MM)',
+    values: [
+    { value: 'none', name: 'None' },
+    { value: 'all', name: 'All' },
+    { value: 'overworld', name: 'Overworld' },
+    { value: 'dungeons', name: 'Dungeons only' },
+  ],
+  default: 'none',
+  cond: hasMM,
+}, {
   key: 'shuffleGrassMm',
   name: 'Grass Shuffle (MM)',
   category: 'main.shuffle',
@@ -691,6 +714,58 @@ export const SETTINGS = [{
   cond: (s: any) => hasMM(s) && (s.shuffleGrassMm === 'overworld' || s.shuffleGrassMm === 'all'),
   default: false
 }, {
+  key: 'shuffleTreesOot',
+  name: 'Tree Shuffle (OoT)',
+  category: 'main.shuffle',
+  type: 'boolean',
+  description: 'Controls whether or not the trees are shuffled (OoT)',
+  default: false,
+  cond: hasOoT,
+}, {
+  key: 'shuffleTreesMm',
+  name: 'Tree Shuffle (MM)',
+  category: 'main.shuffle',
+  type: 'enum',
+  description: 'Controls whether or not the trees are shuffled (MM)',
+  values: [
+    { value: 'none', name: 'None' },
+    { value: 'all', name: 'All' },
+    { value: 'overworld', name: 'Overworld' },
+    { value: 'dungeons', name: 'Dungeons only' },
+  ],
+  default: 'none',
+  cond: hasMM,
+}, {
+  key: 'shuffleBushOot',
+  name: 'Bush Shuffle (OoT)',
+  category: 'main.shuffle',
+  type: 'boolean',
+  description: 'Controls whether or not the bushes are shuffled (OoT)',
+  default: false,
+  cond: hasOoT,
+}, {
+  key: 'shuffleBushMm',
+  name: 'Bush Shuffle (MM)',
+  category: 'main.shuffle',
+  type: 'enum',
+  description: 'Controls whether or not the bushes are shuffled (MM)',
+  values: [
+    { value: 'none', name: 'None' },
+    { value: 'all', name: 'All' },
+    { value: 'overworld', name: 'Overworld' },
+    { value: 'dungeons', name: 'Dungeons only' },
+  ],
+  default: 'none',
+  cond: hasMM,
+}, {
+  key: 'shuffleSoilOot',
+  name: 'Soil Shuffle (OoT)',
+  category: 'main.shuffle',
+  type: 'boolean',
+  description: 'Controls whether or not the fairies from bean soil spots are shuffled (OoT)',
+  default: false,
+  cond: hasOoT,
+},{
   key: 'shuffleFreeRupeesOot',
   name: 'Freestanding Rupees Shuffle (OoT)',
   category: 'main.shuffle',
@@ -1645,6 +1720,14 @@ export const SETTINGS = [{
   default: false,
   cond: hasOoT,
 }, {
+  key: 'iceArrowPlatformsOot',
+  name: 'Ice Arrow Platforms (OoT)',
+  category: 'items.extensions',
+  type: 'boolean',
+  description: 'Allow ice arrows in OoT to create walkable ice platforms on water',
+  default: false,
+  cond: hasOoT,
+}, {
   key: 'sunlightArrows',
   name: 'Sunlight Arrows',
   category: 'items.extensions',
@@ -1722,6 +1805,14 @@ export const SETTINGS = [{
   description: 'Adds a Magical Rupee that can trigger every silver-rupee event in OoT dungeons.',
   default: false,
   cond: (s: any) => s.silverRupeeShuffle !== 'vanilla',
+}, {
+  key: 'transcendentFairy',
+  name: 'Transcendent Fairy',
+  category: 'items.extensions',
+  type: 'boolean',
+  description: 'Adds a Transcendent Fairy that counts as every Stray Fairy in MM.',
+  default: false,
+  cond: (s: any) => hasMM(s)
 }, {
   key: 'bombchuBehaviorOot',
   name: 'Bombchu Behavior (OoT)',
@@ -2084,18 +2175,18 @@ export const SETTINGS = [{
   category: 'items.extensions',
   type: 'boolean',
   default: true,
-  description: 'Makes traps look like different items (except rupoors).',
+  description: 'Makes traps look like different items.',
 }, {
   key: 'trapsQuantity',
   name: 'Traps Quantity',
   category: 'items.extensions',
   type: 'enum',
   values: [
-    { value: 'small', name: 'Small', description: '10 traps per 100 junk items' },
-    { value: 'medium', name: 'Medium', description: '30 traps per 100 junk items' },
-    { value: 'large', name: 'Large', description: '50 traps per 100 junk items' },
-    { value: 'verylarge', name: 'Very Large', description: '100 traps per 100 junk items' },
-    { value: 'extreme', name: 'Extreme', description: '200 traps per 100 junk items' },
+    { value: 'small', name: 'Small', description: '5 traps per 100 junk items' },
+    { value: 'medium', name: 'Medium', description: '10 traps per 100 junk items' },
+    { value: 'large', name: 'Large', description: '20 traps per 100 junk items' },
+    { value: 'verylarge', name: 'Very Large', description: '50 traps per 100 junk items' },
+    { value: 'extreme', name: 'Extreme', description: '100 traps per 100 junk items' },
     { value: 'insane', name: 'Insane', description: '500 traps per 100 junk items' },
     { value: 'obnoxious', name: 'Obnoxious', description: '1000 traps per 100 junk items' },
     { value: 'absurd', name: 'Absurd', description: '5000 traps per 100 junk items' },
@@ -3054,7 +3145,15 @@ export const SETTINGS = [{
   name: 'Keep Items on Cycle Reset',
   category: 'main.qol',
   type: 'boolean',
-  description: 'Keeps items through a cycle reset',
+  description: 'Keeps ammo & rupees through a cycle reset',
+  default: false,
+  cond: hasMM,
+}, {
+  key: 'keepBottlesReset',
+  name: 'Keep Bottles on Cycle Reset',
+  category: 'main.qol',
+  type: 'boolean',
+  description: 'Keeps bottle contents through a cycle reset',
   default: false,
   cond: hasMM,
 }, {

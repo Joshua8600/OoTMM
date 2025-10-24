@@ -23,6 +23,7 @@
     "Kokiri Forest Storms Grotto": "hidden_grotto_storms"
     "Kokiri Forest Near Deku Tree": "can_bypass_mido"
     "Kokiri Forest Adult Rupees": "is_adult && (can_ride_bean(BEAN_KOKIRI_FOREST) || has_hover_boots || hookshot_anywhere || climb_anywhere)"
+    "Kokiri Forest Soil Fairies": "soil_fairies(BEAN_KOKIRI_FOREST)"
   events:
     BOMBS_OR_BOMBCHU: "true"
     RUPEES: "true"
@@ -34,8 +35,24 @@
   locations:
     "Kokiri Forest GS Soil": "gs_soil && can_damage_skull"
     "Kokiri Forest GS Night Adult": "is_adult && (can_collect_distance || (climb_anywhere && can_damage_skull)) && gs_night"
+    "Kokiri Forest Rock Circle Rock 1": "true"
+    "Kokiri Forest Rock Circle Rock 2": "true"
+    "Kokiri Forest Rock Circle Rock 3": "true"
+    "Kokiri Forest Rock Circle Rock 4": "true"
+    "Kokiri Forest Rock Circle Rock 5": "true"
+    "Kokiri Forest Rock Circle Rock 6": "true"
+    "Kokiri Forest Rock Circle Rock 7": "true"
+    "Kokiri Forest Rock Circle Rock 8": "true"
   gossip:
     "Kokiri Gossip Near Lost Woods Open": "true"
+
+"Kokiri Forest Soil Fairies":
+  region: KOKIRI_FOREST
+  age_change: false
+  locations:
+    "Kokiri Forest Soil 1": "true"
+    "Kokiri Forest Soil 2": "true"
+    "Kokiri Forest Soil 3": "true"
 
 "Kokiri Forest Child":
   region: KOKIRI_FOREST
@@ -62,6 +79,14 @@
     "Kokiri Forest Wonder Item Platforms 1": "true"
     "Kokiri Forest Wonder Item Platforms 2": "true"
     "Kokiri Forest Wonder Item Sign": "can_use_sword"
+    "Kokiri Forest Rock Child 1": "true"
+    "Kokiri Forest Rock Child 2": "true"
+    "Kokiri Forest Rock Child 3": "true"
+    "Kokiri Forest Rock Child 4": "true"
+    "Kokiri Forest Rock Child 5": "true"
+    "Kokiri Forest Rock Child 6": "true"
+    "Kokiri Forest Rock Child 7": "true"
+    "Kokiri Forest Rock Child 8": "true"
 
 "Kokiri Forest Grass":
   region: KOKIRI_FOREST
