@@ -115,7 +115,6 @@ const SHARED_ITEMS_OOT = new Map([
   ['SHARED_MASK_STONE',             'OOT_MASK_STONE'],
   ['SHARED_SCALE',                  'OOT_SCALE'],
   ['SHARED_STRENGTH',               'OOT_STRENGTH'],
-  ['SHARED_TRAP_RUPOOR',            'OOT_TRAP_RUPOOR'],
   ['SHARED_HAMMER',                 'OOT_HAMMER'],
   ['SHARED_STICK_UPGRADE',          'OOT_STICK_UPGRADE'],
   ['SHARED_NUT_UPGRADE',            'OOT_NUT_UPGRADE'],
@@ -199,7 +198,6 @@ const SHARED_ITEMS_MM = new Map([
   ['SHARED_MASK_STONE',             'MM_MASK_STONE'],
   ['SHARED_SCALE',                  'MM_SCALE'],
   ['SHARED_STRENGTH',               'MM_STRENGTH'],
-  ['SHARED_TRAP_RUPOOR',            'MM_TRAP_RUPOOR'],
   ['SHARED_HAMMER',                 'MM_HAMMER'],
   ['SHARED_STICK_UPGRADE',          'MM_STICK_UPGRADE'],
   ['SHARED_NUT_UPGRADE',            'MM_NUT_UPGRADE'],
@@ -429,6 +427,7 @@ function checkKey(check: WorldCheck): number {
   case 'tree':
   case 'bush':
   case 'rock':
+  case 'soil':
   case 'fairy':
   case 'snowball':
   case 'hive':
@@ -458,6 +457,7 @@ function checkKey(check: WorldCheck): number {
   case 'tree':
   case 'bush':
   case 'rock':
+  case 'soil':
   case 'fairy':
   case 'snowball':
   case 'hive':
@@ -533,7 +533,7 @@ const gameChecks = async (worldId: number, opts: Options, settings: Settings, ga
     bufWriteU16BE(b, 4, playerId(item.player));
     bufWriteU16BE(b, 6, itemGi);
     let cloakGi = 0;
-    if (settings.cloakTraps && ItemGroups.TRAPS_CLOAKED.has(item.item)) {
+    if (settings.cloakTraps && ItemGroups.TRAPS.has(item.item)) {
       cloakGi = await makeCloakGi(key, opts.seed, settings, logic);
     }
     bufWriteU16BE(b, 8, cloakGi);
