@@ -165,6 +165,9 @@ const ACTORS_OOT = {
   OBJ_HAMISHI: 0x1d2,
   BG_ICICLE: 0x1c7,
   BG_ICE_SHELTER: 0x0ef,
+  EN_ISHI: 0x14e,
+  EN_WOOD02: 0x077,
+  OBJ_BEAN: 0x126,
 };
 
 const ACTORS_MM = {
@@ -192,6 +195,11 @@ const ACTORS_MM = {
   //DOOR_ANA: 0x55,
   OBJ_HAMISHI: 0x0fc,
   BG_ICICLE: 0x11f,
+  EN_ISHI: 0x0b0,
+  EN_WOOD02: 0x041,
+  OBJ_YASI: 0x23c,
+  EN_SNOWWD: 0x1d4,
+  OBJ_TREE: 0x229,
 };
 
 const ACTOR_SLICES_OOT = {
@@ -200,6 +208,8 @@ const ACTOR_SLICES_OOT = {
   [ACTORS_OOT.BG_SPOT11_OASIS]: 8,
   [ACTORS_OOT.OBJ_MURE3]: 7,
   [ACTORS_OOT.OBJ_MURE]: 5,
+  [ACTORS_OOT.EN_WOOD02]: 6,
+  [ACTORS_OOT.OBJ_BEAN]: 3,
 }
 
 const ACTOR_SLICES_MM = {
@@ -211,6 +221,7 @@ const ACTOR_SLICES_MM = {
   [ACTORS_MM.EN_HIT_TAG]: 3,
   [ACTORS_MM.OBJ_FLOWERPOT]: 2,
   [ACTORS_MM.OBJ_MURE]: 5,
+  [ACTORS_MM.EN_WOOD02]: 6,
 }
 
 const INTERESTING_ACTORS_OOT = Object.values(ACTORS_OOT);
@@ -397,11 +408,11 @@ type RawRoom = {
 type Actor = {
   actorId: number;
   typeId: number;
-  pos: [number, number, number];
   rx: number;
   ry: number;
   rz: number;
   params: number;
+  pos: [number, number, number];
 }
 
 type RoomActors = {
@@ -433,6 +444,7 @@ type Check = {
   item: string;
   roomActor: RoomActor;
   sliceId?: number;
+  letter?: string;
 }
 
 function sliceOverrideOot(a: Actor) {
@@ -1091,6 +1103,12 @@ type ActorHandlers = { [actorId: number]: ActorHandler };
 
 let altGrassAcc = 0;
 
+function actorHandlerOotObjBean(checks: Check[], ra: RoomActor) {
+  for (let i = 0; i < 3; ++i) {
+    checks.push({ roomActor: ra, item: 'FAIRY', name: `Soil ${i + 1}`, type: 'soil', sliceId: i });
+  }
+}
+
 function actorHandlerOotEnKusa(checks: Check[], ra: RoomActor) {
   const { actor } = ra;
   const grassType = (actor.params) & 3;
@@ -1102,6 +1120,90 @@ function actorHandlerOotEnKusa(checks: Check[], ra: RoomActor) {
     altGrassAcc++;
   }
   checks.push({ roomActor: ra, item, name: 'Grass', type: 'grass' });
+}
+
+function handleWood02(checks: Check[], ra: RoomActor, game: Game) {
+  const { actor } = ra;
+  let checkType: 'bush' | 'tree';
+  const type = (actor.params) & 0xff;
+  if (type > 0x16) return;
+  if (type <= 0x0a)
+    checkType = 'tree';
+  else
+    checkType = 'bush';
+
+  if (game === 'oot' && (ra.actor.rz & 0xff)) return;
+  let count = 1;
+  if (type === 3 || type === 6 || type === 8 || type === 0x0d || type === 0x0f || type === 0x13 || type === 0x15)
+    count = 6;
+  let item: string;
+
+  if (checkType === 'tree') {
+    switch ((ra.actor.params >>> 8) & 0xff) {
+    case 0x00:
+    case 0x01:
+    case 0x02:
+    case 0x03:
+    case 0x04:
+    case 0x05:
+    case 0x06:
+    case 0x07:
+    case 0x0d:
+    case 0x0e:
+      item = 'RANDOM';
+      break;
+    case 0x08:
+      item = 'DEKU_SEEDS_5/ARROWS_5';
+      break;
+    case 0x09:
+      item = 'MAGIC_JAR_SMALL';
+      break;
+    case 0x0a:
+      item = 'BOMBS_5';
+      break;
+    case 0x0b:
+      item = 'RUPEE_GREEN';
+      break;
+    case 0x0c:
+      item = 'RUPEE_BLUE';
+      break;
+    default:
+      item = 'NOTHING';
+      break;
+    }
+  } else {
+    item = 'NOTHING';
+  }
+
+  let name = checkType === 'tree' ? 'Tree' : 'Bush';
+  let nameCluster = checkType === 'tree' ? 'Tree Cluster' : 'Bush Cluster';
+
+  if (count > 1) {
+    for (let i = 0; i < count; ++i)
+      checks.push({ roomActor: ra, item, name: nameCluster, type: checkType, sliceId: i, name2: `${name} ${i + 1}` });
+  } else {
+    checks.push({ roomActor: ra, item, name, type: checkType });
+  }
+}
+
+function actorHandlerOotEnWood02(checks: Check[], ra: RoomActor) {
+  handleWood02(checks, ra, 'oot');
+}
+
+function actorHandlerMmEnWood02(checks: Check[], ra: RoomActor) {
+  handleWood02(checks, ra, 'mm');
+}
+
+function actorHandlerMmObjYasi(checks: Check[], ra: RoomActor) {
+  checks.push({ roomActor: ra, item: 'NOTHING', name: 'Palm Tree', type: 'tree' });
+}
+
+function actorHandlerMmEnSnowwd(checks: Check[], ra: RoomActor) {
+  checks.push({ roomActor: ra, item: 'NOTHING', name: 'Snow Tree', type: 'tree' });
+}
+
+function actorHandlerMmObjTree(checks: Check[], ra: RoomActor) {
+  checks.push({ roomActor: ra, item: 'NOTHING', name: 'Forked Tree', type: 'tree' });
 }
 
 function actorHandlerMmEnKusa(checks: Check[], ra: RoomActor) {
@@ -1132,43 +1234,35 @@ function actorHandlerMmEnKusa2(checks: Check[], ra: RoomActor) {
 
 function actorHandlerOotObjHana(checks: Check[], ra: RoomActor) {
   const type = ra.actor.params & 3;
-  if (type !== 2)
-    return;
-  const item = 'NOTHING';
-  checks.push({ roomActor: ra, item, name: 'Grass Weird', type: 'grass' });
-}
-
-function actorHandlerOotObjMure2(checks: Check[], ra: RoomActor) {
-  const type = (ra.actor.params) & 3;
-  let count: number;
-  if (type > 1) {
-    return;
+  if (type === 2) {
+    checks.push({ roomActor: ra, item: 'NOTHING', name: 'Grass Weird', type: 'grass' });
   }
-  if (type == 0) {
-    count = 9;
-  } else {
-    count = 12;
-  }
-  const item = 'RANDOM';
-  for (let i = 0; i < count; ++i) {
-    checks.push({ roomActor: ra, item, name: 'Grass Pack', type: 'grass', sliceId: i, name2: `Grass ${i + 1}` });
+  if (type === 1) {
+    checks.push({ roomActor: ra, item: 'NOTHING', name: 'Rock Weird', type: 'rock' });
   }
 }
 
-function actorHandlerMmObjMure2(checks: Check[], ra: RoomActor) {
+function actorHandlerObjMure2(checks: Check[], ra: RoomActor) {
   const type = (ra.actor.params) & 3;
+  let checkType: string;
+  let checkName: string;
+  let checkName2: string;
   let count: number;
-  if (type > 1) {
-    return;
-  }
-  if (type == 0) {
-    count = 9;
+  if (type >= 2) {
+    count = 8;
+    checkType = 'rock';
+    checkName = 'Rock Circle';
+    checkName2 = 'Rock';
   } else {
-    count = 12;
+    count = (type === 0) ? 9 : 12;
+    checkType = 'grass';
+    checkName = 'Grass Pack';
+    checkName2 = 'Grass';
   }
+
   const item = 'RANDOM';
   for (let i = 0; i < count; ++i) {
-    checks.push({ roomActor: ra, item, name: 'Grass Pack', type: 'grass', subtype: 'pack', sliceId: i, name2: `Grass ${i + 1}` });
+    checks.push({ roomActor: ra, item, name: checkName, type: checkType, sliceId: i, name2: `${checkName2} ${i + 1}` });
   }
 }
 
@@ -1343,6 +1437,21 @@ function actorHandlerOotEnItem00(checks: Check[], ra: RoomActor) {
   }
 }
 
+function actorHandlerOotEnIshi(checks: Check[], ra: RoomActor) {
+  const type = (ra.actor.params & 1);
+  if (type !== 0) return;
+  const item = 'RANDOM';
+  checks.push({ roomActor: ra, item, name: 'Rock', type: 'rock' });
+}
+
+function actorHandlerMmEnIshi(checks: Check[], ra: RoomActor) {
+  const type = (ra.actor.params & 1);
+  const isWall = (ra.actor.params & 4) !== 0;
+  if (type !== 0) return;
+  const item = 'RANDOM';
+  checks.push({ roomActor: ra, item, name: isWall ? 'Rock Wall' : 'Rock', type: 'rock' });
+}
+
 function actorHandlerMmEnItem00(checks: Check[], ra: RoomActor) {
   const item00arg = ra.actor.params & 0xff;
   if (item00arg >= ITEM00_DROPS_MM.length) {
@@ -1389,10 +1498,13 @@ const ACTORS_HANDLERS_OOT = {
   [ACTORS_OOT.EN_BUTTE]: actorHandlerOotEnButte,
   [ACTORS_OOT.OBJ_MURE]: actorHandlerOotObjMure,
   [ACTORS_OOT.OBJ_HANA]: actorHandlerOotObjHana,
-  [ACTORS_OOT.OBJ_MURE2]: actorHandlerOotObjMure2,
+  [ACTORS_OOT.OBJ_MURE2]: actorHandlerObjMure2,
   [ACTORS_OOT.OBJ_HAMISHI]: actorHandlerObjHamishi,
   [ACTORS_OOT.BG_ICICLE]: actorHandlerOotBgIcicle,
   [ACTORS_OOT.BG_ICE_SHELTER]: actorHandlerOotBgIceShelter,
+  [ACTORS_OOT.EN_ISHI]: actorHandlerOotEnIshi,
+  [ACTORS_OOT.EN_WOOD02]: actorHandlerOotEnWood02,
+  [ACTORS_OOT.OBJ_BEAN]: actorHandlerOotObjBean,
 };
 
 const ACTORS_HANDLERS_MM = {
@@ -1407,16 +1519,57 @@ const ACTORS_HANDLERS_MM = {
   [ACTORS_MM.OBJ_SNOWBALL2]: actorHandlerMmObjSnowball2,
   [ACTORS_MM.EN_BUTTE]: actorHandlerMmEnButte,
   [ACTORS_MM.OBJ_MURE]: actorHandlerMmObjMure,
-  [ACTORS_MM.OBJ_MURE2]: actorHandlerMmObjMure2,
+  [ACTORS_MM.OBJ_MURE2]: actorHandlerObjMure2,
   [ACTORS_MM.OBJ_GRASS_UNIT]: actorHandlerMmObjGrassUnit,
   [ACTORS_MM.OBJ_HAMISHI]: actorHandlerObjHamishi,
   [ACTORS_MM.BG_ICICLE]: actorHandlerMmBgIcicle,
+  [ACTORS_MM.EN_ISHI]: actorHandlerMmEnIshi,
+  [ACTORS_MM.EN_WOOD02]: actorHandlerMmEnWood02,
+  [ACTORS_MM.OBJ_YASI]: actorHandlerMmObjYasi,
+  [ACTORS_MM.EN_SNOWWD]: actorHandlerMmEnSnowwd,
+  [ACTORS_MM.OBJ_TREE]: actorHandlerMmObjTree,
 };
 
 const ACTORS_HANDLERS = {
   oot: ACTORS_HANDLERS_OOT,
   mm: ACTORS_HANDLERS_MM,
 };
+
+function letterChecks(checks: Check[]) {
+  const perScene: { [sceneId: number]: Check[] } = {};
+
+  /* Cluster by scene */
+  for (const c of checks) {
+    if (!perScene[c.roomActor.sceneId]) {
+      perScene[c.roomActor.sceneId] = [];
+    }
+    perScene[c.roomActor.sceneId].push(c);
+  }
+
+  /* Every cluster */
+  for (const cluster of Object.values(perScene)) {
+    let letterValue = 1;
+    for (const c1 of cluster) {
+      for (const c2 of cluster) {
+        if (c1 === c2) continue;
+        if (c1.roomActor.setupId === c2.roomActor.setupId) continue;
+        if (c1.roomActor.roomId !== c2.roomActor.roomId) continue;
+        if (c1.type !== c2.type) continue;
+        if (c1.subtype !== c2.subtype) continue;
+        if (c1.roomActor.actor.pos[0] !== c2.roomActor.actor.pos[0]) continue;
+        if (c1.roomActor.actor.pos[1] !== c2.roomActor.actor.pos[1]) continue;
+        if (c1.roomActor.actor.pos[2] !== c2.roomActor.actor.pos[2]) continue;
+
+        /* We found a match */
+        if (c1.letter === undefined) {
+          c1.letter = letterValue.toString();
+          letterValue++;
+        }
+        c2.letter = c1.letter;
+      }
+    }
+  }
+}
 
 function makeChecks(rooms: RoomActors[], handlers: ActorHandlers): Check[] {
   const checks: Check[] = [];
@@ -1429,6 +1582,8 @@ function makeChecks(rooms: RoomActors[], handlers: ActorHandlers): Check[] {
       }
     }
   }
+
+  letterChecks(checks);
   return checks;
 }
 
@@ -1456,7 +1611,8 @@ function outputChecks(game: 'oot' | 'mm', checks: Check[], filter?: string, filt
     }
 
     const key = ((check.sliceId ?? 0) << 16) | ((ra.setupId & 0x3) << 14) | (ra.roomId << 8) | ra.actor.actorId;
-    let name = `Scene ${ra.sceneId.toString(16)} Setup ${ra.setupId} Room ${decPad(ra.roomId, 2)} ${check.name} ${decPad(ra.actor.actorId + 1, 2)}`; /* Room + 1 , to match SceneNavi/SceneTatl */
+    const letterData = check.letter ? ` [${check.letter.padEnd(2)}]` : '';
+    let name = `Scene ${ra.sceneId.toString(16)} Setup ${ra.setupId} Room ${decPad(ra.roomId, 2)} ${check.name}${letterData} ${decPad(ra.actor.actorId + 1, 2)}`; /* Room + 1 , to match SceneNavi/SceneTatl */
     if (check.name2) {
       name = `${name} ${check.name2}`;
     }

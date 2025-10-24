@@ -89,6 +89,8 @@ void DrawGi_Xlu0(PlayState* play, s16 drawGiId)
 
 void DrawGi_CustomNote(PlayState* play, s16 drawGiId, u8 param)
 {
+    static const float kSmallScale = 0.6f;
+
     static const u32 kColors[] = {
         0x8000ffff /* Purple */,
         0x0000ffff /* Blue */,
@@ -112,6 +114,8 @@ void DrawGi_CustomNote(PlayState* play, s16 drawGiId, u8 param)
     color4(&r, &g, &b, &a, kColors[param & 0xf]);
 
     Matrix_RotateZ(angle, MTXMODE_APPLY);
+    if (param & 0x40)
+        Matrix_Scale(kSmallScale, kSmallScale, kSmallScale, MTXMODE_APPLY);
 
     OPEN_DISPS(play->state.gfxCtx);
     Gfx_SetupDL25_Xlu(play->state.gfxCtx);
@@ -593,6 +597,12 @@ static const Gfx kStrayFairyDlistColorTownBg[] = {
     gsSPEndDisplayList(),
 };
 
+static const Gfx kStrayFairyDlistColorTranscendent[] = {
+    gsDPSetPrimColor(0, 0, 0xff, 0xff, 0xff, 255),
+    gsDPSetEnvColor(0xcc, 0xcc, 0xcc, 255),
+    gsSPEndDisplayList(),
+};
+
 static int DrawGi_CustomStrayFairyLimbOverride(PlayState* play, int limbIndex, Gfx** dlist, Vec3f* pos, Vec3s* rot, Actor* this)
 {
     if (limbIndex == 9)
@@ -634,7 +644,7 @@ void DrawGiSystem_Update(PlayState* play)
     SkelAnime_Update(&sDrawStrayFairySkelAnime);
 }
 
-void DrawGi_CustomStrayFairy(PlayState* play, s16 drawGiId)
+void DrawGi_CustomStrayFairy(PlayState* play, s16 drawGiId, u8 param)
 {
     static const Gfx* const kColors[] = {
         kStrayFairyDlistColorWoodfall,
@@ -642,6 +652,7 @@ void DrawGi_CustomStrayFairy(PlayState* play, s16 drawGiId)
         kStrayFairyDlistColorGreatBay,
         kStrayFairyDlistColorStoneTower,
         kStrayFairyDlistColorTown,
+        kStrayFairyDlistColorTranscendent,
     };
 
     static const Gfx* const kColorsBg[] = {
@@ -650,31 +661,49 @@ void DrawGi_CustomStrayFairy(PlayState* play, s16 drawGiId)
         kStrayFairyDlistColorGreatBayBg,
         kStrayFairyDlistColorStoneTowerBg,
         kStrayFairyDlistColorTownBg,
+        NULL,
     };
-
-    const DrawGi* drawGi;
-    int index;
 
     sDrawStrayFairyLimit++;
     if (sDrawStrayFairyLimit >= 15)
         return;
 
-    drawGi = &kDrawGi[drawGiId];
-    index = drawGi->lists[0];
 #if defined(GAME_MM)
-    if (index == 0)
+    if (param == 0)
     {
         if (play->sceneId == SCE_MM_CLOCK_TOWN_EAST || play->sceneId == SCE_MM_LAUNDRY_POOL)
-            index = 5;
+            param = 5;
         else
-            index = gSaveContext.dungeonId + 1;
+            param = (u8)gSaveContext.dungeonId + 1;
     }
 #endif
+    param--;
 
     OPEN_DISPS(play->state.gfxCtx);
     Gfx_SetupDL25_Xlu(play->state.gfxCtx);
-    gSPSegment(POLY_XLU_DISP++, 0x08, kColors[index - 1]);
-    gSPSegment(POLY_XLU_DISP++, 0x09, kColorsBg[index - 1]);
+    gSPSegment(POLY_XLU_DISP++, 0x08, kColors[param]);
+    if (kColorsBg[param] != NULL)
+    {
+        gSPSegment(POLY_XLU_DISP++, 0x09, kColorsBg[param]);
+    }
+    else
+    {
+        float h;
+        u32 color;
+        u32 color2;
+        Gfx* rainbow;
+
+        h = (play->state.frameCount & 0x1f) * (1.f/32.f);
+        color = hsla(h, 1.f, 0.5f, 1.f);
+        color2 = hsla(h, 1.f, 0.3f, 1.f);
+
+        rainbow = GRAPH_ALLOC(play->state.gfxCtx, sizeof(Gfx) * 3);
+        gDPSetPrimColor(&rainbow[0], 0, 0, (color >> 24) & 0xff, (color >> 16) & 0xff, (color >> 8) & 0xff, 255);
+        gDPSetEnvColor(&rainbow[1], (color2 >> 24) & 0xff, (color2 >> 16) & 0xff, (color2 >> 8) & 0xff, 255);
+        gSPEndDisplayList(&rainbow[2]);
+        gSPSegment(POLY_XLU_DISP++, 0x09, rainbow);
+
+    }
     Matrix_ReplaceRotation(&play->billboardMtxF);
     Matrix_Scale(0.03f, 0.03f, 0.03f, MTXMODE_APPLY);
 #if defined(GAME_OOT)

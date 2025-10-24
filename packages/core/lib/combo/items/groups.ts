@@ -216,20 +216,46 @@ export const SONGS = new Set([
   Items.SHARED_SONG_EMPTINESS,
 ]);
 
-export const TRAPS_CLOAKED = new Set([
+export const SONG_NOTES = new Set([
+  Items.OOT_SONG_NOTE_EPONA,
+  Items.OOT_SONG_NOTE_SARIA,
+  Items.OOT_SONG_NOTE_STORMS,
+  Items.OOT_SONG_NOTE_SUN,
+  Items.OOT_SONG_NOTE_TIME,
+  Items.OOT_SONG_NOTE_ZELDA,
+  Items.OOT_SONG_NOTE_TP_FOREST,
+  Items.OOT_SONG_NOTE_TP_WATER,
+  Items.OOT_SONG_NOTE_TP_FIRE,
+  Items.OOT_SONG_NOTE_TP_SHADOW,
+  Items.OOT_SONG_NOTE_TP_SPIRIT,
+  Items.OOT_SONG_NOTE_TP_LIGHT,
+  Items.MM_SONG_NOTE_TIME,
+  Items.MM_SONG_NOTE_AWAKENING,
+  Items.MM_SONG_NOTE_HEALING,
+  Items.MM_SONG_NOTE_EPONA,
+  Items.MM_SONG_NOTE_SOARING,
+  Items.MM_SONG_NOTE_GORON,
+  Items.MM_SONG_NOTE_ZORA,
+  Items.MM_SONG_NOTE_STORMS,
+  Items.MM_SONG_NOTE_EMPTINESS,
+  Items.MM_SONG_NOTE_ORDER,
+  Items.MM_SONG_NOTE_SUN,
+  Items.SHARED_SONG_NOTE_EPONA,
+  Items.SHARED_SONG_NOTE_TIME,
+  Items.SHARED_SONG_NOTE_STORMS,
+  Items.SHARED_SONG_NOTE_SUN,
+  Items.OOT_SONG_NOTE_EMPTINESS,
+  Items.SHARED_SONG_NOTE_EMPTINESS,
+]);
+
+export const TRAPS = new Set([
   Items.OOT_TRAP_ICE,
   Items.OOT_TRAP_FIRE,
   Items.OOT_TRAP_SHOCK,
   Items.OOT_TRAP_DRAIN,
   Items.OOT_TRAP_ANTI_MAGIC,
   Items.OOT_TRAP_KNOCKBACK,
-]);
-
-export const TRAPS = new Set([
   Items.OOT_TRAP_RUPOOR,
-  Items.MM_TRAP_RUPOOR,
-  Items.SHARED_TRAP_RUPOOR,
-  ...TRAPS_CLOAKED,
 ]);
 
 export const JUNK = new Set([
@@ -914,6 +940,7 @@ export const CLOCKS = new Set([
 ]);
 
 export const REQUIRED = new Set([
+  ...SONG_NOTES,
   ...OWLS,
   ...RUPEES_SILVER,
   ...OOT_SOULS_ENEMY,
@@ -942,6 +969,7 @@ export const REQUIRED = new Set([
   ...MM_BOMBCHU,
   ...SHARED_BOMBCHU,
   ...CLOCKS,
+  Items.MM_TRANSCENDENT_FAIRY,
   Items.OOT_BOMBCHU_BAG,
   Items.MM_BOMBCHU_BAG,
   Items.SHARED_BOMBCHU_BAG,
