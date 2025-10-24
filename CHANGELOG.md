@@ -6,14 +6,30 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Cosmetics setting to enable BGM during night time.
+- Some seasonal textures, for Halloween.
+- Add soft soil shuffle to Ocarina of Time.
+- Add bush shuffle in Ocarina of Time and Majora's Mask.
+- Add tree shuffle in Ocarina of Time and Majora's Mask.
+- Add rock shuffle in Ocarina of Time and Majora's Mask.
+- Add a transcendent fairy item, which counts as every stray fairy at once.
+- Add a setting to make OoT Ice Arrow behave like in MM, creating walkable ice platforms on water (no logic yet).
+- Add the ability to split songs into invividually shuffled notes (thanks @ebrown38).
 - Add bronze scale, an extra scale item required to enter deep water (logic is experimental).
 
 ### Changed
 
+- Alter the number of traps - seeds should have slightly less traps on the smaller settings now.
+- Made rupoors behave like other traps.
+- Remove some vanilla BGM mixing when custom music is enabled.
+- Separate settings for keeping ammo/rupees and bottle contents through cycle resets in MM.
+- The Skeleton key has a new, custom model (thanks Dahni).
 - Cloaked items are now progressive when relevant.
 
 ### Fixed
 
+- Fix a checksum issue that could very rarely produce invalid ROMs.
+- Fix a vanilla bug causing the final chest in Secret Shrine to sometimes not spawn.
 - Fix a bug that could cause the player to be stuck on the Moon in ER.
 - Fix cloaked items rotation in MM.
 
@@ -21,7 +37,6 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-<!-- - Cosmetics setting to enable BGM during night time. -->
 - Cosmetic setting to alter the File Select color.
 - Add a setting to link traps in multiworld.
 - Add Fire, Shock, Drain, Anti-Magic & Knockback traps.

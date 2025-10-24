@@ -29,6 +29,7 @@
 # include <combo/effect.h>
 # include <combo/equipment.h>
 # include <combo/math.h>
+# include <combo/camera.h>
 # include <combo/item.h>
 # include <combo/npc.h>
 # include <combo/object.h>
@@ -128,6 +129,8 @@ NORETURN void comboGameSwitch(PlayState* play, u32 entrance);
 #if defined(GAME_OOT)
 void swapFarore(void);
 #endif
+
+extern const u8 kMaxSongNotes[];
 
 void    comboWalletRefresh(void);
 

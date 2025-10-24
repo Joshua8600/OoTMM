@@ -6,26 +6,42 @@
     "Hyrule Field": "true"
     "Gerudo Valley After Bridge": "can_longshot || can_ride_epona || (is_adult && carpenters_rescued) || (is_child && ((has_hover_boots && trick(OOT_VALLEY_GATE_HOVER)) || can_hookshot)) || time_travel_at_will"
     "Octorok Grotto Ledge": "true"
+    "Gerudo Valley Soil Fairies": "soil_fairies(BEAN_GERUDO_VALLEY)"
   events:
     RUPEES: "true"
     BOMBS_OR_BOMBCHU: "is_child"
     SEEDS: "is_child"
     MAGIC: "is_child"
     BUGS: "is_child && has_bottle"
+    BEAN_GERUDO_VALLEY: "can_use_beans"
   locations:
     "Gerudo Valley Crate HP": "is_child || can_longshot || climb_anywhere"
-    "Gerudo Valley Waterfall HP": "is_child || can_swim || can_longshot || (has_iron_boots && can_hookshot)" ##Grab the PoH with Cucco as child. The Hookshot can attach to the ladder.
+    "Gerudo Valley Waterfall HP": "is_child || can_swim || can_longshot || climb_anywhere || (has_iron_boots && can_hookshot)" ##Grab the PoH with Cucco as child. The Hookshot can attach to the ladder.
     "Gerudo Valley GS Soil": "gs_soil && can_damage_skull"
     "Gerudo Valley GS Wall": "is_child && gs_night && (can_collect_distance || (climb_anywhere && (can_use_sword_master || (age_sword_adult && has(SWORD_BIGGORON)) || has_explosives || can_use_din || can_use_sticks || can_use_slingshot)))"
     "Gerudo Valley Cow": "is_child && can_play_epona"
     "Gerudo Valley Crate Ledge": "is_child || can_longshot || climb_anywhere"
     "Gerudo Valley Crate Child Bottom": "is_child"
     "Gerudo Valley Wonder Item Lower": "is_adult"
-    "Gerudo Valley Wonder Item Upper": "is_adult"
+    "Gerudo Valley Wonder Item Upper": "(is_adult && (can_swim || can_longshot || climb_anywhere || can_use_ice_arrow_platforms || (has_iron_boots && can_hookshot))) || time_travel_at_will || can_ride_bean(BEAN_GERUDO_VALLEY)"
     "Gerudo Valley Red Boulder Before Bridge 1": "is_adult && can_hammer"
     "Gerudo Valley Red Boulder Before Bridge 2": "is_adult && can_hammer"
+    "Gerudo Valley Rock Entrance Ground 1": "true"
+    "Gerudo Valley Rock Entrance Ground 2": "true"
+    "Gerudo Valley Rock Entrance Ground 3": "true"
+    "Gerudo Valley Rock Entrance Water 1": "true"
+    "Gerudo Valley Rock Entrance Water 2": "true"
+    "Gerudo Valley Rock Entrance Water 3": "true"
   gossip:
     "Gerudo Valley Gossip": "true"
+
+"Gerudo Valley Soil Fairies":
+  region: GERUDO_VALLEY
+  age_change: false
+  locations:
+    "Gerudo Valley Soil 1": "true"
+    "Gerudo Valley Soil 2": "true"
+    "Gerudo Valley Soil 3": "true"
 
 "Gerudo Valley After Bridge":
   region: GERUDO_VALLEY
@@ -48,6 +64,10 @@
     "Gerudo Valley Red Boulder Around Chest 2": "is_adult && can_hammer"
     "Gerudo Valley Red Boulder Around Chest 3": "is_adult && can_hammer"
     "Gerudo Valley Red Boulder Around Chest 4": "is_adult && can_hammer"
+    "Gerudo Valley Rock Adult 1": "is_adult"
+    "Gerudo Valley Rock Adult 2": "is_adult"
+    "Gerudo Valley Rock Adult 3": "is_adult"
+    "Gerudo Valley Rock Adult 4": "is_adult"
     # Unreachable with some settings, need a way to detect that
     #"Gerudo Valley Crate Child Unreachable 1": "is_child"
     #"Gerudo Valley Crate Child Unreachable 2": "is_child"

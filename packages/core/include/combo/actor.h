@@ -13,7 +13,6 @@
 #define PARAMS_GET_S(p, s, n)   (((p) & (NBITS_TO_MASK(n) << (s))) >> (s))
 
 #define ACTOR_FLAG_OOT_5            (1 << 5)
-#define ACTOR_FLAG_OOT_6            (1 << 6)
 #define ACTOR_FLAG_OOT_9            (1 << 9)
 #define ACTOR_FLAG_OOT_10           (1 << 10)
 #define ACTOR_FLAG_OOT_13           (1 << 13)
@@ -22,7 +21,6 @@
 #define ACTOR_FLAG_OOT_31           (1 << 31)
 
 #define ACTOR_FLAG_MM_20                        (1 << 5)
-#define ACTOR_FLAG_MM_INSIDE_CULLING_VOLUME     (1 << 6)
 #define ACTOR_FLAG_MM_200                       (1 << 9)
 #define ACTOR_FLAG_MM_400                       (1 << 10)
 #define ACTOR_FLAG_MM_800                       (1 << 11)
@@ -55,6 +53,7 @@
 #define ACTOR_FLAG_FRIENDLY                     (1 << 3)
 #define ACTOR_FLAG_UPDATE_CULLING_DISABLED      (1 << 4)
 #define ACTOR_FLAG_DRAW_CULLING_DISABLED        (1 << 5)
+#define ACTOR_FLAG_INSIDE_CULLING_VOLUME        (1 << 6)
 #define ACTOR_FLAG_REACT_TO_LENS                (1 << 7)
 #define ACTOR_FLAG_TALK                         (1 << 8)
 #define ACTOR_FLAG_IGNORE_QUAKE                 (1 << 12)
@@ -443,6 +442,11 @@ void* actorAddr(u16 actorId, u32 addr);
 #define DYNA_INTERACT_ACTOR_ON_HEAVY_SWITCH (1 << 4) // Like the ACTOR_ON_TOP flag but only actors with ACTOR_FLAG_CAN_PRESS_HEAVY_SWITCHES
 
 void DynaPolyActor_Init(DynaPolyActor* dynaActor, s32 transformFlags);
+s32 DynaPolyActor_IsActorOnTop(struct DynaPolyActor* dynaActor);
+s32 DynaPolyActor_IsPlayerOnTop(struct DynaPolyActor* dynaActor);
+s32 DynaPolyActor_IsPlayerAbove(struct DynaPolyActor* dynaActor);
+s32 DynaPolyActor_IsSwitchPressed(struct DynaPolyActor* dynaActor);
+
 void Actor_UpdatePos(Actor *actor);
 
 #if defined(GAME_MM)
@@ -613,5 +617,7 @@ void Actor_SetObjectDependency(struct PlayState* play, Actor* actor);
 extern Gfx D_801AEFA0[];
 extern Gfx D_801AEF88[];
 #endif
+
+void Actor_WorldToActorCoords(Actor* actor, Vec3f* dest, Vec3f* pos);
 
 #endif

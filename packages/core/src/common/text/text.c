@@ -224,19 +224,29 @@ static int isItemAmbiguous(s16 gi)
     case GI_MM_ARROW_LIGHT:
         return !Config_Flag(CFG_SHARED_MAGIC_ARROW_LIGHT);
     case GI_OOT_SONG_EPONA:
+    case GI_OOT_SONG_NOTE_EPONA:
     case GI_MM_SONG_EPONA:
+    case GI_MM_SONG_NOTE_EPONA:
         return !Config_Flag(CFG_SHARED_SONG_EPONA);
     case GI_OOT_SONG_STORMS:
+    case GI_OOT_SONG_NOTE_STORMS:
     case GI_MM_SONG_STORMS:
+    case GI_MM_SONG_NOTE_STORMS:
         return !Config_Flag(CFG_SHARED_SONG_STORMS);
     case GI_OOT_SONG_TIME:
+    case GI_OOT_SONG_NOTE_TIME:
     case GI_MM_SONG_TIME:
+    case GI_MM_SONG_NOTE_TIME:
         return !Config_Flag(CFG_SHARED_SONG_TIME);
     case GI_OOT_SONG_SUN:
+    case GI_OOT_SONG_NOTE_SUN:
     case GI_MM_SONG_SUN:
+    case GI_MM_SONG_NOTE_SUN:
         return !Config_Flag(CFG_SHARED_SONG_SUN) && Config_Flag(CFG_MM_SONG_SUN);
     case GI_OOT_SONG_EMPTINESS:
+    case GI_OOT_SONG_NOTE_EMPTINESS:
     case GI_MM_SONG_EMPTINESS:
+    case GI_MM_SONG_NOTE_EMPTINESS:
         return !Config_Flag(CFG_SHARED_SONG_EMPTINESS) && Config_Flag(CFG_OOT_SONG_EMPTINESS);
     case GI_OOT_STICK_UPGRADE:
     case GI_OOT_STICK_UPGRADE2:
@@ -308,7 +318,6 @@ static int isItemAmbiguous(s16 gi)
     case GI_OOT_RUPEE_RED:
     case GI_OOT_RUPEE_PURPLE:
     case GI_OOT_RUPEE_HUGE:
-    case GI_OOT_TRAP_RUPOOR:
     case GI_MM_WALLET:
     case GI_MM_WALLET2:
     case GI_MM_WALLET3:
@@ -320,7 +329,6 @@ static int isItemAmbiguous(s16 gi)
     case GI_MM_RUPEE_PURPLE:
     case GI_MM_RUPEE_SILVER:
     case GI_MM_RUPEE_GOLD:
-    case GI_MM_TRAP_RUPOOR:
         return !Config_Flag(CFG_SHARED_WALLETS);
     case GI_OOT_HEART_CONTAINER:
     case GI_OOT_HEART_CONTAINER2:
@@ -646,10 +654,16 @@ void comboTextAutoLineBreaks(char* buffer)
         {
             lastSpace = i;
         }
-        if (c == (u8)(TEXT_NL[0]) || c == (u8)(TEXT_BB[0]))
+        if (c == (u8)(TEXT_NL[0]))
+        {
+            lastSpace = i;
+            lineLength = 999;
+        }
+        if (c == (u8)(TEXT_BB[0]))
         {
             lastSpace = -1;
             lineLength = 0;
+            lineCount = 0;
         }
         i += comboMultibyteCharSize(c);
     }
@@ -1202,25 +1216,6 @@ void comboTextHijackLightArrows(PlayState* play)
     comboTextAppendRegionName(&b, gComboConfig.hints.lightArrows.region, gComboConfig.hints.lightArrows.world, TF_PREPOS);
     comboTextAppendStr(&b, "?" TEXT_END);
     comboTextAutoLineBreaks(play->msgCtx.font.msgBuf);
-}
-#endif
-
-#if defined(GAME_MM)
-void comboTextHijackOathToOrder(PlayState* play)
-{
-    char* b;
-    char* start;
-
-    b = play->msgCtx.font.textBuffer.schar;
-    comboTextAppendHeader(&b);
-    start = b;
-    comboTextAppendStr(&b,
-        "Have you found the " TEXT_COLOR_PINK "Oath to Order "
-    );
-    comboTextAppendClearColor(&b);
-    comboTextAppendRegionName(&b, gComboConfig.hints.oathToOrder.region, gComboConfig.hints.oathToOrder.world, TF_PREPOS);
-    comboTextAppendStr(&b, "?" TEXT_END);
-    comboTextAutoLineBreaks(start);
 }
 #endif
 

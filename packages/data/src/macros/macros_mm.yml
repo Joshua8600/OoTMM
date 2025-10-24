@@ -58,7 +58,7 @@
 # Age
 "is_child": "!setting(crossAge) || age(child)"
 "is_adult": "setting(crossAge) && age(adult)"
-"is_tall": "has_mask_zora || is_adult"
+"is_tall": "has_mask_zora || is_adult" #add Fierce Deity or a new macro to include FD
 "is_short": "has(MASK_DEKU) || is_child"
 
 # Spells
@@ -108,33 +108,42 @@
 
 "has_ocarina_n(x)": "has(OCARINA, x) || has(SHARED_OCARINA, x)"
 "has_ocarina": "cond(setting(sharedOcarina), cond(setting(fairyOcarinaMm), has_ocarina_n(1), has_ocarina_n(2)), has_ocarina_n(1))"
-"can_play(song)": "has_ocarina && has(song)"
-"can_play_cross(x)": "can_play(x) && setting(crossWarpOot)"
 
-"can_play_sun": "(can_play(SONG_SUN) || can_play(SHARED_SONG_SUN)) && ocarina_button_right && ocarina_button_down && ocarina_button_up"
-"can_play_time": "(can_play(SONG_TIME) || can_play(SHARED_SONG_TIME)) && ocarina_button_a && ocarina_button_right && ocarina_button_down"
-"can_play_epona": "(can_play(SONG_EPONA) || can_play(SHARED_SONG_EPONA)) && ocarina_button_up && ocarina_button_right && ocarina_button_left"
-"can_play_storms": "(can_play(SONG_STORMS) || can_play(SHARED_SONG_STORMS)) && ocarina_button_a && ocarina_button_down && ocarina_button_up"
-"can_play_healing": "can_play(SONG_HEALING) && ocarina_button_down && ocarina_button_right && ocarina_button_left"
-"can_play_soaring": "can_play(SONG_SOARING) && ocarina_button_down && ocarina_button_up && ocarina_button_left"
+# Songs (having & playing)
+"has_song_healing": "has(SONG_HEALING) || has(SONG_NOTE_HEALING, 6)"
+"has_song_awakening": "has(SONG_AWAKENING) || has(SONG_NOTE_AWAKENING, 7)"
+"has_song_goron": "has(SONG_GORON) || has(SONG_GORON_HALF, 2) || has(SONG_NOTE_GORON, 8)"
+"has_song_goron_half": "has_song_goron || (setting(progressiveGoronLullaby, progressive) && (has(SONG_GORON_HALF) || has(SONG_NOTE_GORON, 6)))"
+"has_song_zora": "has(SONG_ZORA) || has(SONG_NOTE_ZORA, 7)"
+"has_song_order": "has(SONG_ORDER) || has(SONG_NOTE_ORDER, 6)"
 
-"can_play_awakening": "can_play(SONG_AWAKENING) && ocarina_button_up && ocarina_button_right && ocarina_button_left && ocarina_button_a"
-"can_play_goron_half": "has_ocarina && has_goron_song_half && ocarina_button_a && ocarina_button_right && ocarina_button_left"
-"can_play_goron": "has_ocarina && has_goron_song && ocarina_button_a && ocarina_button_right && ocarina_button_left"
-"can_play_zora": "can_play(SONG_ZORA) && ocarina_button_left && ocarina_button_right && ocarina_button_up && ocarina_button_down"
-"can_play_emptiness": "has_ocarina && has_elegy_raw && ocarina_button_left && ocarina_button_right && ocarina_button_up && ocarina_button_down"
-"can_play_order": "can_play(SONG_ORDER) && ocarina_button_right && ocarina_button_down && ocarina_button_up && ocarina_button_a"
+"can_play_emptiness": "can_play_emptiness_raw"
+"can_play_soaring": "can_play_soaring_raw"
+"can_play_healing": "has_song_healing && has_ocarina && ocarina_button_down && ocarina_button_right && ocarina_button_left"
+"can_play_awakening": "has_song_awakening && has_ocarina && ocarina_button_up && ocarina_button_right && ocarina_button_left && ocarina_button_a"
+"can_play_goron_half": "has_song_goron_half && has_ocarina && ocarina_button_a && ocarina_button_right && ocarina_button_left"
+"can_play_goron": "has_song_goron && has_ocarina && ocarina_button_a && ocarina_button_right && ocarina_button_left"
+"can_play_zora": "has_song_zora && has_ocarina && ocarina_button_left && ocarina_button_right && ocarina_button_up && ocarina_button_down"
+"can_play_order": "has_song_order && has_ocarina && ocarina_button_right && ocarina_button_down && ocarina_button_up && ocarina_button_a"
 
 "can_play_evan": "has_ocarina && ocarina_button_a && ocarina_button_right && ocarina_button_down && ocarina_button_left"
 "can_play_minigame": "has_ocarina && ocarina_button_a && ocarina_button_right && ocarina_button_down && ocarina_button_left && ocarina_button_up"
 "can_play_scarecrow": "has_ocarina && ocarina_button_any2"
 
-"can_play_cross_tp_light": "can_play_cross(OOT_SONG_TP_LIGHT) && ocarina_button_up && ocarina_button_right && ocarina_button_left"
-"can_play_cross_tp_forest": "can_play_cross(OOT_SONG_TP_FOREST) && ocarina_button_a && ocarina_button_up && ocarina_button_right && ocarina_button_left"
-"can_play_cross_tp_fire": "can_play_cross(OOT_SONG_TP_FIRE) && ocarina_button_a && ocarina_button_right && ocarina_button_down"
-"can_play_cross_tp_water": "can_play_cross(OOT_SONG_TP_WATER) && ocarina_button_a && ocarina_button_right && ocarina_button_down && ocarina_button_left"
-"can_play_cross_tp_shadow": "can_play_cross(OOT_SONG_TP_SHADOW) && ocarina_button_a && ocarina_button_right && ocarina_button_down && ocarina_button_left"
-"can_play_cross_tp_spirit": "can_play_cross(OOT_SONG_TP_SPIRIT) && ocarina_button_a && ocarina_button_right && ocarina_button_down"
+"can_play_tp_light": "setting(crossWarpOot) && can_play_tp_light_raw"
+"can_play_tp_forest": "setting(crossWarpOot) && can_play_tp_forest_raw"
+"can_play_tp_fire": "setting(crossWarpOot) && can_play_tp_fire_raw"
+"can_play_tp_water": "setting(crossWarpOot) && can_play_tp_water_raw"
+"can_play_tp_shadow": "setting(crossWarpOot) && can_play_tp_shadow_raw"
+"can_play_tp_spirit": "setting(crossWarpOot) && can_play_tp_spirit_raw"
+
+# Stray fairies
+"sf_town": "has(TRANSCENDENT_FAIRY) || has(STRAY_FAIRY_TOWN)"
+"sf_dungeon(item)": "has(TRANSCENDENT_FAIRY) || has(item, var(STRAY_FAIRY_COUNT))"
+"sf_woodfall": "sf_dungeon(STRAY_FAIRY_WF)"
+"sf_snowhead": "sf_dungeon(STRAY_FAIRY_SH)"
+"sf_great_bay": "sf_dungeon(STRAY_FAIRY_GB)"
+"sf_stone_tower": "sf_dungeon(STRAY_FAIRY_ST)"
 
 # Misc
 "has_spin_upgrade": "cond(setting(sharedSpinUpgrade), has(SHARED_SPIN_UPGRADE), has(SPIN_UPGRADE))"
@@ -189,8 +198,6 @@
 "has_weapon_range": "has_arrows || can_hookshot_short || has_mask_zora || can_use_deku_bubble"
 "has_paper": "has(DEED_LAND) || has(DEED_SWAMP) || has(DEED_MOUNTAIN) || has(DEED_OCEAN) || has(LETTER_TO_KAFEI) || has(LETTER_TO_MAMA)"
 "can_fight": "has_weapon || has_mask_zora || has_mask_goron"
-"has_goron_song_half": "cond(setting(progressiveGoronLullaby, progressive), has(SONG_GORON_HALF), has(SONG_GORON))"
-"has_goron_song": "cond(setting(progressiveGoronLullaby, progressive), has(SONG_GORON_HALF, 2), has(SONG_GORON))"
 "can_lullaby_half": "has_mask_goron && can_play_goron_half"
 "can_lullaby": "has_mask_goron && can_play_goron"
 "has_shield": "renewable(SHIELD_HERO) || renewable(SHIELD_DEKU) || renewable(SHARED_SHIELD_DEKU) || renewable(SHARED_SHIELD_HYLIAN) || has(SHIELD, 1) || cond(setting(dekuShieldMm), has(SHARED_SHIELD, 1), has(SHARED_SHIELD, 2)) || has_mirror_shield"
@@ -212,8 +219,8 @@
 "has_bow": "has(BOW) || has(SHARED_BOW)"
 "has_arrows": "has_bow && (event(ARROWS) || renewable(ARROWS_10) || renewable(ARROWS_30) || renewable(ARROWS_40) || renewable(SHARED_ARROWS_5) || renewable(SHARED_ARROWS_10) || renewable(SHARED_ARROWS_30) || renewable(SHARED_ARROWS_40))"
 "has_bombs": "has_bomb_bag && (event(BOMBS) || event(BOMBS_OR_BOMBCHU) || (setting(sharedBombBags) && (event(OOT_BOMBS) || event(OOT_BOMBS_OR_BOMBCHU))) || renewable(BOMBS_5) || renewable(BOMBS_10) || renewable(BOMBS_20) || renewable(BOMBS_30) || renewable(SHARED_BOMBS_5) || renewable(SHARED_BOMBS_10) || renewable(SHARED_BOMBS_20) || renewable(SHARED_BOMBS_30))"
-"has_magic": "(has(MAGIC_UPGRADE) || has(SHARED_MAGIC_UPGRADE)) && (event(MAGIC) || has_magic_jar || has_green_potion || has_blue_potion || event(CHATEAU))"
-"has_double_magic": "(has(MAGIC_UPGRADE, 2) || has(SHARED_MAGIC_UPGRADE, 2)) && (event(MAGIC) || has_green_potion || has_blue_potion || event(CHATEAU))"
+"has_magic": "(has(MAGIC_UPGRADE) || has(SHARED_MAGIC_UPGRADE)) && (event(MAGIC) || has_magic_jar || has_green_potion || has_blue_potion || has_chateau)"
+"has_double_magic": "(has(MAGIC_UPGRADE, 2) || has(SHARED_MAGIC_UPGRADE, 2)) && (event(MAGIC) || has_green_potion || has_blue_potion || has_chateau)"
 "has_rupees": "event(RUPEES)"
 "bombers1": "event(BOMBERS_NORTH1) && event(BOMBERS_EAST1) && event(BOMBERS_WEST1)"
 "bombers2": "event(BOMBERS_NORTH2) && event(BOMBERS_EAST2) && event(BOMBERS_WEST2)"
