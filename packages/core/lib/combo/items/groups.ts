@@ -737,6 +737,7 @@ export const SHARED_SOULS_NPC = new Set([
 export const OOT_SOULS_MISC = new Set([
   Items.OOT_SOUL_MISC_GS,
   Items.OOT_SOUL_MISC_BUSINESS_SCRUB,
+  Items.OOT_SOUL_MISC_TREE,
 ]);
 
 export const MM_SOULS_ENEMY = new Set([
@@ -800,6 +801,7 @@ export const MM_SOULS_BOSS = new Set([
 export const MM_SOULS_MISC = new Set([
   Items.MM_SOUL_MISC_GS,
   Items.MM_SOUL_MISC_BUSINESS_SCRUB,
+  Items.MM_SOUL_MISC_TREE,
 ]);
 
 export const SHARED_SOULS_ENEMY = new Set([
@@ -834,6 +836,7 @@ export const SHARED_SOULS_ENEMY = new Set([
 export const SHARED_SOULS_MISC = new Set([
   Items.SHARED_SOUL_MISC_GS,
   Items.SHARED_SOUL_MISC_BUSINESS_SCRUB,
+  Items.SHARED_SOUL_MISC_TREE,
 ]);
 
 export const NAMED_TRIFORCE = new Set([
