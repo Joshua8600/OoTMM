@@ -48,10 +48,10 @@
     "Twin Islands Small Snowball 1": "is_winter"
     "Twin Islands Small Snowball 2": "is_winter"
     "Twin Islands Small Snowball 3": "is_winter"
-    "Twin Islands Snow Tree Island 1": "is_winter"
-    "Twin Islands Snow Tree Island 2": "is_winter"
-    "Twin Islands Tree Island 1": "is_spring"
-    "Twin Islands Tree Island 2": "is_spring"
+    "Twin Islands Snow Tree Island 1": "is_winter && soul_tree"
+    "Twin Islands Snow Tree Island 2": "is_winter && soul_tree"
+    "Twin Islands Tree Island 1": "is_spring && soul_tree"
+    "Twin Islands Tree Island 2": "is_spring && soul_tree"
 
 "Twin Islands Ramp Grotto":
   region: ENTRANCE
@@ -120,8 +120,8 @@
     "Twin Islands Rock 1": "is_spring"
     "Twin Islands Rock 2": "is_spring"
     "Twin Islands Rock 3": "is_spring"
-    "Twin Islands Snow Tree Ramp": "is_winter"
-    "Twin Islands Tree Ramp": "is_spring"
+    "Twin Islands Snow Tree Ramp": "is_winter && soul_tree"
+    "Twin Islands Tree Ramp": "is_spring && soul_tree"
 
 "Tingle Mountain":
   region: TINGLE
