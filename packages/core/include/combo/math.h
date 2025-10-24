@@ -10,8 +10,11 @@
 #define BINANG_ADD(a, b) ((s16)(a + b))
 #define BINANG_ROT180(angle) ((s16)(angle + 0x8000))
 
-#define SQXZ(vec) ((vec.x) * (vec.x) + (vec.z) * (vec.z))
-#define DOTXYZ(vec1, vec2) ((vec1.x) * (vec2.x) + (vec1.y) * (vec2.y) + (vec1.z) * (vec2.z))
+#define VEC_SET(V,X,Y,Z) (V).x=(X);(V).y=(Y);(V).z=(Z)
+#define SQXZ(vec) ((vec).x * (vec).x + (vec).z * (vec).z)
+#define DOTXZ(vec1, vec2) ((vec1).x * (vec2).x + (vec1).z * (vec2).z)
+#define SQXYZ(vec) ((vec).x * (vec).x + (vec).y * (vec).y + (vec).z * (vec).z)
+#define DOTXYZ(vec1, vec2) ((vec1).x * (vec2).x + (vec1).y * (vec2).y + (vec1).z * (vec2).z)
 
 #define LERPIMP(v0, v1, t) ((v0) + (((v1) - (v0)) * (t)))
 #define LERPIMP_ALT(v0, v1, t) (((v1) - (v0)) * (t) + (v0))
@@ -68,6 +71,7 @@ void    Math_Vec3f_Sum(Vec3f* a, Vec3f* b, Vec3f* dest);
 void    Math_Vec3f_Diff(Vec3f* a, Vec3f* b, Vec3f* dest);
 s32     Math_ScaledStepToS(s16* pValue, s16 target, s16 step);
 float   Math3D_Vec3fDistSq(const Vec3f* a, const Vec3f* b);
+f32     Math3D_Cos(Vec3f* a, Vec3f* b);
 s32     Math3D_CosOut(Vec3f* a, Vec3f* b, f32* dst);
 float   Math3D_Dist1DSq(float a, float b);
 float   Math3D_Dist2DSq(float x1, float y1, float x2, float y2);
@@ -76,7 +80,11 @@ s16     Math_Vec3f_Pitch(Vec3f* origin, Vec3f* point);
 f32     Math_FAcosF(f32 angle);
 f32     Math_SinF(f32 rad);
 f32     Math_Vec3f_DistXZ(Vec3f* a, Vec3f* b);
+f32     Math_Vec3f_DistXYZ(Vec3f* a, Vec3f* b);
+f32     Math_Vec3f_DistXYZAndStoreDiff(Vec3f* a, Vec3f* b, Vec3f* dest);
 s32     Math3D_LineSegVsPlane(f32 nx, f32 ny, f32 nz, f32 originDist, Vec3f* linePointA, Vec3f* linePointB, Vec3f* intersect, s32 fromFront);
-
+void    Math_Vec3s_ToVec3f(Vec3f* dest, Vec3s* src);
+void    Math_Vec3s_DiffToVec3f(Vec3f* dest, Vec3s* a, Vec3s* b);
+void    Math_Vec3f_Scale(Vec3f* vec, f32 scaleF);
 
 #endif

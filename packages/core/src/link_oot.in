@@ -38,8 +38,11 @@ Audio_GetActiveSeqId = 0x800cab18;
 
 Actor_ProcessInitChain = 0x80063f7c;
 Actor_Angle = 0x800213b4;
-
-GetRoomClearFlag = 0x80020640;
+Flags_GetClear = 0x80020640;
+func_800F4E30 = 0x800c5b70;
+Audio_PlaySariaBgm = 0x800c5fe0;
+Audio_UpdateMalonSinging = 0x800c6f9c;
+Audio_ToggleMalonSinging = 0x800c72a4;
 
 AudioLoad_InitTable = 0x800b70c8;
 Audio_SetFileSelectSettings = 0x800c7420;
@@ -231,6 +234,16 @@ Flags_GetSwitch = 0x8002049c;
 Flags_SetSwitch = 0x800204d0;
 ClearSwitchFlag = 0x80020510;
 
+Audio_ClearSariaBgmAtPos = 0x800c5e2c;
+Audio_PlaySfxRiver = 0x800c5374;
+Audio_SetGanonsTowerBgmVolumeLevel = 0x800c55b0;
+SurfaceType_GetConveyorSpeed = 0x80034778;
+Audio_ClearSariaBgm2 = 0x800c6258;
+Audio_LowerMainBgmVolume = 0x800c5794;
+Audio_PlayNatureAmbienceSequence = 0x800c7c90;
+Math_Vec3f_DistXYZ = 0x80063e18;
+Actor_WorldToActorCoords = 0x8002154c;
+
 DisplaceTexture = 0x8007eb84;
 ConvertMatrix = 0x800ab6bc;
 
@@ -246,13 +259,22 @@ PreDraw2 = 0x80022554;
 LoadObjectGi = 0x80838f6c;
 Actor_OfferCarry = 0x80022d20;
 ActorEnableTalk = 0x80022a68;
-ActorEnableTalkEx = 0x80022a34;
+Actor_OfferTalkExchangeEquiCylinder = 0x80022a34;
 ActorTalkedTo = 0x80022930;
 PlayerDisplayTextBox = 0x800dce14;
 Message_Close = 0x800d6218;
 Message_GetState = 0x800dd464;
 Message_IsClosed = 0x80022ad0;
+DynaPolyActor_IsPlayerOnTop = 0x80035364;
+DynaPolyActor_IsPlayerAbove = 0x80035388;
+Math3D_Vec3fDistSq = 0x800a5538;
+Math_Vec3s_ToVec3f = 0x80063ccc;
+Actor_PlaySfx_Flagged = 0x8002313c;
+Math_Vec3s_DiffToVec3f = 0x80063d80;
+Math3D_CosOut = 0x800a4ee0;
+Math_Vec3f_Scale = 0x80063ddc;
 
+Camera_RequestSetting = 0x800495bc;
 OcarinaAction =  0x800dd400;
 OcarinaAction2 = 0x800dd430;
 
@@ -272,7 +294,7 @@ SpawnSomeDust = 0x80026308;
 Rand_ZeroOne = 0x800cdccc;
 Flags_GetTreasure = 0x8002060c;
 SetChestFlag = 0x80020624;
-GetActiveItem = 0x80022b04;
+Actor_GetPlayerExchangeItemId = 0x80022b04;
 
 AddItem = 0x8006fdcc;
 Player_AddItemWithIcon = 0x8083c590;
@@ -378,6 +400,7 @@ ActorFind = 0x80025b0c;
 sqrtf = 0x800D0DC0;
 
 EffectSsIceSmoke_Spawn = 0x8001e560;
+SkinMatrix_Vec3fMtxFMultXYZW = 0x8008ec20;
 
 CollisionCheck_SetOC = 0x8004c130;
 Collider_InitCylinder = 0x8004ab7c;
@@ -426,9 +449,33 @@ Gfx_SetupDL_25Opa = 0x8007e298;
 Math_SmoothStepToS = 0x80064508;
 Math_FAcosF = 0x800cd890;
 Math_Vec3f_DistXZ = 0x80063eb8;
+Math_Vec3f_Diff = 0x80063d48;
 Math3D_Vec3fMagnitude = 0x800a5510;
 Math_SinF = 0x800a45fc;
 Player_IsBurningStickInRange = 0x80079a20;
+
+Quake_AddVecGeoToVec3f	  = 0x8007cdd0;
+Quake_UpdateShakeInfo	    = 0x8007ce50;
+Quake_CallbackType1	      = 0x8007d078;
+Quake_CallbackType5	      = 0x8007d100;
+Quake_CallbackType6	      = 0x8007d174;
+Quake_CallbackType3	      = 0x8007d1f8;
+Quake_CallbackType2	      = 0x8007d290;
+Quake_CallbackType4	      = 0x8007d300;
+Quake_GetFreeIndex	      = 0x8007d398;
+Quake_RequestImpl	        = 0x8007d3fc;
+Quake_Remove	            = 0x8007d4b4;
+Quake_GetRequest	        = 0x8007d4dc;
+Quake_SetValue	          = 0x8007d538;
+Quake_SetSpeed	          = 0x8007d668;
+Quake_SetDuration	        = 0x8007d6b0;
+Quake_GetTimeLeft	        = 0x8007d700;
+Quake_SetPerturbations	  = 0x8007d738;
+Quake_SetOrientation	    = 0x8007d7a0;
+Quake_Init	              = 0x8007d808;
+Quake_Request	            = 0x8007d85c;
+Quake_RemoveRequest	      = 0x8007d880;
+Quake_Update	            = 0x8007d8c8;
 
 Matrix_ReplaceRotation = 0x800abe54;
 Matrix_RotateZYX = 0x800aaf00;
@@ -588,7 +635,6 @@ EffectSsDeadDs_Spawn = 0x8001e3b0;
 EffectSsDeadDs_SpawnStationary = 0x8001e428;
 EffectSsDeadSound_Spawn = 0x8001e478;
 EffectSsDeadSound_SpawnStationary = 0x8001e510;
-EffectSsIceSmoke_Spawn = 0x8001e560;
 
 Collider_InitBase = 0x80049e70;
 Collider_DestroyBase = 0x80049eb8;

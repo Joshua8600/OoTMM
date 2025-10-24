@@ -418,9 +418,13 @@ class CosmeticsPass {
 
     if (colorFileSelect !== null) this.patchFileSelect(colorFileSelect);
 
-    // if(c.nightBgm) {
-    //   this.patchSymbol('NIGHT_BGM', new Uint8Array([0x01]));
-    // }
+    if(c.nightBgm) {
+      this.patchSymbol('NIGHT_BGM', new Uint8Array([0x01]));
+    }
+
+    if(c.halloween) {
+      this.patchSymbol('HALLOWEEN_TEXTURES', new Uint8Array([0x01]));
+    }
 
     /* Patch models */
     await this.patchOotChildModel();
@@ -428,6 +432,7 @@ class CosmeticsPass {
 
     /* Custom music */
     if (c.music) {
+      this.patchSymbol('MUSIC_CUSTOM', new Uint8Array([0x01]));
       const data = await this.getPathBuffer(c.music);
       if (data)
         await randomizeMusic(this.logWriter, this.monitor, this.builder, random, data);

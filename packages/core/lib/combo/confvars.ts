@@ -190,6 +190,7 @@ export const CONFVARS = [
   'ONLY_OOT',
   'ONLY_MM',
   'MM_KEEP_ITEMS_RESET',
+  'MM_KEEP_BOTTLES_RESET',
   'MM_FAST_MASKS',
   'OOT_PLANTED_BEANS',
   'OOT_OPEN_JABU_JABU',
@@ -223,6 +224,8 @@ export const CONFVARS = [
   'REGION_STATE_REWARDS',
   'REGION_STATE_FREE',
   'MM_EASY_LIGHTBLOCKS',
+  'SONG_NOTES',
+  'OOT_ICE_ARROW_PLATFORMS',
 ] as const;
 
 export type Confvar = typeof CONFVARS[number];

@@ -556,6 +556,11 @@ static void cheatAllItems(PlayState* play)
     gSave.info.inventory.quest.songSun = 1;
     gSave.info.inventory.quest.songSaria = 1;
 
+    gSave.info.inventory.quest.remainsGoht = 1;
+    gSave.info.inventory.quest.remainsGyorg = 1;
+    gSave.info.inventory.quest.remainsTwinmold = 1;
+    gSave.info.inventory.quest.remainsOdolwa = 1;
+
     gMmSave.info.playerData.isMagicAcquired = 1;
     gMmSave.info.playerData.isDoubleMagicAcquired = 1;
     gMmSave.info.playerData.magic = 2 * 0x30;
@@ -636,6 +641,7 @@ static void cheatAllItems(PlayState* play)
     gSave.info.inventory.items[ITS_OOT_SPELL_WIND] = ITEM_OOT_SPELL_WIND;
     gSave.info.inventory.items[ITS_OOT_SPELL_FIRE] = ITEM_OOT_SPELL_FIRE;
     gSave.info.inventory.items[ITS_OOT_SPELL_LOVE] = ITEM_OOT_SPELL_LOVE;
+    gSave.info.inventory.items[ITS_OOT_MAGIC_BEAN] = ITEM_OOT_MAGIC_BEAN;
 
     gOotExtraItems.ocarina = 3;
     gOotExtraItems.hookshot = 3;
@@ -663,6 +669,7 @@ static void cheatAllItems(PlayState* play)
     gSave.info.inventory.ammo[ITS_OOT_BOMBS] = 40;
     gSave.info.inventory.ammo[ITS_OOT_BOW] = 50;
     gSave.info.inventory.ammo[ITS_OOT_BOMBCHU] = 50;
+    gSave.info.inventory.ammo[ITS_OOT_MAGIC_BEAN] = 10;
     gSave.info.inventory.quest.songZelda = 1;
     gSave.info.inventory.quest.songSaria = 1;
     gSave.info.inventory.quest.songTime = 1;

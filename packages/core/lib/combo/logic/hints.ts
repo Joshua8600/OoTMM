@@ -129,7 +129,7 @@ export type HintGossip = { game: Game } & (HintGossipPath | HintGossipFoolish | 
 type WorldItemHints = {
   dungeonRewards: Region[];
   lightArrow: Region;
-  oathToOrder: Region;
+  oathToOrder: Region[];
   ganonBossKey: Region;
   staticHintsImportances: number[];
 };
@@ -277,6 +277,41 @@ export class LogicPassHints {
     return { loc: null, region: makeRegion(regName, 0) };
   }
 
+  private findItemMulti(item: PlayerItem | PlayerItem[], count: number): LocRegion[] {
+    item = Array.isArray(item) ? item : [item];
+    let regions: LocRegion[] = [];
+    for (const i of item) {
+      const itemCount = this.state.startingItems.get(i) || 0;
+      for (let i = 0; i < itemCount; ++i) {
+        regions.push({ loc: null, region: makeRegion('POCKET', 0) });
+      }
+    }
+
+    const inSpheres = this.findItems(item);
+    for (const locRegion of inSpheres) {
+      regions.push(locRegion);
+    }
+
+    regions = regions.slice(0, count);
+    while (regions.length < count) {
+      regions.push({ loc: null, region: makeRegion('NONE', 0) });
+    }
+
+    return regions;
+  }
+
+  private locRegionOath(playerId: number): LocRegion[] {
+    if (this.state.settings.songs === 'notes') {
+      return this.findItemMulti(makePlayerItem(Items.MM_SONG_NOTE_ORDER, playerId), 6);
+    } else {
+      const oath = [this.findItem(makePlayerItem(Items.MM_SONG_ORDER, playerId))];
+      for (let i = 0; i < 5; ++i) {
+        oath.push({ loc: null, region: makeRegion('NONE', playerId) });
+      }
+      return oath;
+    }
+  }
+
   private isLocationHintable(loc: Location, klass: HintClass) {
     /* Get the item and region  */
     const item = this.state.items.get(loc)!;
@@ -317,9 +352,10 @@ export class LogicPassHints {
       return false;
     }
 
-    /* Triforce Piece - never hinted outside of location */
-    if (ItemHelpers.isTriforcePiece(item.item) && klass !== 'location') {
-      return false;
+    /* Don't hint specific items, except for locations */
+    if (klass !== 'location') {
+      if (ItemHelpers.isTriforcePiece(item.item) || ItemHelpers.isSongNote(item.item))
+        return false;
     }
 
     /* Additional restrictions for WotH */
@@ -778,7 +814,7 @@ export class LogicPassHints {
     for (let world = 0; world < this.state.settings.players; ++world) {
       const locRegDungeonRewards = [...ItemGroups.DUNGEON_REWARDS].map(item => this.findItem(makePlayerItem(item, world)));
       const locRegLightArrow = this.findItem([makePlayerItem(Items.OOT_ARROW_LIGHT, world), makePlayerItem(Items.SHARED_ARROW_LIGHT, world)]);
-      const locRegOathToOrder = this.findItem(makePlayerItem(Items.MM_SONG_ORDER, world));
+      const locRegOathToOrder = this.locRegionOath(world);
       let locRegGanonBossKey: LocRegion;
       if (this.state.settings.ganonBossKey === 'anywhere') {
         locRegGanonBossKey = this.findItem(makePlayerItem(Items.OOT_BOSS_KEY_GANON, world));
@@ -798,7 +834,7 @@ export class LogicPassHints {
         }
       }
 
-      for (const lr of [...locRegDungeonRewards, locRegOathToOrder, locRegGanonBossKey]) {
+      for (const lr of [...locRegDungeonRewards, ...locRegOathToOrder, locRegGanonBossKey]) {
         this.markLocation(lr.loc);
       }
 
@@ -808,7 +844,7 @@ export class LogicPassHints {
       worldItemHints.push({
         dungeonRewards: locRegDungeonRewards.map(x => x.region),
         lightArrow: locRegLightArrow.region,
-        oathToOrder: locRegOathToOrder.region,
+        oathToOrder: locRegOathToOrder.map(x => x.region),
         ganonBossKey: locRegGanonBossKey.region,
         staticHintsImportances,
       });
