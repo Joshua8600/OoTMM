@@ -22,6 +22,7 @@ void EnTab_GiveItem(Actor* actor, PlayState* play, s16 gi, float a, float b);
 typedef void (*TextBoxCallback)(Actor*, PlayState*, s16);
 void EnGo_AfterTextBox(Actor* this, PlayState* play, s16 messageId);
 void EnTab_AfterTextBox(Actor* this, PlayState* play, s16 messageId);
+void EnBjt_AfterTextBox(Actor* this, PlayState* play, s16 messageId);
 
 static Actor* sByteCodeActor;
 
@@ -212,6 +213,9 @@ static void Actor_ByteCode_DispatchTextBox(PlayState* play, s16 messageId)
         break;
     case ACTOR_EN_TAB:
         cb = EnTab_AfterTextBox;
+        break;
+    case ACTOR_EN_BJT:
+        cb = EnBjt_AfterTextBox;
         break;
     }
     if (cb)
@@ -420,7 +424,7 @@ static int canSpawnSoul(PlayState* play, s16 actorId, u16 variable)
     case ACTOR_EN_PEEHAT:
         return comboHasSoulMm(GI_MM_SOUL_ENEMY_PEAHAT);
     case ACTOR_EN_DINOFOS:
-        return comboHasSoulMm(GI_MM_SOUL_ENEMY_LIZALFOS_DINALFOS);
+        return comboHasSoulMm(GI_MM_SOUL_ENEMY_LIZALFOS_DINOLFOS);
     case ACTOR_EN_ST:
         return comboHasSoulMm(GI_MM_SOUL_ENEMY_SKULLTULA);
     case ACTOR_EN_AM:
