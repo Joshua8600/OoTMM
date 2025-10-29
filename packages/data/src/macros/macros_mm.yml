@@ -254,29 +254,10 @@
 "hit_target_range_close": "can_hookshot_short || hit_target_range_far"
 "hit_target_range_far": "can_use_deku_bubble || has_arrows || has_mask_zora || can_hookshot"
 
-# Bottles
-"has_bottle": "true"
-"has_blue_potion": "has_bottle && (renewable(POTION_BLUE) || renewable(BOTTLE_POTION_BLUE))"
-"has_red_potion": "has_bottle && (renewable(POTION_RED) || renewable(BOTTLE_POTION_RED))"
-"has_green_potion": "has_bottle && (renewable(POTION_GREEN) || renewable(BOTTLE_POTION_GREEN))"
-"has_milk": "has_bottle && (renewable(MILK) || renewable(BOTTLE_MILK))"
-"has_red_or_blue_potion": "has_red_potion || has_blue_potion"
-"has_zora_egg": "has_bottle && (event(ZORA_EGGS_HOOKSHOT_ROOM) || event(ZORA_EGGS_BARREL_MAZE) || event(ZORA_EGGS_LONE_GUARD) || event(ZORA_EGGS_TREASURE_ROOM) || event(ZORA_EGGS_PINNACLE_ROCK))"
-"has_all_zora_eggs": "has_bottle && event(ZORA_EGGS_HOOKSHOT_ROOM) && event(ZORA_EGGS_BARREL_MAZE) && event(ZORA_EGGS_LONE_GUARD) && event(ZORA_EGGS_TREASURE_ROOM) && event(ZORA_EGGS_PINNACLE_ROCK)"
-"has_chateau": "has_bottle && (renewable(CHATEAU) || renewable(BOTTLE_CHATEAU))"
-"has_big_poe": "has_bottle && (event(WELL_BIG_POE) || event(DAMPE_BIG_POE) || renewable(BOTTLE_BIG_POE) || renewable(BIG_POE))"
-"has_bugs": "has_bottle && event(BUGS)"
-"has_fish": "has_bottle && event(FISH)"
-"has_water": "has_bottle && event(WATER)"
-"has_mushroom": "has_bottle && event(MUSHROOM)"
-"has_poe": "has_bottle && event(POE)"
-"has_fairy": "has_bottle && event(FAIRY)"
-"has_deku_princess": "has_bottle && event(DEKU_PRINCESS)"
-
 "can_isg_ow": "has(SHIELD, 1) && (has(BOMB_BAG) || has(SHARED_BOMB_BAG))"
 "can_isg_tf": "has(SHIELD, 1)"
 "can_bomb_hover": "can_isg_ow && has(MASK_BLAST)"
-"can_ocarina_NNL": "(cond(setting(sharedOcarina), cond(setting(fairyOcarinaMm), has_ocarina_n(1), has_ocarina_n(2)), has_ocarina_n(1))) || (has(BOTTLE_EMPTY) || has(BOTTLE_POTION_RED) || has(BOTTLE_MILK) || event(GOLD_DUST_USED) || has(BOTTLE_CHATEAU))"
+"can_ocarina_NNL": "(cond(setting(sharedOcarina), cond(setting(fairyOcarinaMm), has_ocarina_n(1), has_ocarina_n(2)), has_ocarina_n(1))) || (has(BOTTLE_EMPTY) || has(BOTTLE_POTION_RED) || has(BOTTLE_MILK) || event(GOLD_DUST_USED) || has(BOTTLE_CHATEAU))" #Needs fixing with new bottle macros
 "can_jump_fences": "(can_ocarina_NNL && (has(SONG_EPONA) || has(SHARED_SONG_EPONA))) || (can_goron_bomb_jump && (has(BOMB_BAG) || has(SHARED_BOMB_BAG))) || can_bomb_hover || short_hook_anywhere"
 
 # Wallets
