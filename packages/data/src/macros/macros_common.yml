@@ -137,7 +137,7 @@
 "has_bottle_poe": "shared_bottle(BOTTLE_POE, SHARED_BOTTLE_POE)"
 "has_bottle_big_poe": "shared_bottle(BOTTLE_BIG_POE, SHARED_BOTTLE_BIG_POE)"
 "has_bottle_fire": "shared_bottle(BOTTLE_BLUE_FIRE, SHARED_BOTTLE_BLUE_FIRE)"
-"has_bottle": "has_bottle_empty || has_bottle_red || has_bottle_green || has_bottle_blue || has_bottle_milk || has_bottle_gold || has_bottle_letter || has_bottle_chateau || has_bottle_fairy || has_bottle_poe || has_bottle_big_poe || has_bottle_fire"
+"has_bottle": "true"
 "has_blue_potion": "has_bottle && (shared_bottle_renewable(POTION_BLUE, SHARED_POTION_BLUE) || shared_bottle_renewable(BOTTLE_POTION_BLUE, SHARED_BOTTLE_POTION_BLUE))"
 "has_red_potion": "has_bottle && (shared_bottle_renewable(POTION_RED, SHARED_POTION_RED) || shared_bottle_renewable(BOTTLE_POTION_RED, SHARED_BOTTLE_POTION_RED))"
 "has_green_potion": "has_bottle && (shared_bottle_renewable(POTION_GREEN, SHARED_POTION_GREEN) || shared_bottle_renewable(BOTTLE_POTION_GREEN, SHARED_BOTTLE_POTION_GREEN))"
