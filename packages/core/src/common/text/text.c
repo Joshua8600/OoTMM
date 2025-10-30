@@ -346,7 +346,7 @@ static int isItemAmbiguous(s16 gi)
     case GI_OOT_SOUL_ENEMY_KEESE:
     case GI_OOT_SOUL_ENEMY_TEKTITE:
     case GI_OOT_SOUL_ENEMY_PEAHAT:
-    case GI_OOT_SOUL_ENEMY_LIZALFOS_DINALFOS:
+    case GI_OOT_SOUL_ENEMY_LIZALFOS_DINOLFOS:
     case GI_OOT_SOUL_ENEMY_SKULLTULA:
     case GI_OOT_SOUL_ENEMY_ARMOS:
     case GI_OOT_SOUL_ENEMY_DEKU_BABA:
@@ -371,7 +371,7 @@ static int isItemAmbiguous(s16 gi)
     case GI_MM_SOUL_ENEMY_KEESE:
     case GI_MM_SOUL_ENEMY_TEKTITE:
     case GI_MM_SOUL_ENEMY_PEAHAT:
-    case GI_MM_SOUL_ENEMY_LIZALFOS_DINALFOS:
+    case GI_MM_SOUL_ENEMY_LIZALFOS_DINOLFOS:
     case GI_MM_SOUL_ENEMY_SKULLTULA:
     case GI_MM_SOUL_ENEMY_ARMOS:
     case GI_MM_SOUL_ENEMY_DEKU_BABA:
@@ -562,7 +562,6 @@ static int isItemAmbiguous(s16 gi)
     case GI_OOT_HAMMER:
     case GI_MM_HAMMER:
         return Config_Flag(CFG_MM_HAMMER) && !Config_Flag(CFG_SHARED_HAMMER);
-    case GI_OOT_MAGIC_BEAN:
     case GI_OOT_BOTTLE_EMPTY:
     case GI_OOT_BOTTLE_MILK:
     case GI_OOT_MILK:
@@ -576,11 +575,10 @@ static int isItemAmbiguous(s16 gi)
     case GI_OOT_BOTTLE_POE:
     case GI_OOT_BOTTLE_BIG_POE:
     case GI_OOT_FAIRY:
-    case GI_OOT_BUG:
+    case GI_OOT_BUGS:
     case GI_OOT_FISH:
     case GI_OOT_POE:
     case GI_OOT_BIG_POE:
-    case GI_MM_MAGIC_BEAN:
     case GI_MM_BOTTLE_POTION_RED:
     case GI_MM_BOTTLE_POTION_GREEN:
     case GI_MM_BOTTLE_POTION_BLUE:
@@ -598,6 +596,9 @@ static int isItemAmbiguous(s16 gi)
     case GI_MM_FISH:
     case GI_MM_POE:
     case GI_MM_BIG_POE:
+        return !Config_Flag(CFG_SHARED_BOTTLES);
+    case GI_MM_MAGIC_BEAN:
+    case GI_OOT_MAGIC_BEAN:
         return 1;
     default:
         return 0;
