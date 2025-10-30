@@ -26,8 +26,8 @@
     "Path to Mountain Village Small Snowball Lower Spring 2": "is_spring"
     "Path to Mountain Village Small Snowball Lower Spring 3": "is_spring"
     "Path to Mountain Village Small Snowball Lower Spring 4": "is_spring"
-    "Path to Mountain Village Snow Tree Lower 1": "true"
-    "Path to Mountain Village Snow Tree Lower 2": "true"
+    "Path to Mountain Village Snow Tree Lower 1": "soul_tree"
+    "Path to Mountain Village Snow Tree Lower 2": "soul_tree"
 
 "Mountain Village Path Upper":
   region: PATH_TO_MOUNTAIN_VILLAGE
@@ -49,5 +49,5 @@
     "Path to Mountain Village Small Snowball Upper Spring 1": "is_spring"
     "Path to Mountain Village Small Snowball Upper Spring 2": "is_spring"
     "Path to Mountain Village Small Snowball Upper Spring 3": "is_spring"
-    "Path to Mountain Village Snow Tree Upper 1": "true"
-    "Path to Mountain Village Snow Tree Upper 2": "true"
+    "Path to Mountain Village Snow Tree Upper 1": "soul_tree"
+    "Path to Mountain Village Snow Tree Upper 2": "soul_tree"
