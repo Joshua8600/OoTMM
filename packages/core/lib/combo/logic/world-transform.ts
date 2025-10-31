@@ -1273,6 +1273,12 @@ export class LogicPassWorldTransform {
       /* Can't reach this tree */
       this.removeLocations(['OOT Hyrule Castle Tree Guarded']);
     }
+
+    if (this.state.settings.logic === 'allLocations' && !this.state.settings.tricks.includes('MM_GORON_BOMB_JUMP') && this.state.settings.hookshotAnywhereMm !== 'logical') {
+      /* Can't reach Gorman track trees */
+      const locs = POOL.mm.filter((x: any) => x.type === 'tree' && x.scene === 'GORMAN_TRACK').map((x: any) => gameId('mm', x.location, ' ')) as string[];
+      this.removeLocations(locs);
+    }
   }
 
   private filterChecksBushes() {
@@ -1282,6 +1288,7 @@ export class LogicPassWorldTransform {
 
   private filterChecksSoil() {
     this.filterLocationsBool(this.state.settings.shuffleSoilOot, 'soil', 'oot');
+    this.filterLocations(this.state.settings.shuffleSoilMm, 'soil', 'mm');
   }
 
   private filterChecksWonder() {
