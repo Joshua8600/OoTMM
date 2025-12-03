@@ -6,8 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Add animal souls in OoT and MM (Experimental).
 - Cosmetics setting to enable BGM during night time.
-- Some seasonal textures, for Halloween.
 - Add soft soil shuffle to Ocarina of Time and Majora's Mask.
 - Add bush shuffle in Ocarina of Time and Majora's Mask.
 - Add tree shuffle in Ocarina of Time and Majora's Mask.
@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 - Add the ability to split songs into invividually shuffled notes (thanks @ebrown38).
 - Add bronze scale, an extra scale item required to enter deep water (logic is experimental).
 - Add a setting to enable shared bottles.
+- Cosmetics setting to remove the low HP beeping sfx.
 
 ### Changed
 
@@ -26,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Separate settings for keeping ammo/rupees and bottle contents through cycle resets in MM.
 - The Skeleton key has a new, custom model (thanks Dahni).
 - Cloaked items are now progressive when relevant.
+- Fix an oversight by adding climb and hookshot anywhere logic to traverse the rolling log room in Deku Tree MQ.
 
 ### Fixed
 
@@ -33,6 +35,8 @@ All notable changes to this project will be documented in this file.
 - Fix a vanilla bug causing the final chest in Secret Shrine to sometimes not spawn.
 - Fix a bug that could cause the player to be stuck on the Moon in ER.
 - Fix cloaked items rotation in MM.
+- Fix Woodfall Temple Pre-Boss logic for the lower rupees.
+- Fix Water Temple MQ logic for using the blue switch on the second floor of the lobby.
 
 ## [29.0] - 2025-08-15
 

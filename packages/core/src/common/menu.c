@@ -241,6 +241,7 @@ static const char* const kSoulsEnemyOot[] = {
     "Stalchildren",
     "Guays",
     "Gerudo Fighters",
+    "Poes",
 };
 
 static const char* const kSoulsBossOot[] = {
@@ -351,6 +352,7 @@ static const char* const kSoulsEnemyMm[] = {
     "Warts",
     "Captain Keeta",
     "Pirate Fighters",
+    "Poes",
 };
 
 static const char* const kSoulsBossMm[] = {
@@ -415,6 +417,20 @@ static const char* const kSoulsNpcMm[] = {
     "Banker",
     "Moon Children",
     "Pirate Guards"
+};
+
+static const char* const kSoulsAnimalOot[] = {
+    "Cuccos",
+    "Cows",
+    "Dogs",
+    "Butterflies",
+};
+
+static const char* const kSoulsAnimalMm[] = {
+    "Cuccos",
+    "Cows",
+    "Dogs",
+    "Butterflies",
 };
 
 static const char* const kSoulsMiscOot[] = {
@@ -1114,6 +1130,9 @@ void comboMenuUpdate(PlayState* play)
     case MENU_SOULS_OOT_NPC:
         g.menuCursorMax = ARRAY_COUNT(kSoulsNpcOot);
         break;
+    case MENU_SOULS_OOT_ANIMAL:
+        g.menuCursorMax = ARRAY_COUNT(kSoulsAnimalOot);
+        break;
     case MENU_SOULS_OOT_MISC:
         g.menuCursorMax = ARRAY_COUNT(kSoulsMiscOot);
         break;
@@ -1125,6 +1144,9 @@ void comboMenuUpdate(PlayState* play)
         break;
     case MENU_SOULS_MM_NPC:
         g.menuCursorMax = ARRAY_COUNT(kSoulsNpcMm);
+        break;
+    case MENU_SOULS_MM_ANIMAL:
+        g.menuCursorMax = ARRAY_COUNT(kSoulsAnimalMm);
         break;
     case MENU_SOULS_MM_MISC:
         g.menuCursorMax = ARRAY_COUNT(kSoulsMiscMm);
@@ -1224,6 +1246,9 @@ void comboMenuDraw(PlayState* play)
     case MENU_SOULS_OOT_NPC:
         drawMenuSouls(play, "OoT NPC Souls", kSoulsNpcOot, GI_OOT_SOUL_NPC_SARIA, 0);
         break;
+    case MENU_SOULS_OOT_ANIMAL:
+        drawMenuSouls(play, "OoT Animal Souls", kSoulsAnimalOot, GI_OOT_SOUL_ANIMAL_CUCCO, 0);
+        break;
     case MENU_SOULS_OOT_MISC:
         drawMenuSouls(play, "OoT Misc. Souls", kSoulsMiscOot, GI_OOT_SOUL_MISC_GS, 0);
         break;
@@ -1235,6 +1260,9 @@ void comboMenuDraw(PlayState* play)
         break;
     case MENU_SOULS_MM_NPC:
         drawMenuSouls(play, "MM NPC Souls", kSoulsNpcMm, GI_MM_SOUL_NPC_AROMA, 1);
+        break;
+    case MENU_SOULS_MM_ANIMAL:
+        drawMenuSouls(play, "MM Animal Souls", kSoulsAnimalMm, GI_MM_SOUL_ANIMAL_CUCCO, 1);
         break;
     case MENU_SOULS_MM_MISC:
         drawMenuSouls(play, "MM Misc. Souls", kSoulsMiscMm, GI_MM_SOUL_MISC_GS, 1);
@@ -1265,6 +1293,8 @@ void comboMenuNext(void)
         g.menuScreen++;
     if (g.menuScreen == MENU_SOULS_OOT_NPC && !Config_Flag(CFG_OOT_SOULS_NPC))
         g.menuScreen++;
+    if (g.menuScreen == MENU_SOULS_OOT_ANIMAL && !Config_Flag(CFG_OOT_SOULS_ANIMAL))
+        g.menuScreen++;
     if (g.menuScreen == MENU_SOULS_OOT_MISC && !Config_Flag(CFG_OOT_SOULS_MISC))
         g.menuScreen++;
     if (g.menuScreen == MENU_SOULS_MM_ENEMY && !Config_Flag(CFG_MM_SOULS_ENEMY))
@@ -1272,6 +1302,8 @@ void comboMenuNext(void)
     if (g.menuScreen == MENU_SOULS_MM_BOSS && !Config_Flag(CFG_MM_SOULS_BOSS))
         g.menuScreen++;
     if (g.menuScreen == MENU_SOULS_MM_NPC && !Config_Flag(CFG_MM_SOULS_NPC))
+        g.menuScreen++;
+    if (g.menuScreen == MENU_SOULS_MM_ANIMAL && !Config_Flag(CFG_MM_SOULS_ANIMAL))
         g.menuScreen++;
     if (g.menuScreen == MENU_SOULS_MM_MISC && !Config_Flag(CFG_MM_SOULS_MISC))
         g.menuScreen++;

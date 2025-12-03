@@ -6,6 +6,7 @@
 #include <combo/dpad.h>
 #include <combo/global.h>
 #include <combo/draw.h>
+#include <combo/inventory.h>
 
 #define DPAD_DOWN   0
 #define DPAD_UP     1
@@ -129,11 +130,7 @@ void Dpad_Draw(PlayState* play)
 
     reloadIcons(play);
 
-#if defined(GAME_OOT)
     alpha = (u8)play->interfaceCtx.healthAlpha;
-#else
-    alpha = (u8)play->interfaceCtx.alpha.health;
-#endif
 
     /* Init */
     OPEN_DISPS(play->state.gfxCtx);
@@ -196,6 +193,13 @@ void Dpad_Update(PlayState* play)
     }
     else if(Config_Flag(CFG_OOT_AGELESS_CHILD_TRADE))
         sDpadItems[DPAD_UP] = gSave.info.inventory.items[ITS_OOT_TRADE_CHILD];
+
+    /* Ban bottles */
+    for (int i = 0; i < 4; ++i)
+    {
+        if (comboIsTradeBottleOot(sDpadItems[i]))
+            sDpadItems[i] = ITEM_NONE;
+    }
 }
 #endif
 

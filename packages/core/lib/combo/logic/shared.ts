@@ -33,6 +33,7 @@ const SOULS_ENEMY: ItemSharedDef[] = [
   { shared: Items.SHARED_SOUL_ENEMY_LEEVER,             oot: Items.OOT_SOUL_ENEMY_LEEVER,             mm: Items.MM_SOUL_ENEMY_LEEVER },
   { shared: Items.SHARED_SOUL_ENEMY_STALCHILD,          oot: Items.OOT_SOUL_ENEMY_STALCHILD,          mm: Items.MM_SOUL_ENEMY_STALCHILD },
   { shared: Items.SHARED_SOUL_ENEMY_THIEVES,            oot: Items.OOT_SOUL_ENEMY_THIEVES,            mm: Items.MM_SOUL_ENEMY_THIEVES },
+  { shared: Items.SHARED_SOUL_ENEMY_POE,                oot: Items.OOT_SOUL_ENEMY_POE,                mm: Items.MM_SOUL_ENEMY_POE },
 ];
 
 const SOULS_NPC: ItemSharedDef[] = [
@@ -72,6 +73,13 @@ const SOULS_NPC: ItemSharedDef[] = [
   { shared: Items.SHARED_SOUL_NPC_OLD_HAG,                 oot: Items.OOT_SOUL_NPC_OLD_HAG,                 mm: Items.MM_SOUL_NPC_OLD_HAG },
   { shared: Items.SHARED_SOUL_NPC_BANKER,                  oot: Items.OOT_SOUL_NPC_BANKER,                  mm: Items.MM_SOUL_NPC_BANKER },
   { shared: Items.SHARED_SOUL_NPC_THIEVES,                 oot: Items.OOT_SOUL_NPC_THIEVES,                 mm: Items.MM_SOUL_NPC_THIEVES },
+];
+
+const SOULS_ANIMAL: ItemSharedDef[] = [
+  { shared: Items.SHARED_SOUL_ANIMAL_CUCCO,         oot: Items.OOT_SOUL_ANIMAL_CUCCO,         mm: Items.MM_SOUL_ANIMAL_CUCCO },
+  { shared: Items.SHARED_SOUL_ANIMAL_COW,           oot: Items.OOT_SOUL_ANIMAL_COW,           mm: Items.MM_SOUL_ANIMAL_COW },
+  { shared: Items.SHARED_SOUL_ANIMAL_DOG,           oot: Items.OOT_SOUL_ANIMAL_DOG,           mm: Items.MM_SOUL_ANIMAL_DOG },
+  { shared: Items.SHARED_SOUL_ANIMAL_BUTTERFLY,     oot: Items.OOT_SOUL_ANIMAL_BUTTERFLY,     mm: Items.MM_SOUL_ANIMAL_BUTTERFLY },
 ];
 
 const SOULS_MISC: ItemSharedDef[] = [
@@ -125,4 +133,4 @@ const BOTTLES: ItemSharedDef[] = [
 ]
 
 
-export const SharedItemGroups = { SOULS_ENEMY, SOULS_NPC, SOULS_MISC, SKELETON_KEY, OCARINA_BUTTONS, SHIELDS, BOTTLES };
+export const SharedItemGroups = { SOULS_ENEMY, SOULS_NPC, SOULS_ANIMAL, SOULS_MISC, SKELETON_KEY, OCARINA_BUTTONS, SHIELDS, BOTTLES };

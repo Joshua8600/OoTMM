@@ -423,6 +423,9 @@ const ITEM_NAMES: {[k in ItemID]: string} = {
   OOT_SOUL_ENEMY_DODONGO: "Soul of Dodongos (OoT)",
   OOT_SOUL_ENEMY_FLARE_DANCER: "Soul of Flare Dancers",
   OOT_SOUL_ENEMY_FLOORMASTER: "Soul of Floormasters (OoT)",
+  OOT_SOUL_ENEMY_POE: "Soul of Poes (OoT)",
+  MM_SOUL_ENEMY_POE: "Soul of Poes (MM)",
+  SHARED_SOUL_ENEMY_POE: "Soul of Poes",
   OOT_SOUL_ENEMY_FLYING_POT: "Soul of Flying Pots (OoT)",
   OOT_SOUL_ENEMY_FREEZARD: "Soul of Freezards (OoT)",
   OOT_SOUL_ENEMY_GOHMA_LARVA: "Soul of Gohma Larvaes",
@@ -902,7 +905,19 @@ const ITEM_NAMES: {[k in ItemID]: string} = {
   OOT_CHATEAU: "Chateau Romani Refill",
   MM_BOTTLE_RUTO_LETTER: "Ruto's Letter",
   OOT_BOTTLED_GOLD_DUST: "Bottle of Gold Dust",
-  MM_BOTTLE_BLUE_FIRE: "Bottle of Blue Fire"
+  MM_BOTTLE_BLUE_FIRE: "Bottle of Blue Fire",
+  OOT_SOUL_ANIMAL_CUCCO: 'Soul of Cuccos (OoT)',
+  OOT_SOUL_ANIMAL_COW: 'Soul of Cows (OoT)',
+  OOT_SOUL_ANIMAL_DOG: 'Soul of Dogs (OoT)',
+  OOT_SOUL_ANIMAL_BUTTERFLY: 'Soul of Butterflies (OoT)',
+  MM_SOUL_ANIMAL_CUCCO: 'Soul of Cuccos (MM)',
+  MM_SOUL_ANIMAL_COW: 'Soul of Cows (MM)',
+  MM_SOUL_ANIMAL_DOG: 'Sould of Dogs (MM)',
+  MM_SOUL_ANIMAL_BUTTERFLY: 'Soul of Butterflies (MM)',
+  SHARED_SOUL_ANIMAL_CUCCO: 'Soul of Cuccos',
+  SHARED_SOUL_ANIMAL_COW: 'Soul of Cows',
+  SHARED_SOUL_ANIMAL_DOG: 'Soul of Dogs',
+  SHARED_SOUL_ANIMAL_BUTTERFLY: 'Soul of Butterflies',
 };
 
 export function itemName(item: string) {

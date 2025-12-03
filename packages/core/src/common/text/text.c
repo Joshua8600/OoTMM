@@ -365,6 +365,7 @@ static int isItemAmbiguous(s16 gi)
     case GI_OOT_SOUL_ENEMY_FLOORMASTER:
     case GI_OOT_SOUL_ENEMY_LEEVER:
     case GI_OOT_SOUL_ENEMY_STALCHILD:
+    case GI_OOT_SOUL_ENEMY_POE:
     case GI_MM_SOUL_ENEMY_OCTOROK:
     case GI_MM_SOUL_ENEMY_WALLMASTER:
     case GI_MM_SOUL_ENEMY_DODONGO:
@@ -390,6 +391,7 @@ static int isItemAmbiguous(s16 gi)
     case GI_MM_SOUL_ENEMY_FLOORMASTER:
     case GI_MM_SOUL_ENEMY_LEEVER:
     case GI_MM_SOUL_ENEMY_STALCHILD:
+    case GI_MM_SOUL_ENEMY_POE:
         return !Config_Flag(CFG_SHARED_SOULS_ENEMY);
     case GI_OOT_SOUL_NPC_SHOOTING_GALLERY_OWNER:
     case GI_OOT_SOUL_NPC_BAZAAR_SHOPKEEPER:
@@ -462,6 +464,15 @@ static int isItemAmbiguous(s16 gi)
     case GI_MM_SOUL_NPC_OLD_HAG:
     case GI_MM_SOUL_NPC_BANKER:
         return !Config_Flag(CFG_SHARED_SOULS_NPC);
+    case GI_OOT_SOUL_ANIMAL_CUCCO:
+    case GI_OOT_SOUL_ANIMAL_COW:
+    case GI_OOT_SOUL_ANIMAL_DOG:
+    case GI_OOT_SOUL_ANIMAL_BUTTERFLY:
+    case GI_MM_SOUL_ANIMAL_CUCCO:
+    case GI_MM_SOUL_ANIMAL_COW:
+    case GI_MM_SOUL_ANIMAL_DOG:
+    case GI_MM_SOUL_ANIMAL_BUTTERFLY:
+        return !Config_Flag(CFG_SHARED_SOULS_ANIMAL);
     case GI_OOT_SOUL_MISC_GS:
     case GI_OOT_SOUL_MISC_BUSINESS_SCRUB:
     case GI_MM_SOUL_MISC_GS:
