@@ -64,14 +64,16 @@
 "Zora Fountain Frozen":
   region: ZORA_FOUNTAIN
   exits:
-    "Zora Fountain": "true"
+    "Zora Fountain": "can_swim_or_sink || longshot_anywhere || climb_anywhere || (is_adult && has_hover_boots)"
     "Ice Cavern": "true"
+  locations:
+    "Zora Fountain Iceberg HP": "is_adult"
 
 "Fairy Fountain Farore":
   region: ENTRANCE
   exits:
     "Zora Fountain": "true"
   events:
-    MAGIC: "can_play_zelda"
+    MAGIC: "song_event(5)"
   locations:
-    "Great Fairy Farore's Wind": "can_play_zelda"
+    "Great Fairy Farore's Wind": "song_event(5)"

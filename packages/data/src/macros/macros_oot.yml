@@ -1,9 +1,9 @@
 #Generic Utility Macros
 "is_child": "age(child)"
 "is_adult": "age(adult)"
-"is_day": "oot_time(day) || can_play_sun"
-"is_night": "oot_time(night) || can_play_sun"
-"is_dusk": "oot_time(day) && oot_time(night)" # If day and night can be true at the same time, then you have access to a local time-flow zone
+"is_day": "oot_time(day) || can_play_sun || can_play_double_time"
+"is_night": "oot_time(night) || can_play_sun || can_play_double_time"
+"is_dusk": "(oot_time(day) && oot_time(night)) || can_play_double_time" # If day and night can be true at the same time, then you have access to a local time-flow zone
 "time_travel_at_will": "!setting(ageChange, none) && event(TIME_TRAVEL_AT_WILL)"
 
 # Spells
@@ -41,11 +41,21 @@
 "can_play_tp_spirit": "can_play_tp_spirit_raw"
 "can_play_elegy": "setting(elegyOot) && can_play_emptiness_raw"
 "can_play_soaring": "(setting(crossWarpMm, full) || (setting(crossWarpMm, childOnly) && is_child)) && can_play_soaring_raw"
+"can_play_double_time": "setting(songOfDoubleTimeOot) && can_play_time"
 
 "can_play_minigame": "has_ocarina && ocarina_button_a && ocarina_button_right && ocarina_button_down && ocarina_button_left && ocarina_button_up"
 "can_play_scarecrow": "has_ocarina && ocarina_button_any2"
 
 "soil_fairies(x)": "is_child && (can_play_storms || has_water) && (setting(ootPreplantedBeans) || event(x))"
+
+# Song events
+"song_event_zelda(x)": "_song_event(x, 0) && can_play_zelda"
+"song_event_epona(x)": "_song_event(x, 1) && can_play_epona"
+"song_event_saria(x)": "_song_event(x, 2) && can_play_saria"
+"song_event_storms(x)": "_song_event(x, 3) && can_play_storms"
+"song_event_sun(x)": "_song_event(x, 4) && can_play_sun"
+"song_event_time(x)": "_song_event(x, 5) && can_play_time"
+"song_event(x)": "song_event_zelda(x) || song_event_epona(x) || song_event_saria(x) || song_event_storms(x) || song_event_sun(x) || song_event_time(x)"
 
 # Bombchu
 "bombchu_license_bag_first": "license(BOMBCHU_5) || license(BOMBCHU_10) || license(BOMBCHU_20) || license(SHARED_BOMBCHU) || license(SHARED_BOMBCHU_5) || license(SHARED_BOMBCHU_10) || license(SHARED_BOMBCHU_20)"
@@ -184,7 +194,7 @@
 # GS
 "gs": "soul_gs"
 "gs_soil": "gs && is_child && has_bugs"
-"gs_night": "gs && is_night && (trick(OOT_NIGHT_GS) || can_play_sun)"
+"gs_night": "gs && is_night && (trick(OOT_NIGHT_GS) || can_play_sun || can_play_double_time)"
 
 #Specific Interaction Macros:
 "can_ride_epona": "is_adult && can_play_epona"
@@ -202,7 +212,9 @@
 "can_rescue_carpenter": "small_keys_hideout_all && (can_use_sword || ((can_boomerang || has_nuts) && can_use_sticks)) && soul_carpenters && soul_thief_fighter"
 "carpenters_rescued": "setting(gerudoFortress, open) || (event(CARPENTER_1) && (setting(gerudoFortress, single) || (event(CARPENTER_2) && event(CARPENTER_3) && event(CARPENTER_4))))"
 "get_past_skultullas": "has_nuts || can_use_sword_or_sticks || has_ranged_weapon || can_use_din || has_explosives || can_hammer || can_use_mask_blast || can_use_mask_stone"
+"get_past_skultullas_no_stone": "has_nuts || can_use_sword_or_sticks || has_ranged_weapon || can_use_din || has_explosives || can_hammer || can_use_mask_blast"
 "collect_gs_on_walls": "gs && (can_collect_distance || (has_ranged_weapon && climb_anywhere))" #TODO: Low/high macros like beehives; Din's, Blast mask, bomchus, bombs (if within throwing distance) and maybe even jump slashes if space permits (and damage?)
+"can_hit_crystal_switch_close": "has_weapon || has_bombs || can_use_mask_blast || has_bombchu || can_use_bow || can_use_slingshot || can_hookshot || can_use_sticks || can_hammer || can_boomerang"
 
 
 #Trick Macros

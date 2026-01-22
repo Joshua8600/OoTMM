@@ -6,7 +6,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- Add animal souls in OoT and MM (Experimental).
+- Add a setting to shuffle the required songs for various events in OoT (thanks Mizu Aoyuki for the icons).
+- Add animal souls in OoT and MM.
 - Cosmetics setting to enable BGM during night time.
 - Add soft soil shuffle to Ocarina of Time and Majora's Mask.
 - Add bush shuffle in Ocarina of Time and Majora's Mask.
@@ -18,6 +19,8 @@ All notable changes to this project will be documented in this file.
 - Add bronze scale, an extra scale item required to enter deep water (logic is experimental).
 - Add a setting to enable shared bottles.
 - Cosmetics setting to remove the low HP beeping sfx.
+- Add double, quadruple, octuple and OHKO damage multipliers (no logic for any of them yet).
+- Add Song of Double Time logic for passing time in Ocarina of Time.
 
 ### Changed
 
@@ -28,15 +31,29 @@ All notable changes to this project will be documented in this file.
 - The Skeleton key has a new, custom model (thanks Dahni).
 - Cloaked items are now progressive when relevant.
 - Fix an oversight by adding climb and hookshot anywhere logic to traverse the rolling log room in Deku Tree MQ.
+- Change the trick "Roll Under Deku Tree MQ Water Room's Rotating Spike" to also consider backflipping over it in the vanilla version.
+- Greatly increase the speed of grown Bean Plants in OoT when you are not standing on it.
+- Song of Double Time in Ocarina of Time will now keep your position if it needs to reload the scene.
+- Ocarina of Time warp songs in Majora's Mask now include the song playback, fanfare and song effect.
+- Song of Soaring and Song of Double Time in Ocarina of Time now include the song playback, fanfare and song effect.
 
 ### Fixed
 
+- Fix a vanilla bug that cause minimap corruption when pausing, sometimes cascading into other issues.
 - Fix a checksum issue that could very rarely produce invalid ROMs.
 - Fix a vanilla bug causing the final chest in Secret Shrine to sometimes not spawn.
 - Fix a bug that could cause the player to be stuck on the Moon in ER.
 - Fix cloaked items rotation in MM.
 - Fix Woodfall Temple Pre-Boss logic for the lower rupees.
 - Fix Water Temple MQ logic for using the blue switch on the second floor of the lobby.
+- Fix voiding after dying in an OoT dungeon respawning link at the place of death.
+- Fixed Spirit Temple logic not accounting for a way to fight the Iron Knuckles to access the hands.
+- Fix some mystery lag.
+- Fix silver boulder in Gerudo Valley wrongly flagged as a red boulder when being there as child under some circumstances.
+- Fix Shadow Temple Bird Statue being too high after getting blown up.
+- Fix Water Temple MQ's Stalfos before Dark Link expecting child to be able to fight.
+- Fix Snowhead logic wrongly requiring the soul of Biggoron to get access to the locations and entrances past it.
+- Fix Zora Domain logic expecting to go back to Lake Hylia with nothing when coming out of it.
 
 ## [29.0] - 2025-08-15
 

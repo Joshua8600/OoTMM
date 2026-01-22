@@ -339,20 +339,30 @@ export const TRICKS: Tricks = {
     name: "Destroy Beehives using Bombchu (OoT)",
     tooltip: "Use some careful timing with a Bombchu to blow up the beehives across Hyrule.",
   },
-  OOT_DEKU_MQ_WATER_ROOM_SPIKE_ROLL: {
+  OOT_DEKU_WATER_ROOM_SPIKE_NOTHING: {
     game: 'oot',
-    name: "Roll Under Deku Tree MQ Water Room's Rotating Spike.",
-    tooltip: "Puts crossing the Water Room in Deku Tree MQ in logic with no items, as any age.",
+    name: "Get Past Deku Tree Water Room's Rotating Spike with Nothing",
+    tooltip: "Puts crossing the Water Room in Deku Tree (both Vanilla and MQ) in logic with no items, as any age. Vanilla requires a backflip and MQ requires a roll.",
   },
   OOT_BOTW_MQ_BACKFLIP: {
     game: 'oot',
     name: "Backflip/Sidehop Over Gap to Reach BotW MQ's Main Room's Center",
     tooltip: "Makes the center of the main room reachable without Zelda's Lullaby or Hover Boots by entering the left cage and backflipping/sidehopping over the invisible gap",
   },
+  OOT_FOREST_MQ_CLIMBING_BLOCK_ROOM_TWIST_SWITCH_EARLY: {
+    game: 'oot',
+    name: "Hit/Reach the Forest MQ Twisting Switch While It Is Blocked",
+    tooltip: "This trick makes hitting/reaching this switch logical early, through a variety of means, while the Ice Blocks are still covering the alcove.",
+  },
   OOT_ICE_CAVERN_ICICLES_STICKS: {
     game: 'oot',
     name: "Use Deku Sticks to Break Ice Cavern Stalagmite Icicles",
     tooltip: "Logic can expect you to use Deku Sticks to break the stalagmite icicles for their item drops in Ice Cavern (Ordinary and MQ) when Icicle Shuffle is active (thus potentially needing multiple revisits with more sticks). This does not affect other checks or dungeon progression.",
+  },
+  OOT_MQ_JABU_WITHOUT_COW_SOUL: {
+    game: 'oot',
+    name: "MQ Jabu without cow soul",
+    tooltip: "Logic can expect you to hit the switches in MQ Jabu-Jabu without needing to possess the cow soul.",
   },
   MM_LENS: {
     game: 'mm',

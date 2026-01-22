@@ -575,7 +575,7 @@ static void cheatAllItems(PlayState* play)
     gSave.info.inventory.ammo[ITS_MM_BOMBS] = 40;
 
     gSave.info.playerData.healthCapacity = 0x10 * 20;
-    // gSave.info.playerData.health = gSave.info.playerData.healthCapacity;
+    gSave.info.playerData.health = gSave.info.playerData.healthCapacity;
 
     gMmExtraTrade.trade1 = 0x3f;
     gMmExtraTrade.trade2 = 0x1f;
@@ -619,6 +619,8 @@ static void cheatAllItems(PlayState* play)
 
     gSave.info.inventory.dungeonKeys[SCE_OOT_TEMPLE_FIRE] = 8;
     gSave.info.inventory.dungeonKeys[SCE_OOT_TREASURE_SHOP] = 6;
+    gSave.info.inventory.dungeonKeys[SCE_OOT_TEMPLE_SPIRIT] = 9;
+    gSave.info.inventory.dungeonKeys[SCE_OOT_TEMPLE_SHADOW] = 9;
     gSave.info.inventory.items[ITS_OOT_STICKS] = ITEM_OOT_STICK;
     gSave.info.inventory.items[ITS_OOT_NUTS] = ITEM_OOT_NUT;
     gSave.info.inventory.items[ITS_OOT_BOMBS] = ITEM_OOT_BOMB;
@@ -706,7 +708,7 @@ static void cheatAllItems(PlayState* play)
     gSave.info.inventory.quest.stoneRuby = 1;
 
     gSave.info.playerData.healthCapacity = 20 * 0x10;
-    gSave.info.playerData.health = 0x8;
+    gSave.info.playerData.health = gSave.info.playerData.healthCapacity;
 
     gSave.info.playerData.rupees = 500;
 
