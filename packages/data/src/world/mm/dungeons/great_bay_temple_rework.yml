@@ -2,7 +2,7 @@
   dungeon: GB
   exits:
     "WARP_SONGS": "true"
-    "Zora Cape Peninsula": "can_reset_time && (can_hookshot || short_hook_anywhere)"
+    "Zora Cape Peninsula": "can_reset_time && (can_hookshot || short_hook_anywhere)" #TODO: Goron Bomb Jump trick to also leave.
     "Great Bay Temple Entrance": "can_reset_time_dungeon"
 
 "Great Bay Temple Entrance":
