@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { itemName, Items } from '@ootmm/core';
+import { itemName, Items } from '@ootmm/generator';
 
 import { Button, Card, InputField, Select } from './ui';
 import { useStore } from '../store';
@@ -58,7 +58,7 @@ export function StartingItems() {
           <div className="flex-1">
             <Select searcheable placeholder="Search for items" value={null} options={options} onSelect={(item) => alterItem(item, 1)} />
           </div>
-          <Button className="w-[200px]" variant="danger" onClick={reset}>Reset Starting Items</Button>
+          <Button className="w-50" variant="danger" onClick={reset}>Reset Starting Items</Button>
         </div>
         <Card className="flex-[1_1_0] overflow-y-auto">
           {Object.keys(startingItemsCache).length === 0 ? (
