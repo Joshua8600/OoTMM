@@ -4,8 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- Make Song of Double Time (OoT) behave like Sun's Song in scenes where reloading in the same position doesn't work correctly.
+
+## [30.0] - 2026-03-02
+
 ### Added
 
+- Add lone peak shrine to ER.
+- Add deku palace interior to ER.
+- Add a platinum token item, which counts as every skulltula token at once.
+- Add colored squares next to settings in the cosmetics tab when they have a color associated with them.
+- Add a setting to shuffle the Lottery in Majora's Mask, with all nights having a different item.
 - Add a setting to shuffle the required songs for various events in OoT (thanks Mizu Aoyuki for the icons).
 - Add animal souls in OoT and MM.
 - Cosmetics setting to enable BGM during night time.
@@ -16,7 +27,7 @@ All notable changes to this project will be documented in this file.
 - Add a transcendent fairy item, which counts as every stray fairy at once.
 - Add a setting to make OoT Ice Arrow behave like in MM, creating walkable ice platforms on water (no logic yet).
 - Add the ability to split songs into invividually shuffled notes (thanks @ebrown38).
-- Add bronze scale, an extra scale item required to enter deep water (logic is experimental).
+- Add bronze scale, an extra scale item required to enter deep water.
 - Add a setting to enable shared bottles.
 - Cosmetics setting to remove the low HP beeping sfx.
 - Add double, quadruple, octuple and OHKO damage multipliers (no logic for any of them yet).
@@ -24,6 +35,11 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- Add 'Twinmold with Fire and Ice Arrows (MM)' trick, allowing to defeat Twinmold using only Fire and Ice Arrows.
+- Make fairies much easier to activate when walking into them.
+- Mute Market crowd in Ocarina of Time and Carpenters in Majora's Mask if their souls aren't collected.
+- Prevent accessing Ganon Fight without legitimately finding Master Sword.
+- Hide D-Pad if there are no items to use with it.
 - Alter the number of traps - seeds should have slightly less traps on the smaller settings now.
 - Made rupoors behave like other traps.
 - Remove some vanilla BGM mixing when custom music is enabled.
@@ -36,9 +52,18 @@ All notable changes to this project will be documented in this file.
 - Song of Double Time in Ocarina of Time will now keep your position if it needs to reload the scene.
 - Ocarina of Time warp songs in Majora's Mask now include the song playback, fanfare and song effect.
 - Song of Soaring and Song of Double Time in Ocarina of Time now include the song playback, fanfare and song effect.
+- Rework of Forest Temple MQ logic, including implementation of Age Swap, Climb Anywhere, and Hookshot Anywhere features.
+- The trick to enter Bariande's room in vanilla Jabu-Jabu without Boomerang now looks for Hookshot instead of Longshot.
 
 ### Fixed
 
+- Fix a logic issue with two red ice checks in MQ Ice Cavern.
+- Fix being kicked from gorman track in ER not sending to the correct location.
+- Fix a save corruption that could occur when playing MM only games on save 2.
+- Put Baby Goron to sleep after playing him the Goron Lullaby.
+- Fix random settings not having the proper weighting for ageless items.
+- Fix possible hardlocks when getting or receiving an item too close to a grotto.
+- Readd the missing step back for Iron Knuckles in MM when transitioning from the first phase to the second phase.
 - Fix a vanilla bug that cause minimap corruption when pausing, sometimes cascading into other issues.
 - Fix a checksum issue that could very rarely produce invalid ROMs.
 - Fix a vanilla bug causing the final chest in Secret Shrine to sometimes not spawn.
@@ -54,6 +79,8 @@ All notable changes to this project will be documented in this file.
 - Fix Water Temple MQ's Stalfos before Dark Link expecting child to be able to fight.
 - Fix Snowhead logic wrongly requiring the soul of Biggoron to get access to the locations and entrances past it.
 - Fix Zora Domain logic expecting to go back to Lake Hylia with nothing when coming out of it.
+- Fix Bottom of the Well logic expecting only age swap to get past the first Skulltula.
+- Fix Great Bay Temple logic for fighting Wart.
 
 ## [29.0] - 2025-08-15
 
@@ -1635,7 +1662,8 @@ All notable changes to this project will be documented in this file.
 
 - Initial stable release.
 
-[Unreleased]: https://github.com/OoTMM/OoTMM/compare/v29.0...HEAD
+[Unreleased]: https://github.com/OoTMM/OoTMM/compare/v30.0...HEAD
+[30.0]: https://github.com/OoTMM/OoTMM/compare/v29.0...v30.0
 [29.0]: https://github.com/OoTMM/OoTMM/compare/v28.2...v29.0
 [28.2]: https://github.com/OoTMM/OoTMM/compare/v28.1...v28.2
 [28.1]: https://github.com/OoTMM/OoTMM/compare/v28.0...v28.1

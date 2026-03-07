@@ -219,11 +219,11 @@
   exits:
     "Kakariko": "true"
   locations:
-    "Skulltula House 10 Tokens": "has(GS_TOKEN, 10)"
-    "Skulltula House 20 Tokens": "has(GS_TOKEN, 20)"
-    "Skulltula House 30 Tokens": "has(GS_TOKEN, 30)"
-    "Skulltula House 40 Tokens": "has(GS_TOKEN, 40)"
-    "Skulltula House 50 Tokens": "has(GS_TOKEN, 50)"
+    "Skulltula House 10 Tokens": "(has(GS_TOKEN, 10) || has_platinum_token)"
+    "Skulltula House 20 Tokens": "(has(GS_TOKEN, 20) || has_platinum_token)"
+    "Skulltula House 30 Tokens": "(has(GS_TOKEN, 30) || has_platinum_token)"
+    "Skulltula House 40 Tokens": "(has(GS_TOKEN, 40) || has_platinum_token)"
+    "Skulltula House 50 Tokens": "(has(GS_TOKEN, 50) || has_platinum_token)"
 
 "ReDead Grotto":
   region: ENTRANCE
