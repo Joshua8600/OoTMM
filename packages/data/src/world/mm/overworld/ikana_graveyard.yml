@@ -90,7 +90,7 @@
     "Ikana Graveyard": "true"
     "Beneath The Graveyard Night 1/2 Exchange": "short_hook_anywhere || has_hover_boots"
   locations:
-    "Beneath The Graveyard Chest": "soul_enemy(SOUL_ENEMY_BAD_BAT) && (can_fight || has_explosives || has_arrows || can_hookshot_short || has(MASK_DEKU))"
+    "Beneath The Graveyard Chest": "soul_enemy(SOUL_ENEMY_BAD_BAT) && (can_fight || has_explosives || has_arrows || can_hookshot_short || can_use_din || has(MASK_DEKU))"
     "Beneath The Graveyard Song of Storms": "soul_composer_bros && soul_iron_knuckle && (has_weapon || has_mask_goron || has_explosives) && has_fire_sticks"
     "Beneath The Graveyard Pot Night 1 Early 1": "true"
     "Beneath The Graveyard Pot Night 1 Early 2": "true"
@@ -139,7 +139,7 @@
   events:
     ARROWS: "true"
     RUPEES: "(can_fight || has_weapon_range || has_explosives) && soul_wallmaster"
-    DAMPE_BIG_POE: "soul_dampe && can_kill_big_poe && is_night3"
+    DAMPE_BIG_POE: "soul_dampe && can_kill_big_poe && is_night3 && soul_poe"
   exits:
     "Ikana Graveyard": "true"
     "Beneath The Graveyard Night 3 Wallmaster": "soul_wallmaster"

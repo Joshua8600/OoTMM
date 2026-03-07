@@ -3,7 +3,7 @@
   region: GRAVEYARD
   exits:
     "Kakariko": "true"
-    "Graveyard Royal Tomb": "can_play_zelda"
+    "Graveyard Royal Tomb": "song_event(2)"
     "Graveyard Shield Grave": "is_adult || is_night"
     "Graveyard ReDead Grave": "is_adult || is_night"
     "Dampe Grave": "is_adult"
@@ -38,9 +38,9 @@
     "Graveyard Grass 11": "can_cut_grass"
     "Graveyard Grass 12": "can_cut_grass"
     "Graveyard Rock": "true"
-    "Graveyard Butterfly 1": "is_child && can_use_sticks"
-    "Graveyard Butterfly 2": "is_child && can_use_sticks"
-    "Graveyard Butterfly 3": "is_child && can_use_sticks"
+    "Graveyard Butterfly 1": "is_child && butterfly"
+    "Graveyard Butterfly 2": "is_child && butterfly"
+    "Graveyard Butterfly 3": "is_child && butterfly"
 
 "Graveyard Soil Fairies":
   region: GRAVEYARD

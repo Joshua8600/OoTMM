@@ -77,6 +77,7 @@
 "soul_leever": "shared_soul_enemy(SOUL_ENEMY_LEEVER, SHARED_SOUL_ENEMY_LEEVER)"
 "soul_stalchild": "shared_soul_enemy(SOUL_ENEMY_STALCHILD, SHARED_SOUL_ENEMY_STALCHILD)"
 "soul_thief_fighter": "shared_soul_enemy(SOUL_ENEMY_THIEVES, SHARED_SOUL_ENEMY_THIEVES)"
+"soul_poe": "shared_soul_enemy(SOUL_ENEMY_POE, SHARED_SOUL_ENEMY_POE)"
 
 "shared_soul_misc(a,b)": "cond(setting(sharedSoulsMisc), soul_misc(b), soul_misc(a))"
 "soul_gs": "shared_soul_misc(SOUL_MISC_GS, SHARED_SOUL_MISC_GS)"
@@ -121,6 +122,16 @@
 "soul_old_hag": "shared_soul_npc(SOUL_NPC_OLD_HAG, SHARED_SOUL_NPC_OLD_HAG)"
 "soul_thief_guard": "shared_soul_npc(SOUL_NPC_THIEVES, SHARED_SOUL_NPC_THIEVES)"
 
+# Animal Souls
+"shared_soul_animal(a, b)": "cond(setting(sharedSoulsAnimal), soul_animal(b), soul_animal(a))"
+"soul_cucco": "shared_soul_animal(SOUL_ANIMAL_CUCCO, SHARED_SOUL_ANIMAL_CUCCO)"
+"soul_cow": "shared_soul_animal(SOUL_ANIMAL_COW, SHARED_SOUL_ANIMAL_COW)"
+"soul_dog": "shared_soul_animal(SOUL_ANIMAL_DOG, SHARED_SOUL_ANIMAL_DOG)"
+"soul_butterfly": "shared_soul_animal(SOUL_ANIMAL_BUTTERFLY, SHARED_SOUL_ANIMAL_BUTTERFLY)"
+
+"butterfly": "can_use_sticks && soul_butterfly"
+"cow": "can_play_epona && soul_cow"
+
 # Bottles
 "shared_bottle(a, b)": "cond(setting(sharedBottles), has(b), has(a))"
 "shared_bottle_renewable(a, b)": "cond(setting(sharedBottles), renewable(b), renewable(a))"
@@ -157,6 +168,10 @@
 "has_blue_fire_in_bottle": "has_bottle && (shared_bottle_event(BLUE_FIRE, OOT_BLUE_FIRE, MM_BLUE_FIRE) || shared_bottle_renewable(BLUE_FIRE, SHARED_BLUE_FIRE) || shared_bottle_renewable(BOTTLE_BLUE_FIRE, SHARED_BOTTLE_BLUE_FIRE))"
 "has_ruto_letter": "shared_bottle(BOTTLE_RUTO_LETTER, SHARED_BOTTLE_RUTO_LETTER)"
 "has_gold_dust": "shared_bottle(BOTTLED_GOLD_DUST, SHARED_BOTTLED_GOLD_DUST)"
+
+# Item extensions
+"has_skeleton_key": "has(SKELETON_KEY) || has(SHARED_SKELETON_KEY)"
+"has_platinum_token": "has(PLATINUM_TOKEN) || has(SHARED_PLATINUM_TOKEN)"
 
 # Settings
 "is_goal_triforce": "setting(goal, triforce) || setting(goal, triforce3)"

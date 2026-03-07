@@ -11,7 +11,7 @@
     "Owl Mountain": "true"
     "Mountain Village Elder": "true"
     "Mountain Village Keaton": "true"
-    "Mountain Village Butterflies": "is_spring && has_sticks && is_day"
+    "Mountain Village Butterflies": "is_spring && is_day && butterfly"
   gossip:
     "Mountain Village Gossip Outside": "is_spring"
     "Mountain Village Gossip Tunnel": "is_spring && (has_mask_goron || short_hook_anywhere)"
@@ -23,7 +23,7 @@
     RUPEES: "is_spring || (can_break_snowballs && (second_day || final_day)) || (can_break_snowballs && can_use_light_arrows && first_day && soul_tektite)"
     FAIRY: "true"
   locations:
-    "Mountain Village Waterfall Chest": "is_spring && can_use_lens && (can_swim || has(MASK_DEKU) || has_hover_boots || can_hookshot)"
+    "Mountain Village Waterfall Chest": "is_spring && can_use_lens && (can_swim || has(MASK_DEKU) || has_hover_boots || can_hookshot || short_hook_anywhere || hookshot_anywhere)"
     "Mountain Village Don Gero Mask": "is_winter && soul_goron && event(GORON_FOOD)"
     "Mountain Village Frog Choir HP": "is_spring && event(FROG_1) && event(FROG_2) && event(FROG_3) && event(FROG_4)"
     "Mountain Village Pot": "scarecrow_hookshot || short_hook_anywhere"
