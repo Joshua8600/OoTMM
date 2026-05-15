@@ -1,80 +1,37 @@
 {
   "name": "@ootmm/core",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
   "scripts": {
-    "build": "tsx ./lib/build.ts",
-    "start": "tsx ./lib/cli.ts",
-    "start:config": "tsx ./lib/cli.ts --config config.yml",
-    "test": "vitest run --reporter=dot",
-    "bench": "vitest bench",
+    "build": "tsx ./build/index.ts",
     "typecheck": "tsc --noEmit"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "@ootmm/data": "*",
-    "@ootmm/tools": "*",
-    "crc-32": "^1.2.2",
-    "pngjs": "^7.0.0",
-    "uint8array-extras": "^1.4.0",
-    "yaz0": "^4.0.2"
+    "lodash-es": "catalog:",
+    "pako": "^2.1.0",
+    "uint8array-extras": "^1.5.0"
   },
-  "main": "lib/combo/index.ts",
   "devDependencies": {
-    "@types/pngjs": "^6.0.5",
-    "fast-xml-parser": "^4.5.0",
-    "type-fest": "^4.26.1"
+    "@types/lodash-es": "catalog:",
+    "@types/pako": "^2.0.4",
+    "csv": "^6.5.1",
+    "type-fest": "catalog:",
+    "yaml": "catalog:"
   },
-  "files": [
-    "dist/data"
-  ],
-  "license": "MIT",
-  "private": "true",
   "nx": {
-    "namedInputs": {
-      "ts": [
-        "{projectRoot}/lib/**/*",
-        "{projectRoot}/tsconfig.json"
-      ]
-    },
     "targets": {
       "build": {
         "inputs": [
-          { "dependentTasksOutputFiles": "**/*" },
-          "ts",
-          "{workspaceRoot}/third_party/**/*",
-          "{workspaceRoot}/roms/**/*",
-          "{projectRoot}/data/**/*",
-          "{projectRoot}/include/**/*",
+          "{workspaceRoot}/data/**/*",
           "{projectRoot}/src/**/*",
-          "{projectRoot}/CMakeLists.txt",
-          {
-            "env": "VERSION"
-          },
-          {
-            "env": "NODE_ENV"
-          }
+          "{projectRoot}/build/**/*"
         ],
         "outputs": [
-          "{projectRoot}/dist/**/*",
-          "{projectRoot}/include/combo/custom.h"
-        ]
-      },
-      "test": {
-        "inputs": [
-          "ts",
-          "{projectRoot}/tests/**/*"
-        ],
-        "dependsOn": [
-          "build"
-        ]
-      },
-      "start": {
-        "dependsOn": [
-          "build"
-        ]
-      },
-      "start:config": {
-        "dependsOn": [
-          "build"
+          "{projectRoot}/dist/**/*"
         ]
       }
     }
