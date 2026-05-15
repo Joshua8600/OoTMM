@@ -1,11 +1,9 @@
-import { Settings } from '@ootmm/core';
+import type { Settings, ItemsCount } from '@ootmm/core';
 
-import { makeCosmetics } from './cosmetics';
-import { ItemHelpers, ItemsCount, makePlayerItem } from './items';
-import { worldState } from './logic';
-import { Monitor } from './monitor';
+import { makeRandomSettings, makeCosmetics, Monitor, ItemHelpers, makePlayerItem } from '@ootmm/core';
+import { worldState } from '@ootmm/logic';
+
 import { itemName } from './names';
-import { makeRandomSettings } from './random-settings';
 
 export type Items = {[k: string]: number};
 
@@ -23,7 +21,7 @@ export async function itemPool(settings: Settings): Promise<Items> {
   }
 
   /* Add unlimited consumables */
-  for (const loc in worlds[0].checks) {
+  for (const loc of worlds[0].locations) {
     const check = worlds[0].checks[loc];
     const { item } = check;
     const pi = makePlayerItem(item, 0);

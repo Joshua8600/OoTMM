@@ -1,10 +1,10 @@
-import { Settings } from '@ootmm/core';
-import { Confvar } from '../confvars';
-import { isEntranceShuffle } from '../logic/helpers';
-import { mustStartWithMasterSword } from '../logic/master-sword';
-import { World } from '../logic/world';
+import type { Settings } from '@ootmm/core';
+import type { LogicResultWorld } from '@ootmm/logic';
+import type { Confvar } from '../confvars';
 
-export function worldConfig(world: World, settings: Settings): Set<Confvar> {
+import { isEntranceShuffle, mustStartWithMasterSword } from '@ootmm/logic';
+
+export function worldConfig(world: LogicResultWorld, settings: Settings): Set<Confvar> {
   const config = new Set<Confvar>;
 
   const exprs: { [k in Confvar]: boolean } = {
@@ -175,6 +175,8 @@ export function worldConfig(world: World, settings: Settings): Set<Confvar> {
     SHARED_MASK_BLAST: settings.sharedMaskBlast,
     OOT_MASK_STONE: settings.stoneMaskOot,
     SHARED_MASK_STONE: settings.sharedMaskStone,
+    OOT_MASK_KAMARO: settings.kamaroMaskOot,
+    SHARED_MASK_KAMARO: settings.sharedMaskKamaro,
     OOT_SONG_EMPTINESS: settings.elegyOot,
     SHARED_SONG_EMPTINESS: settings.sharedSongElegy,
     MM_FD_ANYWHERE: settings.fierceDeityAnywhere,
@@ -249,6 +251,9 @@ export function worldConfig(world: World, settings: Settings): Set<Confvar> {
     MM_DMG_MULT_4: settings.damageMultiplierMm === 'quadruple',
     MM_DMG_MULT_8: settings.damageMultiplierMm === 'octuple',
     MM_DMG_MULT_OHKO: settings.damageMultiplierMm === 'ohko',
+    MM_MOON_COND_OPEN: settings.moon === 'open',
+    MM_MOON_COND_VANILLA: settings.moon === 'vanilla',
+    MM_MOON_COND_CUSTOM: settings.moon === 'custom',
   };
 
   for (const v in exprs) {
