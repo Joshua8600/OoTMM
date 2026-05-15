@@ -6,23 +6,23 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "./deploy.sh"
+    "deploy": "./deploy.sh",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tailwindcss/typography": "^0.5.16",
-    "preact": "^10.26.9",
-    "preact-iso": "^2.9.2",
-    "react-icons": "^5.5.0",
+    "@tailwindcss/typography": "^0.5.19",
+    "preact": "catalog:",
+    "preact-iso": "^2.11.1",
+    "react-icons": "catalog:",
     "reset-css": "^5.0.2",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "catalog:"
   },
   "devDependencies": {
-    "@mdx-js/rollup": "^3.1.0",
+    "@mdx-js/rollup": "^3.1.1",
     "@ootmm/web-components": "*",
-    "@preact/preset-vite": "^2.10.2",
-    "@tailwindcss/vite": "^4.1.11",
-    "typescript": "^5.8.3",
-    "vite-multiple-assets": "^2.2.5"
+    "@preact/preset-vite": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "vite-multiple-assets": "^2.2.6"
   },
   "nx": {
     "targets": {
