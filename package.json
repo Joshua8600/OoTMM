@@ -4,8 +4,8 @@
   "scripts": {
     "nx": "nx",
     "preinstall": "npx only-allow pnpm",
-    "start:core": "nx run @ootmm/core:start",
-    "start:core:config": "nx run @ootmm/core:start:config",
+    "start": "nx run @ootmm/generator:start",
+    "start:config": "nx run @ootmm/generator:start:config",
     "build": "nx run @ootmm/gui:build",
     "test": "nx run-many --output-style=stream --target=test",
     "typecheck": "nx run-many -t typecheck",
@@ -13,27 +13,19 @@
     "web:dev": "nx run @ootmm/web:dev"
   },
   "dependencies": {
-    "jszip": "^3.10.1",
-    "lodash": "^4.17.21",
-    "lodash-es": "^4.17.21",
-    "pako": "^2.1.0",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.17.12",
     "@types/microtime": "^2.1.2",
-    "@types/node": "^22.7.9",
-    "@types/pako": "^2.0.3",
-    "glob": "^11.0.0",
+    "@types/node": "^25.5.2",
+    "glob": "^13.0.6",
     "microtime": "^3.1.1",
-    "netlify-cli": "^21.2.0",
-    "nx": "^20.0.5",
-    "tslib": "^2.8.0",
-    "tsx": "^4.19.1",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.11",
-    "vitest": "^2.1.4",
-    "yaml": "^2.6.0"
-  },
-  "packageManager": "pnpm@10.7.1+sha512.2d92c86b7928dc8284f53494fb4201f983da65f0fb4f0d40baafa5cf628fa31dae3e5968f12466f17df7e97310e30f343a648baea1b9b350685dafafffdf5808"
+    "netlify-cli": "^24.10.0",
+    "nx": "^22.6.4",
+    "tslib": "^2.8.1",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.7",
+    "vitest": "^4.1.3"
+  }
 }
