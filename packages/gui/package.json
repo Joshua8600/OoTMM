@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build && tsx ./post-build.ts",
+    "build:desktop": "TARGET=desktop vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },
@@ -21,18 +22,22 @@
   },
   "homepage": "https://github.com/OoTMM/gui#readme",
   "dependencies": {
-    "@ootmm/core": "*",
+    "@ootmm/generator": "*",
     "clsx": "^2.1.1",
-    "preact": "^10.26.9",
-    "react-ga4": "^2.1.0",
-    "react-icons": "^5.5.0",
-    "tailwind-merge": "^3.3.1",
-    "tailwindcss": "^4.1.11"
+    "jszip": "^3.10.1",
+    "lodash-es": "catalog:",
+    "preact": "catalog:",
+    "react-ga4": "^3.0.1",
+    "react-icons": "catalog:",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "catalog:",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@preact/preset-vite": "^2.10.2",
-    "@tailwindcss/vite": "^4.1.11",
-    "rollup-plugin-visualizer": "^6.0.3"
+    "@preact/preset-vite": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "@types/lodash-es": "catalog:",
+    "rollup-plugin-visualizer": "^7.0.1"
   },
   "nx": {
     "namedInputs": {
@@ -58,7 +63,16 @@
           "env"
         ],
         "outputs": [
-          "{workspaceRoot}/dist"
+          "{workspaceRoot}/dist/web"
+        ]
+      },
+      "build:desktop": {
+        "inputs": [
+          "default",
+          "env"
+        ],
+        "outputs": [
+          "{workspaceRoot}/dist/desktop"
         ]
       },
       "dev": {

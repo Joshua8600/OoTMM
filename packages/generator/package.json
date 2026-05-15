@@ -1,0 +1,88 @@
+{
+  "name": "@ootmm/generator",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsx ./lib/build.ts",
+    "start": "tsx ./lib/cli.ts",
+    "start:config": "tsx ./lib/cli.ts --config ../../config.yml",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ootmm/core": "*",
+    "@ootmm/tools": "*",
+    "@ootmm/logic": "*",
+    "crc-32": "^1.2.2",
+    "jszip": "^3.10.1",
+    "lodash-es": "catalog:",
+    "pngjs": "^7.0.0",
+    "uint8array-extras": "^1.5.0",
+    "yaz0": "^4.0.2"
+  },
+  "main": "lib/combo/index.ts",
+  "devDependencies": {
+    "@types/lodash-es": "catalog:",
+    "@types/pngjs": "^6.0.5",
+    "fast-xml-parser": "^5.5.10",
+    "type-fest": "catalog:",
+    "yaml": "catalog:"
+  },
+  "files": [
+    "dist/data"
+  ],
+  "license": "MIT",
+  "private": "true",
+  "nx": {
+    "namedInputs": {
+      "ts": [
+        "{projectRoot}/lib/**/*",
+        "{projectRoot}/tsconfig.json"
+      ]
+    },
+    "targets": {
+      "build": {
+        "inputs": [
+          {
+            "dependentTasksOutputFiles": "**/*"
+          },
+          "ts",
+          "{workspaceRoot}/third_party/**/*",
+          "{workspaceRoot}/roms/**/*",
+          "{projectRoot}/data/**/*",
+          "{projectRoot}/include/**/*",
+          "{projectRoot}/src/**/*",
+          "{projectRoot}/CMakeLists.txt",
+          {
+            "env": "VERSION"
+          },
+          {
+            "env": "NODE_ENV"
+          }
+        ],
+        "outputs": [
+          "{projectRoot}/dist/**/*",
+          "{projectRoot}/include/combo/custom.h",
+          "{projectRoot}/include/combo/custom_animations.h"
+        ]
+      },
+      "test": {
+        "inputs": [
+          "ts",
+          "{projectRoot}/tests/**/*"
+        ],
+        "dependsOn": [
+          "build"
+        ]
+      },
+      "start": {
+        "dependsOn": [
+          "build"
+        ]
+      },
+      "start:config": {
+        "dependsOn": [
+          "build"
+        ]
+      }
+    }
+  }
+}

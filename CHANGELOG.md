@@ -4,10 +4,53 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Jokes
+
+- (**April Fools**) Add a fake actor randomizer for OoT, which actually replaces most enemies with very fast redeads.
+
 ### Added
 
+- Add Kamaro's Mask to Ocarina of Time.
+- Add extra signs outside ganon's castle and on clock tower roof to hint the bridge & moon special conditions, when applicable.
+- Add a basic implementation of music categories.
+- Add a setting to avoid placing multiple playthrough hints for identical items.
+
+### Changed
+
+- Paths that only differ by unshuffled items are now considered identical for hint importance purposes.
+- Revamped Woodfall Temple logic to better account for Bronze Scale and future-proofing for planned features.
+
+### Fixed
+
+- Fix seeds requiring very early warp songs usage being sometimes unbeatable. (#905)
+- Auto-equip the deku mask when entering deku palace throne in ER if possible to avoid a potential seed brick.
+- Fix Haunted Wasteland Poe Guide being removed when Enemy Souls are on.
+- Fix some areas being dead silent when they should have some ambience noises.
+- Fixed a lot of broken logic for Woodfall Temple, mostly accounting for Bronze Scale.
+- Ensure the logic for vanilla Ice Cavern Silver Rupees in the Scythe room is sound.
+- Fix logic for Shared Kamaro's Mask.
+
+## [30.1] - 2026-03-15
+
+### Fixed
+
+- Fix transitions between areas sometimes interfering with the give item routine.
+- Make Song of Double Time (OoT) behave like Sun's Song in scenes where reloading in the same position doesn't work correctly.
+- Fix logic for the underwater rocks in Gerudo Valley.
+- Added Boomerang as logic for collecting both of the Zora's River Heart Pieces as it wasn't relevant until animal souls.
+
+## [30.0] - 2026-03-02
+
+### Added
+
+- Add lone peak shrine to ER.
+- Add deku palace interior to ER.
+- Add a platinum token item, which counts as every skulltula token at once.
+- Add colored squares next to settings in the cosmetics tab when they have a color associated with them.
+- Add a setting to shuffle the Lottery in Majora's Mask, with all nights having a different item.
+- Add a setting to shuffle the required songs for various events in OoT (thanks Mizu Aoyuki for the icons).
+- Add animal souls in OoT and MM.
 - Cosmetics setting to enable BGM during night time.
-- Some seasonal textures, for Halloween.
 - Add soft soil shuffle to Ocarina of Time and Majora's Mask.
 - Add bush shuffle in Ocarina of Time and Majora's Mask.
 - Add tree shuffle in Ocarina of Time and Majora's Mask.
@@ -15,24 +58,60 @@ All notable changes to this project will be documented in this file.
 - Add a transcendent fairy item, which counts as every stray fairy at once.
 - Add a setting to make OoT Ice Arrow behave like in MM, creating walkable ice platforms on water (no logic yet).
 - Add the ability to split songs into invividually shuffled notes (thanks @ebrown38).
-- Add bronze scale, an extra scale item required to enter deep water (logic is experimental).
+- Add bronze scale, an extra scale item required to enter deep water.
 - Add a setting to enable shared bottles.
+- Cosmetics setting to remove the low HP beeping sfx.
+- Add double, quadruple, octuple and OHKO damage multipliers (no logic for any of them yet).
+- Add Song of Double Time logic for passing time in Ocarina of Time.
 
 ### Changed
 
+- Add 'Twinmold with Fire and Ice Arrows (MM)' trick, allowing to defeat Twinmold using only Fire and Ice Arrows.
+- Make fairies much easier to activate when walking into them.
+- Mute Market crowd in Ocarina of Time and Carpenters in Majora's Mask if their souls aren't collected.
+- Prevent accessing Ganon Fight without legitimately finding Master Sword.
+- Hide D-Pad if there are no items to use with it.
 - Alter the number of traps - seeds should have slightly less traps on the smaller settings now.
 - Made rupoors behave like other traps.
 - Remove some vanilla BGM mixing when custom music is enabled.
 - Separate settings for keeping ammo/rupees and bottle contents through cycle resets in MM.
 - The Skeleton key has a new, custom model (thanks Dahni).
 - Cloaked items are now progressive when relevant.
+- Fix an oversight by adding climb and hookshot anywhere logic to traverse the rolling log room in Deku Tree MQ.
+- Change the trick "Roll Under Deku Tree MQ Water Room's Rotating Spike" to also consider backflipping over it in the vanilla version.
+- Greatly increase the speed of grown Bean Plants in OoT when you are not standing on it.
+- Song of Double Time in Ocarina of Time will now keep your position if it needs to reload the scene.
+- Ocarina of Time warp songs in Majora's Mask now include the song playback, fanfare and song effect.
+- Song of Soaring and Song of Double Time in Ocarina of Time now include the song playback, fanfare and song effect.
+- Rework of Forest Temple MQ logic, including implementation of Age Swap, Climb Anywhere, and Hookshot Anywhere features.
+- The trick to enter Bariande's room in vanilla Jabu-Jabu without Boomerang now looks for Hookshot instead of Longshot.
 
 ### Fixed
 
+- Fix a logic issue with two red ice checks in MQ Ice Cavern.
+- Fix being kicked from gorman track in ER not sending to the correct location.
+- Fix a save corruption that could occur when playing MM only games on save 2.
+- Put Baby Goron to sleep after playing him the Goron Lullaby.
+- Fix random settings not having the proper weighting for ageless items.
+- Fix possible hardlocks when getting or receiving an item too close to a grotto.
+- Readd the missing step back for Iron Knuckles in MM when transitioning from the first phase to the second phase.
+- Fix a vanilla bug that cause minimap corruption when pausing, sometimes cascading into other issues.
 - Fix a checksum issue that could very rarely produce invalid ROMs.
 - Fix a vanilla bug causing the final chest in Secret Shrine to sometimes not spawn.
 - Fix a bug that could cause the player to be stuck on the Moon in ER.
 - Fix cloaked items rotation in MM.
+- Fix Woodfall Temple Pre-Boss logic for the lower rupees.
+- Fix Water Temple MQ logic for using the blue switch on the second floor of the lobby.
+- Fix voiding after dying in an OoT dungeon respawning link at the place of death.
+- Fixed Spirit Temple logic not accounting for a way to fight the Iron Knuckles to access the hands.
+- Fix some mystery lag.
+- Fix silver boulder in Gerudo Valley wrongly flagged as a red boulder when being there as child under some circumstances.
+- Fix Shadow Temple Bird Statue being too high after getting blown up.
+- Fix Water Temple MQ's Stalfos before Dark Link expecting child to be able to fight.
+- Fix Snowhead logic wrongly requiring the soul of Biggoron to get access to the locations and entrances past it.
+- Fix Zora Domain logic expecting to go back to Lake Hylia with nothing when coming out of it.
+- Fix Bottom of the Well logic expecting only age swap to get past the first Skulltula.
+- Fix Great Bay Temple logic for fighting Wart.
 
 ## [29.0] - 2025-08-15
 
@@ -1614,7 +1693,9 @@ All notable changes to this project will be documented in this file.
 
 - Initial stable release.
 
-[Unreleased]: https://github.com/OoTMM/OoTMM/compare/v29.0...HEAD
+[Unreleased]: https://github.com/OoTMM/OoTMM/compare/v30.1...HEAD
+[30.1]: https://github.com/OoTMM/OoTMM/compare/v30.0...v30.1
+[30.0]: https://github.com/OoTMM/OoTMM/compare/v29.0...v30.0
 [29.0]: https://github.com/OoTMM/OoTMM/compare/v28.2...v29.0
 [28.2]: https://github.com/OoTMM/OoTMM/compare/v28.1...v28.2
 [28.1]: https://github.com/OoTMM/OoTMM/compare/v28.0...v28.1

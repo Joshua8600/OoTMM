@@ -1,13 +1,15 @@
+import type { TrickKey } from '@ootmm/generator';
+import type { TabViewRoute } from './nav';
+
 import { useCallback, useMemo } from 'react';
 import { FaYoutube, FaFileLines } from 'react-icons/fa6';
-import { TRICKS } from '@ootmm/core';
-import { TrickKey } from '@ootmm/core/lib/combo/settings';
+import { TRICKS } from '@ootmm/generator';
 
 import { DoubleList } from './DoubleList';
 import { Tooltip } from './ui/Tooltip';
-import { usePatchSettings, useSetting } from '../contexts/SettingsContext';
-import { TabView, TabViewRoute } from './nav';
+import { TabView } from './nav';
 import { IconMaskMajora, IconTriforce } from './icons';
+import { useStore } from '../store';
 
 function trickExtra(trick: TrickKey) {
   const t = TRICKS[trick];
@@ -25,11 +27,11 @@ type GameTricksProps = {
   game: 'oot' | 'mm';
 }
 function GameTricks({ glitches, game }: GameTricksProps) {
-  const tricks = useSetting('tricks');
+  const tricks = useStore(state => state.settings.tricks);
+  const patchSettings = useStore(state => state.patchSettings);
   const trickKeys = useMemo(() => Object.keys(TRICKS).filter((x) => TRICKS[x].game === game && !!(TRICKS[x].glitch) === !!glitches), [game, glitches]);
   const selectedTrickKeys = trickKeys.filter((x) => tricks.includes(x));
   const options = trickKeys.map((trickKey) => ({ key: trickKey, label: TRICKS[trickKey].name, extra: trickExtra(trickKey) }));
-  const patchSettings = usePatchSettings();
 
   const add = useCallback((t: string[]) => {
     patchSettings({ tricks: { add: t } });
@@ -55,7 +57,7 @@ type TricksProps = {
   glitches?: boolean;
 }
 export function Tricks({ glitches }: TricksProps) {
-  const games = useSetting('games');
+  const games = useStore(state => state.settings.games);
 
   if (games === 'oot') {
     return glitches ? <OotGlitches/> : <OotTricks/>;
