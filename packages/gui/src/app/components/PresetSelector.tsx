@@ -1,5 +1,7 @@
-import { isEqual } from 'lodash';
-import { PRESETS, Settings } from '@ootmm/generator';
+import type { Settings } from '@ootmm/generator';
+
+import { isEqual } from 'lodash-es';
+import { PRESETS } from '@ootmm/generator';
 
 import { localStoragePrefixedGet, localStoragePrefixedSet } from '../util';
 import { Select } from './ui';

@@ -1,19 +1,15 @@
+import type { Game, Settings, Region } from '@ootmm/core';
+import type { LogicResult, LogicResultWorld } from '@ootmm/logic';
+
 import { concatUint8Arrays } from 'uint8array-extras';
-import { Game, SETTINGS, Settings, SPECIAL_CONDS, SPECIAL_CONDS_FIELDS } from '@ootmm/core';
+import { SETTINGS, SPECIAL_CONDS, SPECIAL_CONDS_FIELDS, Items, regionData, ENTRANCES, REGIONS } from '@ootmm/core';
+import { DUNGEONS, DUNGEON_ENTRANCES, makeLocation } from '@ootmm/logic';
 
 import { toI8Buffer, toU16Buffer, toU32Buffer, toU8Buffer } from '../util';
-import { World } from '../logic/world';
-import { LogicResult } from '../logic';
 import { bufWriteU16BE, bufWriteU32BE } from '../util/buffer';
-import { DUNGEON_ENTRANCES } from '../logic/entrance';
-import { ENTRANCES, REGIONS } from '@ootmm/data';
-import { DUNGEONS } from '../logic/dungeons';
 import { worldConfig } from './world-config';
 import { CONFVARS_VALUES } from '../confvars';
-import { makeLocation } from '../logic/locations';
-import { Items } from '../items';
 import { gi } from './util';
-import { Region, regionData } from '../logic/regions';
 
 const BOMBCHU_BEHAVIORS = {
   free: 0,
@@ -37,7 +33,7 @@ const DUNGEON_REWARD_LOCATIONS = [
   'MM Stone Tower Temple Inverted Boss',
 ];
 
-function entrance(srcName: string, world: World) {
+function entrance(srcName: string, world: LogicResultWorld) {
   const dstName = world.entranceOverrides.get(srcName) || srcName;
   const srcGame: Game = (/^OOT_/.test(srcName) ? 'oot' : 'mm');
   const dstGame: Game = (/^OOT_/.test(dstName) ? 'oot' : 'mm');
@@ -52,7 +48,7 @@ function entrance(srcName: string, world: World) {
   return data;
 }
 
-function entranceAbs(world: World, name: string) {
+function entranceAbs(world: LogicResultWorld, name: string) {
   const dstName = world.entranceOverrides.get(name) || name;
   const dstGame: Game = (/^OOT_/.test(dstName) ? 'oot' : 'mm');
   const entr = ENTRANCES[dstName as keyof typeof ENTRANCES];
@@ -85,7 +81,7 @@ type RandomizerPatcherConfigContext = {
 };
 
 export class RandomizerPatcherConfig {
-  private world: World;
+  private world: LogicResultWorld;
   private ctx: RandomizerPatcherConfigContext;
 
   constructor(ctx: RandomizerPatcherConfigContext) {

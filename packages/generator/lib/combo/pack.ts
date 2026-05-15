@@ -1,15 +1,14 @@
-import { FILES } from '@ootmm/data';
-import { GAMES, Game } from '@ootmm/core';
+import type { Game, Options } from '@ootmm/core';
+import type { DecompressedRoms } from './decompress';
+import type { GameAddresses } from './addresses';
+
+import { Monitor, GAMES, FILES } from '@ootmm/core';
 
 import { CONFIG } from './config';
 import { cosmetics } from './cosmetics';
-import { DecompressedRoms } from './decompress';
 import { DmaData } from './dma';
-import { Monitor } from './monitor';
 import { Patchfile } from './patch-build/patchfile';
 import { RomBuilder } from './rom-builder';
-import { Options } from './options';
-import { GameAddresses } from './addresses';
 
 /* Files to alias (will use the OoT version) */
 const ALIASES_OOT = [

@@ -1,4 +1,4 @@
-import { Game } from '../defines';
+import type { Game } from '../defines';
 
 function hasGame(x: any, g: Game) {
   return x.games === g || x.games === 'ootmm';
@@ -162,6 +162,13 @@ export const SETTINGS = [{
   type: 'boolean',
   description: 'Prevents items that are part of a plando from being hinted',
   default: true
+}, {
+  key: 'noDuplicatePlaythroughHints',
+  name: 'No Duplicate Playthrough Hints',
+  category: 'hints',
+  type: 'boolean',
+  description: 'Do not place multiple playthrough hints for the same kind of items (for example - multiple playthrough hints for different gold skulltula tokens).',
+  default: false
 }, {
   key: 'extraHintRegions',
   name: 'Extra Hint Regions',
@@ -1266,6 +1273,19 @@ export const SETTINGS = [{
   default: false,
   cond: hasMM,
 }, {
+  key: 'moon',
+  name: 'Moon Access',
+  category: 'main.events',
+  type: 'enum',
+  description: 'Controls how the Moon is accessed',
+  values: [
+    { value: 'open', name: 'Open', description: 'Moon can be accessed as soon as the oath to order can be played' },
+    { value: 'vanilla', name: 'Vanilla', description: 'Moon can be accessed when all 4 remains are obtained' },
+    { value: 'custom', name: 'Custom', description: 'Moon can be accessed when a special condition is met' },
+  ],
+  default: 'vanilla',
+  cond: hasMM,
+}, {
   key: 'lacs',
   name: 'Light Arrow Cutscene',
   category: 'main.events',
@@ -2047,6 +2067,14 @@ export const SETTINGS = [{
   default: false,
   cond: hasOoT,
 }, {
+  key: 'kamaroMaskOot',
+  name: "Kamaro Mask (OoT)",
+  category: 'items.extensions',
+  type: 'boolean',
+  description: "Add the Kamaro Mask in Ocarina of Time.",
+  default: false,
+  cond: hasOoT,
+  }, {
   key: 'elegyOot',
   name: "Elegy of Emptiness (OoT)",
   category: 'items.extensions',
@@ -2486,6 +2514,14 @@ export const SETTINGS = [{
   description: 'Combines the Stone Masks from OoT and MM into one item for both games',
   default: false,
   cond: (s: any) => hasOoTMM(s) && s.stoneMaskOot,
+}, {
+  key: 'sharedMaskKamaro',
+  name: 'Shared Kamaro Mask',
+  category: 'items.shared',
+  type: 'boolean',
+  description: 'Combines the Kamaro Masks from OoT and MM into one item for both games',
+  default: false,
+  cond: (s: any) => hasOoTMM(s) && s.kamaroMaskOot,
 }, {
   key: 'sharedSongElegy',
   name: 'Shared Elegy of Emptiness',

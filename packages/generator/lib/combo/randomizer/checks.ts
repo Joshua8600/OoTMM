@@ -1,10 +1,10 @@
-import { concatUint8Arrays } from 'uint8array-extras';
-import { Game, Settings } from '@ootmm/core';
-import { NPC, SCENES } from '@ootmm/data';
+import type { Game, Settings } from '@ootmm/core';
+import type { WorldCheck, LogicResult, LogicResultWorld } from '@ootmm/logic';
 
-import { World, WorldCheck } from '../logic/world';
-import { LogicResult } from '../logic';
-import { makeLocation } from '../logic/locations';
+import { concatUint8Arrays } from 'uint8array-extras';
+import { NPC, SCENES } from '@ootmm/core';
+import { makeLocation } from '@ootmm/logic';
+
 import { gi, playerId } from './util';
 import { bufReadU32BE, bufWriteU16BE, bufWriteU32BE } from '../util/buffer';
 
@@ -81,6 +81,7 @@ const SHARED_ITEMS_OOT = new Map([
   ['SHARED_TUNIC_ZORA', 'OOT_TUNIC_ZORA'],
   ['SHARED_MASK_BLAST', 'OOT_MASK_BLAST'],
   ['SHARED_MASK_STONE', 'OOT_MASK_STONE'],
+  ['SHARED_MASK_KAMARO', 'OOT_MASK_KAMARO'],
   ['SHARED_SCALE', 'OOT_SCALE'],
   ['SHARED_STRENGTH', 'OOT_STRENGTH'],
   ['SHARED_HAMMER', 'OOT_HAMMER'],
@@ -164,6 +165,7 @@ const SHARED_ITEMS_MM = new Map([
   ['SHARED_TUNIC_ZORA', 'MM_TUNIC_ZORA'],
   ['SHARED_MASK_BLAST', 'MM_MASK_BLAST'],
   ['SHARED_MASK_STONE', 'MM_MASK_STONE'],
+  ['SHARED_MASK_KAMARO', 'MM_MASK_KAMARO'],
   ['SHARED_SCALE', 'MM_SCALE'],
   ['SHARED_STRENGTH', 'MM_STRENGTH'],
   ['SHARED_HAMMER', 'MM_HAMMER'],
@@ -321,7 +323,7 @@ type RandomizerPatcherChecksContext = {
 
 export class RandomizerPatcherChecks {
   private ctx: RandomizerPatcherChecksContext;
-  private world: World;
+  private world: LogicResultWorld;
 
   constructor(ctx: RandomizerPatcherChecksContext) {
     this.ctx = ctx;
