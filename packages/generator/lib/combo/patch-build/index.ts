@@ -1,16 +1,15 @@
-import { GAMES, Settings } from '@ootmm/core';
+import type { Settings } from '@ootmm/core';
+import type { LogicResult, LogicResultWorld } from '@ootmm/logic';
+import type { GameAddresses } from '../addresses';
+import type { DecompressedRoms } from '../decompress';
+import type { PatchGroup } from './group';
 
+import { Monitor, GAMES } from '@ootmm/core';
+import { isEntranceShuffle } from '@ootmm/logic';
 import { CONFIG } from '../config';
-import { GameAddresses } from '../addresses';
-import { DecompressedRoms } from '../decompress';
-import { LogicResult } from '../logic';
-import { Monitor } from '../monitor';
 import { Patcher } from './patcher';
 import { Patchfile } from './patchfile';
 import { patchRandomizer } from '../randomizer';
-import { PatchGroup } from './group';
-import { isEntranceShuffle } from '../logic/helpers';
-import { World } from '../logic/world';
 import { bufReadU32BE, bufWriteU32BE } from '../util/buffer';
 import { FileResolver } from '../file-resolver';
 
@@ -23,7 +22,7 @@ export type BuildPatchfileIn = {
   settings: Settings;
 };
 
-function asmPatchGroups(world: World, settings: Settings) {
+function asmPatchGroups(world: LogicResultWorld, settings: Settings) {
   const groups: {[k in PatchGroup]: boolean} = {
     OOT_HOOKSHOT_ANYWHERE: settings.hookshotAnywhereOot !== 'off',
     OOT_CLIMB_ANYWHERE: settings.climbMostSurfacesOot !== 'off',

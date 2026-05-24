@@ -10,8 +10,14 @@
       ],
       "cache": true
     },
+    "build:desktop": {
+      "cache": true,
+      "dependsOn": ["^build"]
+    },
     "test": {
-      "cache": true
+      "dependsOn": [
+        "^build"
+      ]
     },
     "typecheck": {
       "cache": true
@@ -25,5 +31,6 @@
   "defaultBase": "master",
   "tui": {
     "enabled": false
-  }
+  },
+  "analytics": false
 }

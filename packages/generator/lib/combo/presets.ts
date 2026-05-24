@@ -1,5 +1,6 @@
-import { PartialDeep } from 'type-fest';
-import { Settings, DEFAULT_SETTINGS, makeSettings, TRICKS } from '@ootmm/core';
+import type { Settings } from '@ootmm/core';
+import type { PartialDeep } from 'type-fest';
+import { DEFAULT_SETTINGS, makeSettings, TRICKS } from '@ootmm/core';
 
 export type Presets = { [k: string]: Settings };
 
@@ -9,7 +10,10 @@ const BLITZ_BASE: PartialDeep<Settings> = {
   hintPathBoss: true,
   hintPathEndBoss: true,
   hintPathEvents: true,
-  clearStateDungeonsMm: 'both',
+  clearStateDungeonsMm: {
+    type: 'specific',
+    values: ["WF", "GB"]
+  },
   tingleShuffle: 'starting',
   openMaskShop: true,
   hintImportance: true,
@@ -50,6 +54,7 @@ const BLITZ_BASE: PartialDeep<Settings> = {
   spellWindMm: true,
   spellLoveMm: true,
   hammerMm: true,
+  boomerangMm: true,
   spinUpgradeOot: true,
   sharedNutsSticks: true,
   sharedBows: true,
@@ -84,11 +89,14 @@ const BLITZ_BASE: PartialDeep<Settings> = {
   sharedTunicGoron: true,
   sharedTunicZora: true,
   sharedHammer: true,
+  sharedBoomerang: true,
   blastMaskOot: true,
   stoneMaskOot: true,
+  kamaroMaskOot: true,
   elegyOot: true,
   sharedMaskBlast: true,
   sharedMaskStone: true,
+  sharedMaskKamaro: true,
   sharedSongElegy: true,
   agelessChildTrade: true,
   scalesMm: true,
@@ -156,6 +164,7 @@ const makeBlitz = (input: PartialDeep<Settings>): Settings => {
 
 const PRESET_BLITZ = makeBlitz({
   rainbowBridge: 'custom',
+  moon: 'custom',
   specialConds: {
     BRIDGE: {
       count: 5,
@@ -207,6 +216,7 @@ const PRESET_BLITZ = makeBlitz({
 
 const PRESET_BLITZ_PRECOMPLETED = makeBlitz({
   rainbowBridge: 'custom',
+  moon: 'custom',
   preCompletedDungeons: true,
   preCompletedDungeonsMajor: 6,
   preCompletedDungeonsStones: 2,
@@ -264,6 +274,7 @@ const PRESET_TRIFORCE_BLITZ = makeBlitz({
   goal: "triforce3",
   strayFairyChestShuffle: "starting",
   rainbowBridge: 'custom',
+  moon: 'custom',
   preCompletedDungeons: true,
   preCompletedDungeonsMajor: 8,
   preCompletedDungeonsStones: 2,
@@ -474,10 +485,12 @@ const PRESET_ALLSANITY = makeSettings({
   scalesMm: true,
   strengthMm: true,
   hammerMm: true,
+  boomerangMm: true,
   spinUpgradeOot: true,
   extraChildSwordsOot: true,
   blastMaskOot: true,
   stoneMaskOot: true,
+  kamaroMaskOot: true,
   elegyOot: true,
   ocarinaButtonsShuffleOot: true,
   ocarinaButtonsShuffleMm: true,
@@ -505,6 +518,7 @@ const PRESET_ALLSANITY = makeSettings({
   sharedMaskTruth: true,
   sharedMaskBlast: true,
   sharedMaskStone: true,
+  sharedMaskKamaro: true,
   sharedSongElegy: true,
   sharedWallets: true,
   sharedHealth: true,
@@ -525,6 +539,7 @@ const PRESET_ALLSANITY = makeSettings({
   sharedScales: true,
   sharedStrength: true,
   sharedHammer: true,
+  sharedBoomerang: true,
   sharedBottles: true,
   erBoss: 'full',
   erDungeons: 'full',
@@ -701,10 +716,12 @@ const PRESET_HELL = makeSettings({
   scalesMm: true,
   strengthMm: true,
   hammerMm: true,
+  boomerangMm: true,
   spinUpgradeOot: true,
   extraChildSwordsOot: true,
   blastMaskOot: true,
   stoneMaskOot: true,
+  kamaroMaskOot: true,
   elegyOot: true,
   ocarinaButtonsShuffleOot: true,
   ocarinaButtonsShuffleMm: true,
@@ -808,7 +825,10 @@ const PRESET_HELL = makeSettings({
 
 const PRESET_BEGINNER = makeSettings({
   autoInvert: 'firstCycle',
-  clearStateDungeonsMm: 'both',
+  clearStateDungeonsMm: {
+    type: 'specific',
+    values: ["WF", "GB"]
+  },
   hintImportance: true,
   tingleShuffle: 'starting',
   mapCompassShuffle: 'starting',
@@ -968,9 +988,11 @@ const PRESET_CROSSKEYS = makeSettings({
   strengthMm: true,
   kegStrength3: true,
   hammerMm: true,
+  boomerangMm: true,
   spinUpgradeOot: true,
   blastMaskOot: true,
   stoneMaskOot: true,
+  kamaroMaskOot: true,
   elegyOot: true,
   lenientSpikes: false,
   sharedBows: true,
@@ -992,6 +1014,7 @@ const PRESET_CROSSKEYS = makeSettings({
   sharedMaskTruth: true,
   sharedMaskBlast: true,
   sharedMaskStone: true,
+  sharedMaskKamaro: true,
   sharedSongElegy: true,
   sharedWallets: true,
   sharedHealth: true,
@@ -1007,6 +1030,7 @@ const PRESET_CROSSKEYS = makeSettings({
   sharedScales: true,
   sharedStrength: true,
   sharedHammer: true,
+  sharedBoomerang: true,
   sharedBottles: true,
   mmEasierLightblock: true,
   shadowFastBoat: true,
@@ -1047,6 +1071,7 @@ const PRESET_CROSSKEYS = makeSettings({
     MM_STICK: 10,
     MM_SONG_SOARING: 1
   },
+  moon: 'open',
   junkLocations: [
     'MM Beneath The Graveyard Dampe Chest',
     'MM Deku Playground Reward All Days',
@@ -1096,28 +1121,6 @@ const PRESET_CROSSKEYS = makeSettings({
       stones: true,
       medallions: true,
       remains: true,
-      skullsGold: false,
-      skullsSwamp: false,
-      skullsOcean: false,
-      fairiesWF: false,
-      fairiesSH: false,
-      fairiesGB: false,
-      fairiesST: false,
-      fairyTown: false,
-      masksRegular: false,
-      masksTransform: false,
-      masksOot: false,
-      triforce: false,
-      coinsRed: false,
-      coinsGreen: false,
-      coinsBlue: false,
-      coinsYellow: false
-    },
-    MOON: {
-      count: 0,
-      stones: false,
-      medallions: false,
-      remains: false,
       skullsGold: false,
       skullsSwamp: false,
       skullsOcean: false,
@@ -1261,28 +1264,6 @@ const PRESET_ONLY_OOT = makeSettings({
       coinsBlue: false,
       coinsYellow: false
     },
-    MOON: {
-      count: 7,
-      stones: true,
-      medallions: false,
-      remains: true,
-      skullsGold: false,
-      skullsSwamp: false,
-      skullsOcean: false,
-      fairiesWF: false,
-      fairiesSH: false,
-      fairiesGB: false,
-      fairiesST: false,
-      fairyTown: false,
-      masksRegular: false,
-      masksTransform: false,
-      masksOot: false,
-      triforce: false,
-      coinsRed: false,
-      coinsGreen: false,
-      coinsBlue: false,
-      coinsYellow: false
-    },
     LACS: {
       count: 0,
       stones: false,
@@ -1408,28 +1389,6 @@ const PRESET_ONLY_MM = makeSettings({
       stones: false,
       medallions: false,
       remains: false,
-      skullsGold: false,
-      skullsSwamp: false,
-      skullsOcean: false,
-      fairiesWF: false,
-      fairiesSH: false,
-      fairiesGB: false,
-      fairiesST: false,
-      fairyTown: false,
-      masksRegular: false,
-      masksTransform: false,
-      masksOot: false,
-      triforce: false,
-      coinsRed: false,
-      coinsGreen: false,
-      coinsBlue: false,
-      coinsYellow: false
-    },
-    MOON: {
-      count: 4,
-      stones: false,
-      medallions: false,
-      remains: true,
       skullsGold: false,
       skullsSwamp: false,
       skullsOcean: false,

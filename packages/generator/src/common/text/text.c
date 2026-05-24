@@ -309,6 +309,9 @@ static int isItemAmbiguous(s16 gi)
     case GI_OOT_MASK_STONE:
     case GI_MM_MASK_STONE:
         return (Config_Flag(CFG_OOT_MASK_STONE) && !Config_Flag(CFG_SHARED_MASK_STONE));
+    case GI_OOT_MASK_KAMARO:
+    case GI_MM_MASK_KAMARO:
+        return (Config_Flag(CFG_OOT_MASK_KAMARO) && !Config_Flag(CFG_SHARED_MASK_KAMARO));
     case GI_OOT_WALLET:
     case GI_OOT_WALLET2:
     case GI_OOT_WALLET3:
@@ -575,6 +578,9 @@ static int isItemAmbiguous(s16 gi)
     case GI_OOT_HAMMER:
     case GI_MM_HAMMER:
         return Config_Flag(CFG_MM_HAMMER) && !Config_Flag(CFG_SHARED_HAMMER);
+    case GI_OOT_BOOMERANG:
+    case GI_MM_BOOMERANG:
+        return Config_Flag(CFG_MM_BOOMERANG) && !Config_Flag(CFG_SHARED_BOOMERANG);
     case GI_OOT_BOTTLE_EMPTY:
     case GI_OOT_BOTTLE_MILK:
     case GI_OOT_MILK:

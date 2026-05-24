@@ -1,14 +1,22 @@
+import type { Cosmetics } from '@ootmm/generator';
+import type { SettingsSlice } from './settings';
+import type { RandomSettingsSlice } from './randomSettings';
+import type { CosmeticsSlice } from './cosmetics';
+import type { ConfigSlice } from './config';
+import type { GeneratorSlice } from './generator';
+
 import { create } from 'zustand';
-import { createSettingsSlice, SettingsSlice } from './settings';
+import { isEqual } from 'lodash-es';
+import { COSMETICS, makeSettings } from '@ootmm/generator';
+
+import { createSettingsSlice } from './settings';
 import * as API from '../api';
-import { isEqual } from 'lodash';
-import { Cosmetics, COSMETICS, makeSettings } from '@ootmm/generator';
 import { localStoragePrefixedSet } from '../util';
-import { createRandomSettingsSlice, RandomSettingsSlice } from './randomSettings';
-import { CosmeticsSlice, createCosmeticsSlice } from './cosmetics';
+import { createRandomSettingsSlice } from './randomSettings';
+import { createCosmeticsSlice } from './cosmetics';
 import { loadFile, loadFileLocal, saveFileLocal } from '../db';
-import { ConfigSlice, createConfigSlice } from './config';
-import { createGeneratorSlice, GeneratorSlice } from './generator';
+import { createConfigSlice } from './config';
+import { createGeneratorSlice } from './generator';
 
 export type Store = SettingsSlice & RandomSettingsSlice & CosmeticsSlice & ConfigSlice & GeneratorSlice;
 

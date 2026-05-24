@@ -1,4 +1,4 @@
-import { ItemID } from './items/defs';
+import type { ItemID } from '@ootmm/core';
 
 const ITEM_NAMES: {[k in ItemID]: string} = {
   MM_ARROW_FIRE: "Fire Arrows (MM)",
@@ -80,7 +80,7 @@ const ITEM_NAMES: {[k in ItemID]: string} = {
   MM_MASK_GORON: "Goron Mask (MM)",
   MM_MASK_GREAT_FAIRY: "Great Fairy's Mask",
   MM_MASK_KAFEI: "Kafei's Mask",
-  MM_MASK_KAMARO: "Kamaro's Mask",
+  MM_MASK_KAMARO: "Kamaro's Mask (MM)",
   MM_MASK_KEATON: "Keaton Mask",
   MM_MASK_POSTMAN: "Postman's Hat",
   MM_MASK_ROMANI: "Romani's Mask",
@@ -228,7 +228,7 @@ const ITEM_NAMES: {[k in ItemID]: string} = {
   OOT_BOMBS_20: "20 Bombs (OoT)",
   OOT_BOMBS_30: "30 Bombs (OoT)",
   OOT_BOMBS_5: "5 Bombs (OoT)",
-  OOT_BOOMERANG: "Boomerang",
+  OOT_BOOMERANG: "Boomerang (OOT)",
   OOT_BOOTS_HOVER: "Hover Boots (OoT)",
   OOT_BOOTS_IRON: "Iron Boots (OoT)",
   OOT_BOSS_KEY_FIRE: "Boss Key (Fire Temple)",
@@ -379,7 +379,7 @@ const ITEM_NAMES: {[k in ItemID]: string} = {
   OOT_RUPEE_MAGICAL: "Magical Silver Rupee",
   MM_TRANSCENDENT_FAIRY: "Transcendent Fairy",
   OOT_BOTTLE_RUTO_LETTER: "Ruto's Letter",
-  OOT_SCALE: "Progressive Scale (Oot)",
+  OOT_SCALE: "Progressive Scale (OoT)",
   OOT_SHIELD_DEKU: "Deku Shield (OoT)",
   OOT_SHIELD_HYLIAN: "Hylian Shield",
   OOT_SHIELD_MIRROR: "Mirror Shield (OoT)",
@@ -811,6 +811,8 @@ const ITEM_NAMES: {[k in ItemID]: string} = {
   SHARED_MASK_BLAST: "Blast Mask",
   OOT_MASK_STONE: "Stone Mask (OoT)",
   SHARED_MASK_STONE: "Stone Mask",
+  OOT_MASK_KAMARO: "Kamaro's Mask (OoT)",
+  SHARED_MASK_KAMARO: "Kamaro's Mask",
   OOT_SONG_EMPTINESS: "Elegy of Emptiness (OoT)",
   SHARED_SONG_EMPTINESS: "Elegy of Emptiness",
   MM_CLOCK: "Progressive Clock",
@@ -841,6 +843,8 @@ const ITEM_NAMES: {[k in ItemID]: string} = {
   SHARED_SOUL_ENEMY_THIEVES: 'Soul of Fighting Thieves',
   MM_HAMMER: 'Megaton Hammer (MM)',
   SHARED_HAMMER: 'Megaton Hammer',
+  MM_BOOMERANG: 'Boomerang (MM)',
+  SHARED_BOOMERANG: 'Boomerang',
   MM_STICK_UPGRADE: "Deku Stick Upgrade (MM)",
   MM_NUT_UPGRADE: "Deku Nut Upgrade (MM)",
   SHARED_STICK_UPGRADE: "Deku Stick Upgrade",

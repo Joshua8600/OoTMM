@@ -1,0 +1,23 @@
+{
+  "name": "@ootmm/desktop",
+  "version": "0.0.1",
+  "description": "",
+  "scripts": {
+    "build": "neu update && ./build.sh && neu build --release && node ./scripts/split-zips.mjs"
+  },
+  "author": "Nax",
+  "license": "MIT",
+  "devDependencies": {
+    "@neutralinojs/neu": "^11.7.1",
+    "@ootmm/gui": "*"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [{ "projects": ["@ootmm/gui"], "target": "build:desktop" }],
+        "inputs": ["{projectRoot}/**/*"],
+        "outputs": ["{projectRoot}/dist/**/*"]
+      }
+    }
+  }
+}

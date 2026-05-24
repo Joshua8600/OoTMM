@@ -1,4 +1,4 @@
-import { Game } from '../defines';
+import type { Game } from '../defines';
 
 function hasGame(x: any, g: Game) {
   return x.games === g || x.games === 'ootmm';
@@ -162,6 +162,13 @@ export const SETTINGS = [{
   type: 'boolean',
   description: 'Prevents items that are part of a plando from being hinted',
   default: true
+}, {
+  key: 'noDuplicatePlaythroughHints',
+  name: 'No Duplicate Playthrough Hints',
+  category: 'hints',
+  type: 'boolean',
+  description: 'Do not place multiple playthrough hints for the same kind of items (for example - multiple playthrough hints for different gold skulltula tokens).',
+  default: false
 }, {
   key: 'extraHintRegions',
   name: 'Extra Hint Regions',
@@ -1179,13 +1186,11 @@ export const SETTINGS = [{
   key: 'clearStateDungeonsMm',
   name: 'Clear State Dungeons (MM)',
   category: 'main.events',
-  type: 'enum',
+  type: 'set',
   description: 'Controls whether or not MM dungeons will need their respective songs in the cleared state',
   values: [
-    { value: 'none', name: 'None' },
     { value: 'WF', name: 'Woodfall Temple' },
     { value: 'GB', name: 'Great Bay Temple' },
-    { value: 'both', name: 'Both' },
   ],
   default: 'none',
   cond: hasMM,
@@ -1264,6 +1269,19 @@ export const SETTINGS = [{
   type: 'boolean',
   description: 'Skip playing Oath to Order to reach the Moon, by using a wisp placed on the Clock Tower Roof with this setting',
   default: false,
+  cond: hasMM,
+}, {
+  key: 'moon',
+  name: 'Moon Access',
+  category: 'main.events',
+  type: 'enum',
+  description: 'Controls how the Moon is accessed',
+  values: [
+    { value: 'open', name: 'Open', description: 'Moon can be accessed as soon as the oath to order can be played' },
+    { value: 'vanilla', name: 'Vanilla', description: 'Moon can be accessed when all 4 remains are obtained' },
+    { value: 'custom', name: 'Custom', description: 'Moon can be accessed when a special condition is met' },
+  ],
+  default: 'vanilla',
   cond: hasMM,
 }, {
   key: 'lacs',
@@ -2007,6 +2025,14 @@ export const SETTINGS = [{
   default: false,
   cond: hasMM,
 }, {
+  key: 'boomerangMm',
+  name: "Boomerang (MM)",
+  category: 'items.extensions',
+  type: 'boolean',
+  description: "Adds the Boomerang in Majora's Mask.",
+  default: false,
+  cond: hasMM,
+}, {
   key: 'spinUpgradeOot',
   name: "Spin Attack Upgrade (OoT)",
   category: 'items.extensions',
@@ -2047,6 +2073,14 @@ export const SETTINGS = [{
   default: false,
   cond: hasOoT,
 }, {
+  key: 'kamaroMaskOot',
+  name: "Kamaro Mask (OoT)",
+  category: 'items.extensions',
+  type: 'boolean',
+  description: "Add the Kamaro Mask in Ocarina of Time.",
+  default: false,
+  cond: hasOoT,
+  }, {
   key: 'elegyOot',
   name: "Elegy of Emptiness (OoT)",
   category: 'items.extensions',
@@ -2487,6 +2521,14 @@ export const SETTINGS = [{
   default: false,
   cond: (s: any) => hasOoTMM(s) && s.stoneMaskOot,
 }, {
+  key: 'sharedMaskKamaro',
+  name: 'Shared Kamaro Mask',
+  category: 'items.shared',
+  type: 'boolean',
+  description: 'Combines the Kamaro Masks from OoT and MM into one item for both games',
+  default: false,
+  cond: (s: any) => hasOoTMM(s) && s.kamaroMaskOot,
+}, {
   key: 'sharedSongElegy',
   name: 'Shared Elegy of Emptiness',
   category: 'items.shared',
@@ -2670,6 +2712,14 @@ export const SETTINGS = [{
   description: 'Combines the Megaton Hammers from OoT and MM into one item for both games',
   default: false,
   cond: (s: any) => hasOoTMM(s) && s.hammerMm,
+}, {
+  key: 'sharedBoomerang',
+  name: "Shared Boomerang",
+  category: 'items.shared',
+  type: 'boolean',
+  description: 'Combines the Boomerangs from OoT and MM into one item for both games',
+  default: false,
+  cond: (s: any) => hasOoTMM(s) && s.boomerangMm,
 }, {
   key: 'sharedBottles',
   name: 'Shared Bottles',

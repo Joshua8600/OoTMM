@@ -1,8 +1,7 @@
-import { Game } from '@ootmm/core';
-import { ENTRANCES } from '@ootmm/data';
+import type { Game } from '@ootmm/core';
+import type { LogicResult, LogicResultWorld } from '@ootmm/logic';
 
-import { LogicResult } from '../logic';
-import { World } from '../logic/world';
+import { ENTRANCES } from '@ootmm/core';
 import { padBuffer16, toU32Buffer } from '../util';
 
 function entranceId(srcGame: Game, dstGame: Game, name: string) {
@@ -25,7 +24,7 @@ type RandomizerPatcherEntrancesContext = {
 
 export class RandomizerPatcherEntrances {
   private ctx: RandomizerPatcherEntrancesContext;
-  private world: World;
+  private world: LogicResultWorld;
 
   constructor(ctx: RandomizerPatcherEntrancesContext) {
     this.ctx = ctx;

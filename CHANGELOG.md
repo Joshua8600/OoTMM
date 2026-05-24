@@ -4,9 +4,44 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Jokes
+
+- (**April Fools**) Add a fake actor randomizer for OoT, which actually replaces most enemies with very fast redeads.
+
+### Added
+
+- Add Boomerang to Majora's Mask.
+- Add Kamaro's Mask to Ocarina of Time.
+- Add extra signs outside ganon's castle and on clock tower roof to hint the bridge & moon special conditions, when applicable.
+- Add a basic implementation of music categories.
+- Add a setting to avoid placing multiple playthrough hints for identical items.
+
+### Changed
+
+- Paths that only differ by unshuffled items are now considered identical for hint importance purposes.
+- Revamped Woodfall Temple logic to better account for Bronze Scale and future-proofing for planned features.
+- "MM Termina Field Pot" location can now expect Long Hookshot to obtain.
+- Converted the "Clear State Dungeons (MM)" setting to a "Set" type to allow for random choice.
+
 ### Fixed
 
+- Fix seeds requiring very early warp songs usage being sometimes unbeatable. (#905)
+- Auto-equip the deku mask when entering deku palace throne in ER if possible to avoid a potential seed brick.
+- Fix Haunted Wasteland Poe Guide being removed when Enemy Souls are on.
+- Fix some areas being dead silent when they should have some ambience noises.
+- Fixed a lot of broken logic for Woodfall Temple, mostly accounting for Bronze Scale.
+- Ensure the logic for vanilla Ice Cavern Silver Rupees in the Scythe room is sound.
+- Fix logic for Shared Kamaro's Mask.
+- Fix "OOT Kokiri Shop Wonder Item" location incorrectly expecting the Shopkeeper's Soul to obtain.
+
+## [30.1] - 2026-03-15
+
+### Fixed
+
+- Fix transitions between areas sometimes interfering with the give item routine.
 - Make Song of Double Time (OoT) behave like Sun's Song in scenes where reloading in the same position doesn't work correctly.
+- Fix logic for the underwater rocks in Gerudo Valley.
+- Added Boomerang as logic for collecting both of the Zora's River Heart Pieces as it wasn't relevant until animal souls.
 
 ## [30.0] - 2026-03-02
 
@@ -1662,7 +1697,8 @@ All notable changes to this project will be documented in this file.
 
 - Initial stable release.
 
-[Unreleased]: https://github.com/OoTMM/OoTMM/compare/v30.0...HEAD
+[Unreleased]: https://github.com/OoTMM/OoTMM/compare/v30.1...HEAD
+[30.1]: https://github.com/OoTMM/OoTMM/compare/v30.0...v30.1
 [30.0]: https://github.com/OoTMM/OoTMM/compare/v29.0...v30.0
 [29.0]: https://github.com/OoTMM/OoTMM/compare/v28.2...v29.0
 [28.2]: https://github.com/OoTMM/OoTMM/compare/v28.1...v28.2

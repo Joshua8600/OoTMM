@@ -1,13 +1,13 @@
-import path from 'path';
-import fs from 'fs';
-import { FILES } from '@ootmm/data';
-import { Game } from '@ootmm/core';
+import type { Game } from '@ootmm/core';
+import type { DecompressedRoms } from '../decompress';
+
+import path from 'node:path';
+import fs from 'node:fs';
+import { Monitor, FILES } from '@ootmm/core';
 
 import { DmaData } from '../dma';
 import { arrayToIndexMap, toU32Buffer } from '../util';
 import { CodeGen } from '../util/codegen';
-import { DecompressedRoms } from '../decompress';
-import { Monitor } from '../monitor';
 import { KeepFile } from './keep';
 import { png } from '../util/png';
 import { font } from './font';
@@ -17,6 +17,7 @@ import { grayscale } from '../image';
 import { CustomObjectsBuilder } from './custom-objects-builder';
 import { bufReadU32BE, bufWriteU32BE } from '../util/buffer';
 import { ObjectEditor } from './object-editor';
+import { patchAnimationPorts } from './custom-animation-builder';
 
 const FILES_TO_INDEX = {
   oot: arrayToIndexMap(FILES.oot),
@@ -410,6 +411,11 @@ class CustomAssetsBuilder {
 
   async run() {
     this.monitor.log("Building custom objects");
+
+    /* Build custom animations */
+    if (!process.env.__IS_BROWSER__) {
+      await patchAnimationPorts(this.roms);
+    }
 
     /* Build custom objects */
     const customObjectsBuilder = new CustomObjectsBuilder(this.roms);
