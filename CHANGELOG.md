@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- Add Boomerang to Majora's Mask.
 - Add Kamaro's Mask to Ocarina of Time.
 - Add extra signs outside ganon's castle and on clock tower roof to hint the bridge & moon special conditions, when applicable.
 - Add a basic implementation of music categories.
@@ -19,6 +20,8 @@ All notable changes to this project will be documented in this file.
 
 - Paths that only differ by unshuffled items are now considered identical for hint importance purposes.
 - Revamped Woodfall Temple logic to better account for Bronze Scale and future-proofing for planned features.
+- "MM Termina Field Pot" location can now expect Long Hookshot to obtain.
+- Converted the "Clear State Dungeons (MM)" setting to a "Set" type to allow for random choice.
 
 ### Fixed
 
@@ -29,6 +32,7 @@ All notable changes to this project will be documented in this file.
 - Fixed a lot of broken logic for Woodfall Temple, mostly accounting for Bronze Scale.
 - Ensure the logic for vanilla Ice Cavern Silver Rupees in the Scythe room is sound.
 - Fix logic for Shared Kamaro's Mask.
+- Fix "OOT Kokiri Shop Wonder Item" location incorrectly expecting the Shopkeeper's Soul to obtain.
 
 ## [30.1] - 2026-03-15
 
