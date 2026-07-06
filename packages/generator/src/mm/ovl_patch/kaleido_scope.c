@@ -11,6 +11,77 @@
 #include <combo/misc.h>
 #include <combo/common/Kaleido_Scope.h>
 
+#include "combo/mask.h"
+
+
+static u32 comboResolvePauseSlot(PlayState* play, u32 slot)
+{
+    if (play && play->pauseCtx.pageIndex == PAUSE_MASK)
+        return slot + ITEM_NUM_SLOTS;
+    return slot;
+}
+
+static int KaleidoScope_NormalizeMoonMaskSlot(u32 slot);
+static void KaleidoScope_ToggleMaskSlotSkipHidden(u32 slot);
+
+static u8 KaleidoScope_CustomMaskToItem(s32 customMask)
+{
+    switch (customMask)
+    {
+    case PLAYER_CUSTOM_MASK_GERUDO:
+        return ITEM_MM_MASK_GERUDO;
+    case PLAYER_CUSTOM_MASK_SKULL:
+        return ITEM_MM_MASK_SKULL;
+    case PLAYER_CUSTOM_MASK_SPOOKY:
+        return ITEM_MM_MASK_SPOOKY;
+    default:
+        return ITEM_NONE;
+    }
+}
+
+static s32 KaleidoScope_IsWornCustomMaskSlot(u32 slot)
+{
+    s32 i;
+    u8 wornItem;
+    u32 flags;
+    const u8* table;
+    u32 tableSize;
+    u8* itemPtr;
+
+    wornItem = KaleidoScope_CustomMaskToItem(gCustomSave.customMask);
+    if (wornItem == ITEM_NONE)
+        return 0;
+
+    for (i = EQUIP_SLOT_C_LEFT; i <= EQUIP_SLOT_C_RIGHT; i++)
+    {
+        if (BUTTON_ITEM_EQUIP(0, i) == wornItem && C_SLOT_EQUIP(0, i) == slot)
+            return 1;
+    }
+    if (comboGetSlotExtras(slot, &itemPtr, &flags, &table, &tableSize) >= 0)
+        return *itemPtr == wornItem;
+
+    return 0;
+}
+
+s32 Player_GetCurMaskItemId_Custom(PlayState* play)
+{
+    Player* player;
+    s32 customItem;
+
+    customItem = KaleidoScope_CustomMaskToItem(gCustomSave.customMask);
+    if (customItem != ITEM_NONE)
+        return customItem;
+
+    player = GET_PLAYER(play);
+
+    if (player->currentMask != PLAYER_MASK_NONE)
+        return Player_MaskIdToItemId(player->currentMask - 1);
+
+    return ITEM_NONE;
+}
+
+PATCH_FUNC(0x80122eec, Player_GetCurMaskItemId_Custom);
+
 void KaleidoScope_AfterSetCutsorColor(PlayState* play)
 {
     u16 cursorSlot;
@@ -20,7 +91,8 @@ void KaleidoScope_AfterSetCutsorColor(PlayState* play)
     /* Update Dpad */
     Dpad_Update(play);
 
-    cursorSlot = play->pauseCtx.cursorSlot[0];
+    cursorSlot = play->pauseCtx.cursorSlot[play->pauseCtx.pageIndex];
+    cursorSlot = comboResolvePauseSlot(play, cursorSlot);
     press = !!(play->state.input[0].press.button & (L_TRIG | U_CBUTTONS));
     effect = 0;
 
@@ -28,12 +100,32 @@ void KaleidoScope_AfterSetCutsorColor(PlayState* play)
     u32 flags;
     const u8* table;
     u32 tableSize;
-    if (comboGetSlotExtras(cursorSlot, &itemPtr, &flags, &table, &tableSize) >= 0 && play->pauseCtx.cursorItem[0] != 999 && popcount(flags) > 1)
+
+    if (comboGetSlotExtras(cursorSlot, &itemPtr, &flags, &table, &tableSize) >= 0 &&
+play->pauseCtx.cursorItem[play->pauseCtx.pageIndex] != 999 &&
+popcount(flags) > 1)
     {
+        if (play->pauseCtx.pageIndex == PAUSE_MASK)
+        {
+            if (KaleidoScope_NormalizeMoonMaskSlot(cursorSlot))
+                effect = 1;
+        }
+
         play->pauseCtx.cursorColorIndex = 4;
+
         if (press)
         {
-            comboToggleSlot(cursorSlot);
+            if (KaleidoScope_IsWornCustomMaskSlot(cursorSlot))
+            {
+                PlaySound(0x4806); /* NA_SE_SY_ERROR */
+                return;
+            }
+
+            if (play->pauseCtx.pageIndex == PAUSE_MASK)
+                KaleidoScope_ToggleMaskSlotSkipHidden(cursorSlot);
+            else
+                comboToggleSlot(cursorSlot);
+
             effect = 1;
         }
     }
@@ -112,9 +204,25 @@ void KaleidoScope_LoadNamedItemCustom(void* segment, u32 texIndex)
         isForeign = 1;
         texIndex = 0x7b + ITEM_OOT_BOOMERANG;
         break;
+    case ITEM_MM_SLINGSHOT:
+        isForeign = 1;
+        texIndex = 0x7b + ITEM_OOT_SLINGSHOT;
+        break;
     case ITEM_MM_RUTO_LETTER:
         isForeign = 1;
         texIndex = 0x7b + ITEM_OOT_RUTO_LETTER;
+        break;
+    case ITEM_MM_MASK_GERUDO:
+        isForeign = 1;
+        texIndex = 0x7b + ITEM_OOT_GERUDO_MASK;
+        break;
+    case ITEM_MM_MASK_SKULL:
+        isForeign = 1;
+        texIndex = 0x7b + ITEM_OOT_SKULL_MASK;
+        break;
+    case ITEM_MM_MASK_SPOOKY:
+        isForeign = 1;
+        texIndex = 0x7b + ITEM_OOT_SPOOKY_MASK;
         break;
     }
     if (isForeign)
@@ -247,7 +355,17 @@ void KaleidoScope_ShowItemMessage(PlayState* play, u16 messageId, u8 yPosition)
         comboTextAppendClearColor(&b);
         comboTextAppendStr(&b, "Press " TEXT_COLOR_YELLOW "\xB2");
         comboTextAppendClearColor(&b);
-        comboTextAppendStr(&b, " to throw and watch it" TEXT_NL " come back! The boomerang can stun or " TEXT_NL "defeat enemies!" TEXT_END);
+        comboTextAppendStr(&b, " to throw and watch it come" TEXT_NL "back! The boomerang can stun or" TEXT_NL "defeat enemies!" TEXT_END);
+        break;
+    case ITEM_MM_SLINGSHOT:
+        b = play->msgCtx.font.textBuffer.schar;
+        b[2] = 0xFE; /* Use No Icon */
+        b += 11;
+        comboTextAppendStr(&b, TEXT_COLOR_RED "Fairy Slingshot" TEXT_NL);
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, "Press " TEXT_COLOR_YELLOW "\xB2");
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, " to unleash a deku seed" TEXT_NL "at your target!" TEXT_END);
         break;
     case ITEM_MM_BLUE_FIRE:
         b = play->msgCtx.font.textBuffer.schar;
@@ -264,6 +382,30 @@ void KaleidoScope_ShowItemMessage(PlayState* play, u16 messageId, u8 yPosition)
         comboTextAppendStr(&b, TEXT_COLOR_RED "Letter" TEXT_NL);
         comboTextAppendClearColor(&b);
         comboTextAppendStr(&b, "It looks like there is something" TEXT_NL "already inside this bottle." TEXT_END);
+        break;
+    case ITEM_MM_MASK_GERUDO:
+        b = play->msgCtx.font.textBuffer.schar;
+        b[2] = 0xFE; /* Use No Icon */
+        b += 11;
+        comboTextAppendStr(&b, TEXT_COLOR_RED "Gerudo Mask" TEXT_NL);
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, "With its charming eyes, it makes" TEXT_NL "a great lady's disguise." TEXT_END);
+        break;
+    case ITEM_MM_MASK_SKULL:
+            b = play->msgCtx.font.textBuffer.schar;
+        b[2] = 0xFE; /* Use No Icon */
+        b += 11;
+        comboTextAppendStr(&b, TEXT_COLOR_RED "Skull Mask" TEXT_NL);
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, "A mysterious aura emanates from" TEXT_NL "this mask." TEXT_END);
+        break;
+    case ITEM_MM_MASK_SPOOKY:
+            b = play->msgCtx.font.textBuffer.schar;
+        b[2] = 0xFE; /* Use No Icon */
+        b += 11;
+        comboTextAppendStr(&b, TEXT_COLOR_RED "Spooky Mask" TEXT_NL);
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, "This mask was manufactured from" TEXT_NL "the plank of a coffin." TEXT_END);
         break;
     }
 }
@@ -363,16 +505,20 @@ static u32 sCustomIcons[] = {
     ITEM_MM_TUNIC_ZORA,
     ITEM_MM_HAMMER,
     ITEM_MM_BOOMERANG,
+    ITEM_MM_SLINGSHOT,
     ITEM_MM_RUTO_LETTER,
+    ITEM_MM_MASK_GERUDO,
+    ITEM_MM_MASK_SKULL,
+    ITEM_MM_MASK_SPOOKY
 };
 
-s8 gPlayerFormCustomItemRestrictions[5][ITEM_MM_CUSTOM_MAX - ITEM_MM_CUSTOM_MIN] =
+s8 gPlayerFormCustomItemRestrictions[5][ITEM_MM_CUSTOM_USABLE_MAX - ITEM_MM_CUSTOM_MIN] =
 {
-    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    { 1, 1, 1, -1, -1, -1, -1, 1, 1, 1 },
+    { 0, 0, 0,  0,  0,  0,  0, 0, 0, 0, 1, 0, 0, 0 },
+    { 0, 0, 0,  0,  0,  0,  0, 0, 0, 0, 1, 0, 0, 0 },
+    { 0, 0, 0,  0,  0,  0,  0, 0, 0, 0, 1, 0, 0, 0 },
+    { 0, 0, 0,  0,  0,  0,  0, 0, 0, 0, 1, 0, 0, 0 },
+    { 1, 1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1 },
 };
 
 typedef void (*KaleidoScope_GrayOutTextureRGBA32)(u32*, u16);
@@ -424,8 +570,20 @@ void KaleidoScope_LoadIcons(u32 vrom, void* dst, size_t* size)
         case ITEM_MM_BOOMERANG:
             foreignIcon = ITEM_OOT_BOOMERANG;
             break;
+        case ITEM_MM_SLINGSHOT:
+            foreignIcon = ITEM_OOT_SLINGSHOT;
+            break;
         case ITEM_MM_RUTO_LETTER:
             foreignIcon = ITEM_OOT_RUTO_LETTER;
+            break;
+        case ITEM_MM_MASK_GERUDO:
+            foreignIcon = ITEM_OOT_GERUDO_MASK;
+            break;
+        case ITEM_MM_MASK_SKULL:
+            foreignIcon = ITEM_OOT_SKULL_MASK;
+            break;
+        case ITEM_MM_MASK_SPOOKY:
+            foreignIcon = ITEM_OOT_SPOOKY_MASK;
             break;
         default:
             continue;
@@ -435,7 +593,7 @@ void KaleidoScope_LoadIcons(u32 vrom, void* dst, size_t* size)
         DMARomToRam((textureFileAddress + textureOffset) | PI_DOM1_ADDR2, (void*)customDestination, customIconSize);
 
         u8 customItemIndex = icon - ITEM_MM_CUSTOM_MIN;
-        if (customItemIndex >= (ITEM_MM_CUSTOM_MAX - ITEM_MM_CUSTOM_MIN) || !gPlayerFormCustomItemRestrictions[gSaveContext.save.playerForm][customItemIndex])
+        if (customItemIndex >= (ITEM_MM_CUSTOM_USABLE_MAX - ITEM_MM_CUSTOM_MIN) || !gPlayerFormCustomItemRestrictions[gSaveContext.save.playerForm][customItemIndex])
         {
             KaleidoScope_GrayOutTextureRGBA32((u32*)customDestination, customIconSize);
         }
@@ -479,10 +637,10 @@ static u8 GetNextItem(u32 slot, s32* outTableIndex)
 }
 
 /* Vertex buffers. */
-static Vtx gVertexBufs[(4 * 7) * 2];
+static Vtx gVertexBufs[(4 * 11) * 2];
 
 /* Vertex buffer pointers. */
-static Vtx* gVertex[7] = {
+static Vtx* gVertex[11] = {
     &gVertexBufs[(4 * 0) * 2],
     &gVertexBufs[(4 * 1) * 2],
     &gVertexBufs[(4 * 2) * 2],
@@ -490,6 +648,10 @@ static Vtx* gVertex[7] = {
     &gVertexBufs[(4 * 4) * 2],
     &gVertexBufs[(4 * 5) * 2],
     &gVertexBufs[(4 * 6) * 2],
+    &gVertexBufs[(4 * 7) * 2],
+    &gVertexBufs[(4 * 8) * 2],
+    &gVertexBufs[(4 * 9) * 2],
+    &gVertexBufs[(4 * 10) * 2],
 };
 
 static Vtx* GetVtxBuffer(PlayState* play, u32 vertIdx, u32 slot) {
@@ -548,197 +710,174 @@ void KaleidoScope_DrawIconCustom(GraphicsContext* gfxCtx, u8 item, u16 width, u1
     }
 }
 
-static s32 KaleidoScope_IsAmmoRestricted(s16 item)
-{
-    return !gPlayerFormItemRestrictions[gSaveContext.save.playerForm][item];
+#define MOON_MASK_BIT(i, f) ((u16)(((i) << 8) | (f)))
+#define MOON_MASK_BYTES     ((u8*)0x801f3f3a)
+#define MOON_MASK_GIVEN(i)  (MOON_MASK_BYTES[sMasksGivenOnMoonBits_Custom[i] >> 8] & (u8)sMasksGivenOnMoonBits_Custom[i])
+
+static const u16 sMasksGivenOnMoonBits_Custom[MASK_NUM_SLOTS] = {
+    MOON_MASK_BIT(1, 0x01), MOON_MASK_BIT(0, 0x04), MOON_MASK_BIT(2, 0x02), MOON_MASK_BIT(1, 0x80),
+    MOON_MASK_BIT(1, 0x04), MOON_MASK_BIT(2, 0x10), MOON_MASK_BIT(0, 0x10), MOON_MASK_BIT(2, 0x01),
+    MOON_MASK_BIT(0, 0x08), MOON_MASK_BIT(1, 0x10), MOON_MASK_BIT(2, 0x04), MOON_MASK_BIT(2, 0x20),
+    MOON_MASK_BIT(0, 0x40), MOON_MASK_BIT(0, 0x80), MOON_MASK_BIT(0, 0x02), MOON_MASK_BIT(1, 0x02),
+    MOON_MASK_BIT(0, 0x01), MOON_MASK_BIT(2, 0x40), MOON_MASK_BIT(1, 0x20), MOON_MASK_BIT(1, 0x08),
+    MOON_MASK_BIT(0, 0x20), MOON_MASK_BIT(1, 0x40), MOON_MASK_BIT(2, 0x08), MOON_MASK_BIT(2, 0x80),
+};
+
+typedef struct {
+    u32 flags;
+    u32 tableSize;
+    u8* itemPtr;
+    const u8* table;
+    s32 index;
+} MaskSlotExtras;
+
+static int GetMaskSlotExtras(u32 slot, MaskSlotExtras* e) {
+    e->index = comboGetSlotExtras(slot, &e->itemPtr, &e->flags, &e->table, &e->tableSize);
+    return e->index >= 0 && e->tableSize != 0;
 }
 
-typedef Gfx* (*DrawTexRectIA8Func)(Gfx*, u8*, s16, s16, s16, s16, s16, s16, s32, s32);
-
-#define KALEIDO_DRAW_TEX_RECT_IA8_ADDR 0x8010CD98
-#define KALEIDO_AMMO_DIGIT_0_TEX_ADDR  0x02004aa0
-#define KALEIDO_AMMO_RECT_LEFT_ADDR    0x8082b444
-#define KALEIDO_AMMO_RECT_HEIGHT_ADDR  0x8082b454
-
-static s32 KaleidoScope_ItemHasAmmoCount(s16 item)
-{
-    switch (item)
-    {
-        case ITEM_MM_BOMB:
-        case ITEM_MM_BOW:
-        case ITEM_MM_NUT:
-        case ITEM_MM_BOMBCHU:
-        case ITEM_MM_POWDER_KEG:
-        case ITEM_MM_STICK:
-        case ITEM_MM_MAGIC_BEAN:
-        case ITEM_MM_PICTOGRAPH_BOX:
-            return 1;
-
-        default:
-            return 0;
-    }
+static int KaleidoScope_IsMoonGivenParam0Mask(u32 slot, u8 item) {
+    u32 maskSlot = slot - ITEM_NUM_SLOTS;
+    MaskSlotExtras e;
+    if (slot < ITEM_NUM_SLOTS || maskSlot >= MASK_NUM_SLOTS || !MOON_MASK_GIVEN(maskSlot))
+        return 0;
+    return GetMaskSlotExtras(slot, &e) ? item == e.table[0] : item == gSave.info.inventory.items[slot];
 }
 
-static s32 KaleidoScope_FindSlotForItem(s16 item)
-{
+static s32 GetMaskItemTableIndex(u32 slot, u8 item) {
+    MaskSlotExtras e;
     s32 i;
-
-    for (i = 0; i < ARRAY_COUNT(gSave.info.inventory.items); i++)
-    {
-        if (gSave.info.inventory.items[i] == item)
-        {
+    if (!GetMaskSlotExtras(slot, &e))
+        return -1;
+    for (i = 0; i < (s32)e.tableSize; i++)
+        if (e.table[i] == item)
             return i;
-        }
-    }
-
     return -1;
 }
 
-static s16 KaleidoScope_GetShownAmmoItem(s16 item, s32* outSlot)
-{
-    s32 slot;
-    u8* itemPtr;
-    u32 flags;
-    const u8* table;
-    u32 tableSize;
-
-    slot = KaleidoScope_FindSlotForItem(item);
-    *outSlot = slot;
-
-    if (slot < 0)
-    {
-        return item;
+static u8 GetNextVisibleMaskTrade(u32 slot, u8 currentItem) {
+    MaskSlotExtras e;
+    u8 next, probe = currentItem;
+    u32 i;
+    if (!GetMaskSlotExtras(slot, &e))
+        return ITEM_NONE;
+    for (i = 0; i < e.tableSize; i++) {
+        next = comboGetNextTrade(probe, e.flags, e.table, e.tableSize);
+        if (next == ITEM_NONE || next == currentItem)
+            return ITEM_NONE;
+        if (!KaleidoScope_IsMoonGivenParam0Mask(slot, next))
+            return next;
+        probe = next;
     }
-
-    if (comboGetSlotExtras(slot, &itemPtr, &flags, &table, &tableSize) >= 0 && popcount(flags) > 1)
-    {
-        return *itemPtr;
-    }
-
-    return item;
-}
-#define MM_QUEST_PICTOGRAPH 0x19
-
-#define MM_CHECK_QUEST_ITEM(item) \
-(gSave.info.inventory.quest.value & (1u << (item)))
-static s16 KaleidoScope_GetAmmo(s16 item, s32 slot)
-{
-    switch (item)
-    {
-        case ITEM_MM_PICTOGRAPH_BOX:
-            return MM_CHECK_QUEST_ITEM(MM_QUEST_PICTOGRAPH) ? 1 : 0;
-
-        case ITEM_MM_POWDER_KEG:
-            return gSave.info.inventory.ammo[slot];
-
-        default:
-            if (slot >= 0)
-            {
-                return gSave.info.inventory.ammo[slot];
-            }
-            return 0;
-    }
+    return ITEM_NONE;
 }
 
-#define MM_UPG_QUIVER      gSave.info.inventory.upgrades.quiver
-#define MM_UPG_BOMB_BAG    gSave.info.inventory.upgrades.bombBag
-#define MM_UPG_DEKU_STICKS gSave.info.inventory.upgrades.dekuStick
-#define MM_UPG_DEKU_NUTS   gSave.info.inventory.upgrades.dekuNut
-
-#define MM_CAPACITY_BOMB_BAG(value)    ((s16[]){ 0, 20, 30, 40 }[(value)])
-#define MM_CAPACITY_QUIVER(value)      ((s16[]){ 0, 30, 40, 50 }[(value)])
-#define MM_CAPACITY_DEKU_STICKS(value) ((s16[]){ 0, 10, 20, 30 }[(value)])
-#define MM_CAPACITY_DEKU_NUTS(value)   ((s16[]){ 0, 20, 30, 40 }[(value)])
-
-#define MM_CUR_BOMB_BAG_CAPACITY()    MM_CAPACITY_BOMB_BAG(MM_UPG_BOMB_BAG)
-#define MM_CUR_QUIVER_CAPACITY()      MM_CAPACITY_QUIVER(MM_UPG_QUIVER)
-#define MM_CUR_DEKU_STICKS_CAPACITY() MM_CAPACITY_DEKU_STICKS(MM_UPG_DEKU_STICKS)
-#define MM_CUR_DEKU_NUTS_CAPACITY()   MM_CAPACITY_DEKU_NUTS(MM_UPG_DEKU_NUTS)
-
-
-static s32 KaleidoScope_IsAmmoAtCapacity(s16 item, s16 ammo)
-{
-    return (((item == ITEM_MM_BOMB) && (ammo == MM_CUR_BOMB_BAG_CAPACITY())) ||
-            ((item == ITEM_MM_BOW) && (ammo == MM_CUR_QUIVER_CAPACITY())) ||
-            ((item == ITEM_MM_STICK) && (ammo == MM_CUR_DEKU_STICKS_CAPACITY())) ||
-            ((item == ITEM_MM_NUT) && (ammo == MM_CUR_DEKU_NUTS_CAPACITY())) ||
-            ((item == ITEM_MM_BOMBCHU) && (ammo == gMaxBombchuMm)) ||
-            ((item == ITEM_MM_POWDER_KEG) && (ammo == 1)) ||
-            ((item == ITEM_MM_PICTOGRAPH_BOX) && (ammo == 1)) ||
-            ((item == ITEM_MM_MAGIC_BEAN) && (ammo == 10)));
+static u8 GetCurrentVisibleMaskItem(u32 slot, s32* outActiveIndex) {
+    MaskSlotExtras e;
+    u8 next;
+    if (!GetMaskSlotExtras(slot, &e)) {
+        *outActiveIndex = -1;
+        return ITEM_NONE;
+    }
+    *outActiveIndex = e.index;
+    if (!KaleidoScope_IsMoonGivenParam0Mask(slot, *e.itemPtr))
+        return *e.itemPtr;
+    next = GetNextVisibleMaskTrade(slot, *e.itemPtr);
+    if (next == ITEM_NONE)
+        return ITEM_NONE;
+    *e.itemPtr = next;
+    *outActiveIndex = GetMaskItemTableIndex(slot, next);
+    return next;
 }
 
-void KaleidoScope_DrawAmmoCountCustom(PauseContext* pauseCtx, GraphicsContext* gfxCtx, s16 item, u16 ammoIndex)
+static int KaleidoScope_NormalizeMoonMaskSlot(u32 slot) {
+    MaskSlotExtras e;
+    u8 next;
+    if (slot < ITEM_NUM_SLOTS || slot >= ITEM_NUM_SLOTS + MASK_NUM_SLOTS || !GetMaskSlotExtras(slot, &e))
+        return 0;
+    if (!KaleidoScope_IsMoonGivenParam0Mask(slot, *e.itemPtr))
+        return 0;
+    next = GetNextVisibleMaskTrade(slot, *e.itemPtr);
+    if (next == ITEM_NONE)
+        return 0;
+    *e.itemPtr = next;
+    return 1;
+}
+
+static u8 GetNextVisibleMaskOverlayItem(u32 slot, u8 currentItem, s32* outVtxBufferIndex) {
+    MaskSlotExtras e;
+    u8 next;
+    if (!GetMaskSlotExtras(slot, &e)) {
+        *outVtxBufferIndex = -1;
+        return ITEM_NONE;
+    }
+    *outVtxBufferIndex = e.index;
+    next = GetNextVisibleMaskTrade(slot, currentItem);
+    return next != currentItem ? next : ITEM_NONE;
+}
+
+static void KaleidoScope_ToggleMaskSlotSkipHidden(u32 slot) {
+    MaskSlotExtras e;
+    u32 i;
+    if (!GetMaskSlotExtras(slot, &e))
+        return;
+    for (i = 0; i < e.tableSize; i++) {
+        comboToggleSlot(slot);
+        if (!GetMaskSlotExtras(slot, &e) || !KaleidoScope_IsMoonGivenParam0Mask(slot, *e.itemPtr))
+            return;
+    }
+}
+
+u16 KaleidoScope_ResolveMoonMaskCursorItem(u16 maskSlot, u16 cursorItem) {
+    u32 slot = maskSlot + ITEM_NUM_SLOTS;
+    s32 activeIndex;
+    u8 activeItem;
+    if (cursorItem == ITEM_NONE || cursorItem == 999 || !KaleidoScope_IsMoonGivenParam0Mask(slot, cursorItem))
+        return cursorItem;
+    activeItem = GetCurrentVisibleMaskItem(slot, &activeIndex);
+    return activeItem != ITEM_NONE ? activeItem : ITEM_NONE;
+}
+
+void KaleidoScope_DrawMaskIconCustom(GraphicsContext* gfxCtx, u8 item, u16 width, u16 height, u32 maskSlot, u16 point, u16 vertIdx)
 {
-    s16 ammoUpperDigit;
-    s16 ammo;
-    s16 shownItem;
-    s32 slot;
-    u8 alpha;
-    DrawTexRectIA8Func DrawTexRectIA8;
-    u8* ammoDigit0Tex;
-    s16* ammoRectLeft;
-    s16* ammoRectHeight;
+    u32 slot;
+    u32 texture;
+    s32 tableIndex;
+    u8 primary;
+    u8 next;
+    KaleidoScope_DrawIcon KaleidoScope_DrawIcon;
 
-    shownItem = KaleidoScope_GetShownAmmoItem(item, &slot);
+    maskSlot = vertIdx >> 2;
+    slot = maskSlot + ITEM_NUM_SLOTS;
 
-    if (!KaleidoScope_ItemHasAmmoCount(shownItem))
+    KaleidoScope_DrawIcon = OverlayAddr(0x80821ad4);
+    if (!KaleidoScope_IsMoonGivenParam0Mask(slot, item))
     {
+        texture = GetItemTexture(item);
+        KaleidoScope_DrawIcon(gfxCtx, texture, width, height, point);
+
+        next = GetNextVisibleMaskOverlayItem(slot, item, &tableIndex);
+        if (next != ITEM_NONE && next != item && tableIndex >= 0)
+        {
+            texture = GetItemTexture(next);
+            Vtx* vtx = GetVtxBuffer(gfxCtx->play, vertIdx, tableIndex);
+            DrawIcon(gfxCtx, vtx, texture, width, height, point);
+        }
         return;
     }
-
-    ammo = KaleidoScope_GetAmmo(shownItem, slot);
-    alpha = pauseCtx->itemAlpha & 0xff;
-
-    DrawTexRectIA8 = (DrawTexRectIA8Func)KALEIDO_DRAW_TEX_RECT_IA8_ADDR;
-    ammoDigit0Tex = (u8*)KALEIDO_AMMO_DIGIT_0_TEX_ADDR;
-    ammoRectLeft = OverlayAddr(KALEIDO_AMMO_RECT_LEFT_ADDR);
-    ammoRectHeight = OverlayAddr(KALEIDO_AMMO_RECT_HEIGHT_ADDR);
-
-    OPEN_DISPS(gfxCtx);
-
-    gDPPipeSync(POLY_OPA_DISP++);
-
-    if (KaleidoScope_IsAmmoRestricted(shownItem))
+    primary = GetCurrentVisibleMaskItem(slot, &tableIndex);
+    if (primary == ITEM_NONE)
+        return;
+    texture = GetItemTexture(primary);
+    KaleidoScope_DrawIcon(gfxCtx, texture, width, height, point);
+    next = GetNextVisibleMaskOverlayItem(slot, primary, &tableIndex);
+    if (next != ITEM_NONE && next != primary && tableIndex >= 0)
     {
-        gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 100, 100, 100, alpha);
+        texture = GetItemTexture(next);
+        Vtx* vtx = GetVtxBuffer(gfxCtx->play, vertIdx, tableIndex);
+        DrawIcon(gfxCtx, vtx, texture, width, height, point);
     }
-    else
-    {
-        gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 255, alpha);
-
-        if (ammo == 0)
-        {
-            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 130, 130, 130, alpha);
-        }
-        else if (KaleidoScope_IsAmmoAtCapacity(shownItem, ammo))
-        {
-            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 120, 255, 0, alpha);
-        }
-    }
-
-    for (ammoUpperDigit = 0; ammo >= 10; ammoUpperDigit++)
-    {
-        ammo -= 10;
-    }
-
-    gDPPipeSync(POLY_OPA_DISP++);
-
-    if (ammoUpperDigit != 0)
-    {
-        POLY_OPA_DISP =
-            DrawTexRectIA8(POLY_OPA_DISP, ammoDigit0Tex + (8 * 8 * ammoUpperDigit), 8, 8,
-                           ammoRectLeft[ammoIndex], ammoRectHeight[ammoIndex], 8, 8, 1 << 10, 1 << 10);
-    }
-
-    POLY_OPA_DISP =
-        DrawTexRectIA8(POLY_OPA_DISP, ammoDigit0Tex + (8 * 8 * ammo), 8, 8,
-                       ammoRectLeft[ammoIndex] + 6, ammoRectHeight[ammoIndex], 8, 8, 1 << 10, 1 << 10);
-
-    CLOSE_DISPS();
 }
-
-PATCH_FUNC(0x8081B240, KaleidoScope_DrawAmmoCountCustom);
 
 void KaleidoScope_SetSaveButton(PlayState* play, s16 bButtonDoAction)
 {
@@ -759,3 +898,107 @@ void KaleidoScope_SetSaveButton(PlayState* play, s16 bButtonDoAction)
 }
 
 PATCH_CALL(0x80828908, KaleidoScope_SetSaveButton);
+
+typedef void (*KaleidoScope_DrawAmmoCount)(PauseContext*, GraphicsContext*, s16, u16);
+
+const static u8* gAmmoDigit0Tex = (u8*)0x02004aa0;
+
+static s16 sAmmoRectLeft[] = {
+    95,  // SLOT_BOW
+    62,  // SLOT_BOMB
+    95,  // SLOT_BOMBCHU
+    128, // SLOT_DEKU_STICK
+    161, // SLOT_DEKU_NUT
+    194, // SLOT_MAGIC_BEANS
+    62,  // SLOT_POWDER_KEG
+    95,  // SLOT_PICTOGRAPH_BOX
+};
+
+static s16 sAmmoRectHeight[] = {
+    85,  // SLOT_BOW
+    117, // SLOT_BOMB
+    117, // SLOT_BOMBCHU
+    117, // SLOT_DEKU_STICK
+    117, // SLOT_DEKU_NUT
+    117, // SLOT_MAGIC_BEANS
+    150, // SLOT_POWDER_KEG
+    150, // SLOT_PICTOGRAPH_BOX
+};
+
+void KaleidoScope_CustomDrawAmmoCount(PauseContext* pauseCtx, GraphicsContext* gfxCtx, s16 item, u16 ammoIndex)
+{
+    s16 ammo;
+    s16 ammoTens;
+    s16 maxAmmo;
+    s32 canEquip = 0;
+
+    OPEN_DISPS(gfxCtx);
+
+    switch (item)
+    {
+    case ITEM_MM_BOMBCHU:
+        ammo = gSave.info.inventory.ammo[ITS_MM_BOMBCHU];
+        maxAmmo = gMaxBombchuMm;
+        canEquip = gPlayerFormItemRestrictions[gSaveContext.save.playerForm][item];
+        break;
+    case ITEM_MM_SLINGSHOT:
+        ammo = gMmExtraAmmo.slingshotSeeds;
+        maxAmmo = kMaxSeeds[gMmSave.info.inventory.upgrades.bulletBag];
+        canEquip = gPlayerFormCustomItemRestrictions[gSaveContext.save.playerForm][item - ITEM_MM_CUSTOM_MIN];
+        break;
+    default:
+        return;
+    }
+
+    gDPPipeSync(POLY_OPA_DISP++);
+
+    if (!canEquip) {
+        gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 100, 100, 100, pauseCtx->itemAlpha);
+    } else {
+        gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 255, pauseCtx->itemAlpha);
+
+        if (ammo == 0) {
+            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 130, 130, 130, pauseCtx->itemAlpha);
+        } else if (ammo == maxAmmo) {
+            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 120, 255, 0, pauseCtx->itemAlpha);
+        }
+    }
+
+    for (ammoTens = 0; ammo >= 10; ammoTens++) {
+        ammo -= 10;
+    }
+
+    gDPPipeSync(POLY_OPA_DISP++);
+
+    if (ammoTens != 0) {
+        POLY_OPA_DISP =
+            Gfx_TextureIA8(POLY_OPA_DISP, ((u8*)gAmmoDigit0Tex + (8 * 8 * ammoTens)), 8, 8,
+                               sAmmoRectLeft[ammoIndex], sAmmoRectHeight[ammoIndex], 8, 8, 1 << 10, 1 << 10);
+    }
+
+    POLY_OPA_DISP =
+        Gfx_TextureIA8(POLY_OPA_DISP, ((u8*)gAmmoDigit0Tex + (8 * 8 * ammo)), 8, 8, sAmmoRectLeft[ammoIndex] + 6,
+                           sAmmoRectHeight[ammoIndex], 8, 8, 1 << 10, 1 << 10);
+
+    CLOSE_DISPS();
+}
+
+void KaleidoScope_DrawAmmoCountWrapper(PauseContext* pauseCtx, GraphicsContext* gfxCtx, s16 item, u16 ammoIndex)
+{
+    switch (item)
+    {
+    case ITEM_MM_BOMBCHU:
+    case ITEM_MM_SLINGSHOT:
+        KaleidoScope_CustomDrawAmmoCount(pauseCtx, gfxCtx, item, ammoIndex);
+        break;
+    case ITEM_MM_BOOMERANG:
+        /* No ammo, draw nothing */
+        break;
+    default:
+        KaleidoScope_DrawAmmoCount KaleidoScope_DrawAmmoCount = OverlayAddr(0x8081b240);
+        KaleidoScope_DrawAmmoCount(pauseCtx, gfxCtx, item, ammoIndex);
+        break;
+    }
+}
+
+PATCH_CALL(0x8081bc4c, KaleidoScope_DrawAmmoCountWrapper)

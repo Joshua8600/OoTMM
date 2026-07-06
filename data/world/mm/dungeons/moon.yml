@@ -2,7 +2,7 @@
   dungeon: Moon
   events:
     MAGIC: "true"
-    MM_MOON_OPEN: "(can_play_order || setting(openMoon)) && (setting(moon, open) || (setting(moon, vanilla) && has(REMAINS_ODOLWA) && has(REMAINS_GOHT) && has(REMAINS_GYORG) && has(REMAINS_TWINMOLD)) || (setting(moon, custom) && special(MOON)))"
+    MM_MOON_OPEN: "(song_event(0x0c) || setting(openMoon)) && (setting(moon, open) || (setting(moon, vanilla) && has(REMAINS_ODOLWA) && has(REMAINS_GOHT) && has(REMAINS_GYORG) && has(REMAINS_TWINMOLD)) || (setting(moon, custom) && special(MOON)))"
   exits:
     "Moon": "event(MM_MOON_OPEN)"
     "Clock Tower Platform": "false"
@@ -173,12 +173,12 @@
   region: MOON
   exits:
     "Moon Trial Link Rest 2": "soul_iron_knuckle && (has_weapon || has_mask_goron || has_bombs || has_bombchu || (has_mask_blast && masks(5)))"
-    "Moon Trial Link Rest 3": "soul_iron_knuckle && (has_weapon || has_mask_goron || has_bombs || has_bombchu || (has_mask_blast && masks(5))) && ((has_bombchu && has_arrows) || short_hook_anywhere)"
+    "Moon Trial Link Rest 3": "soul_iron_knuckle && (has_weapon || has_mask_goron || has_bombs || has_bombchu || (has_mask_blast && masks(5))) && ((has_bombchu && (has_arrows || can_use_slingshot)) || short_hook_anywhere)"
   locations:
     "Moon Trial Link Iron Knuckle Chest": "soul_iron_knuckle && (has_weapon || has_mask_goron || has_bombs || has_bombchu || (has_mask_blast && masks(5)))"
   gossip:
-    "Moon Trial Link Gossip Left": "short_hook_anywhere || (has_bombchu && has_arrows)"
-    "Moon Trial Link Gossip Right": "short_hook_anywhere || (has_bombchu && has_arrows)"
+    "Moon Trial Link Gossip Left": "short_hook_anywhere || (has_bombchu && (has_arrows || can_use_slingshot))"
+    "Moon Trial Link Gossip Right": "short_hook_anywhere || (has_bombchu && (has_arrows || can_use_slingshot))"
 
 "Moon Trial Link Rest 3":
   region: MOON
@@ -201,7 +201,7 @@
 "Moon Boss":
   region: MOON
   events:
-    MAJORA_PHASE_1: "has_arrows || has_mask_zora || (has(MASK_FIERCE_DEITY) && has_magic)"
+    MAJORA_PHASE_1: "has_arrows || has_boomerang || has_mask_zora || (has(MASK_FIERCE_DEITY) && has_magic)"
     MAJORA: "!is_goal_triforce && event(MAJORA_PHASE_1) && (has_sword || has_mask_zora || (has(MASK_FIERCE_DEITY) && has_magic))"
   locations:
     "Moon Majora Pot 1": "(can_play_time || event(MAJORA))"

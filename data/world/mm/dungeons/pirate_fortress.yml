@@ -2,7 +2,7 @@
   dungeon: PF
   exits:
     "Great Bay Coast Fortress": "can_reset_time && (underwater_walking || can_dive_small)"
-    "Pirate Fortress Entrance": "can_reset_time_dungeon"
+    "Pirate Fortress Entrance": "can_reset_time_dungeon && can_swim"
 
 "Pirate Fortress Entrance":
   dungeon: PF
@@ -91,6 +91,7 @@
   exits:
     "Pirate Fortress Entrance Balcony": "has_weapon_range || (has_hover_boots && can_activate_crystal)"
     "Pirate Fortress Sewers After Gate": "true"
+    "Pirate Fortress Telescope": "true"
   locations:
     "Pirate Fortress Sewers Pot End 1": "true"
     "Pirate Fortress Sewers Pot End 2": "true"
@@ -103,6 +104,16 @@
     "Pirate Fortress Sewers Barrel End 3": "true"
     "Pirate Fortress Sewers Barrel End 4": "true"
     "Pirate Fortress Sewers Barrel End 5": "true"
+
+"Pirate Fortress Telescope":
+  region: ENTRANCE
+  exit:
+    "Pirate Fortress Telescope Exit": "true"
+
+"Pirate Fortress Telescope Exit":
+  region: BUFFER_DELAYED
+  exits:
+    "Pirate Fortress Sewers End": "true"
 
 "Pirate Fortress Sewers Entrance":
   dungeon: PF
@@ -160,7 +171,7 @@
     "GLOBAL": "true"
     "Pirate Fortress Interior": "true"
   events:
-    FORTRESS_BEEHIVE: "has_mask_stone && can_hookshot_short && (has_arrows || can_use_deku_bubble)"
+    FORTRESS_BEEHIVE: "(has_mask_stone || has_mask_gerudo) && can_hookshot_short && (has_arrows || can_use_deku_bubble || can_use_slingshot)"
     ZORA_EGGS_HOOKSHOT_ROOM: "can_hookshot_short && underwater_walking && event(FORTRESS_BEEHIVE)"
   locations:
     "Pirate Fortress Interior Hookshot": "event(FORTRESS_BEEHIVE)"

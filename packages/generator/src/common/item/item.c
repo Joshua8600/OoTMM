@@ -10,6 +10,7 @@
 #include <combo/multi.h>
 #include <combo/actor.h>
 #include <combo/inventory.h>
+#include <combo/mark.h>
 
 #if defined(GAME_OOT)
 u16 gMmMaxRupees[] = { 0, 200, 500, 999 };
@@ -154,11 +155,29 @@ void comboSyncItems(void)
     if (Config_Flag(CFG_SHARED_BOWS))
         gForeignSave.info.inventory.ammo[ITS_FOREIGN_BOW] = gSave.info.inventory.ammo[ITS_NATIVE_BOW];
 
+    if (Config_Flag(CFG_SHARED_SLINGSHOT))
+    {
+#if defined(GAME_OOT)
+        gMmExtraAmmo.slingshotSeeds = gSave.info.inventory.ammo[ITS_NATIVE_SLINGSHOT];
+#else
+        gForeignSave.info.inventory.ammo[ITS_FOREIGN_SLINGSHOT] = gMmExtraAmmo.slingshotSeeds;
+#endif
+    }
+
     if (Config_Flag(CFG_SHARED_BOMB_BAGS))
         gForeignSave.info.inventory.ammo[ITS_FOREIGN_BOMBS] = gSave.info.inventory.ammo[ITS_NATIVE_BOMBS];
 
     if (Config_Flag(CFG_SHARED_BOMBCHU))
         gForeignSave.info.inventory.ammo[ITS_FOREIGN_BOMBCHU] = gSave.info.inventory.ammo[ITS_NATIVE_BOMBCHU];
+
+    if (Config_Flag(CFG_SHARED_POWDER_KEG))
+    {
+#if defined(GAME_OOT)
+        gForeignSave.info.inventory.ammo[ITS_MM_KEG] = gOotExtraAmmo.kegAmmo;
+#else
+        gOotExtraAmmo.kegAmmo = gSave.info.inventory.ammo[ITS_MM_KEG];
+#endif
+    }
 
     if (Config_Flag(CFG_SHARED_MAGIC))
     {
@@ -333,7 +352,7 @@ void comboGiveItem(Actor* actor, PlayState* play, const ComboItemQuery* q, float
     ComboItemQuery qNothing = ITEM_QUERY_INIT;
     const ComboItemQuery* qPtr;
 
-    if (Multi_IsMarked(play, q->ovType, q->sceneId, q->roomId, q->id) && !(q->ovFlags & OVF_RENEW))
+    if (Mark_Get(play, q->ovType, q->sceneId, q->roomId, q->id) && !(q->ovFlags & OVF_RENEW))
     {
         qNothing.gi = GI_NOTHING;
         qPtr = &qNothing;
@@ -549,32 +568,26 @@ int comboAddItemRawEx(PlayState* play, const ComboItemQuery* q, int updateText)
     if (updateText)
         comboTextHijackItemEx(play, &o, count);
 
-    if (Config_Flag(CFG_MULTIPLAYER) && q->ovType != OV_NONE)
+    /* Mark the item, and add to GI skips in multi */
+    if (Item_IsPlayerSelf(o.playerFrom) && q->ovType != OV_NONE)
     {
-        /* Mark the item */
-        if (Item_IsPlayerSelf(o.player))
+        Mark_Set(play, q->ovType, q->sceneId, q->roomId, q->id);
+        if (Config_Flag(CFG_MULTIPLAYER) && (q->ovFlags & OVF_RENEW))
         {
-#if defined(GAME_OOT)
-            Multi_SetMarkedOot(play, q->ovType, q->sceneId, q->roomId, q->id);
-#else
-            Multi_SetMarkedMm(play, q->ovType, q->sceneId, q->roomId, q->id);
-#endif
-
-            /* If the item was a renewable, add it to the GI skips */
-            if (q->ovFlags & OVF_RENEW)
+            for (int i = 0; i < ARRAY_COUNT(gSharedCustomSave.netGiSkip); ++i)
             {
-                for (int i = 0; i < ARRAY_COUNT(gSharedCustomSave.netGiSkip); ++i)
+                if (gSharedCustomSave.netGiSkip[i] == GI_NONE)
                 {
-                    if (gSharedCustomSave.netGiSkip[i] == GI_NONE)
-                    {
-                        gSharedCustomSave.netGiSkip[i] = o.gi;
-                        break;
-                    }
+                    gSharedCustomSave.netGiSkip[i] = o.gi;
+                    break;
                 }
             }
         }
+    }
 
-        /* Send the item on the network */
+    /* Send the item on the network */
+    if (Config_Flag(CFG_MULTIPLAYER) && q->ovType != OV_NONE)
+    {
         net = netMutexLock();
         netWaitCmdClear();
         bzero(&net->cmdOut, sizeof(net->cmdOut));
@@ -600,7 +613,7 @@ int comboAddItemEx(PlayState* play, const ComboItemQuery* q, int updateText)
     ComboItemQuery qNothing = ITEM_QUERY_INIT;
     const ComboItemQuery* qPtr;
 
-    if (Multi_IsMarked(play, q->ovType, q->sceneId, q->roomId, q->id) && !(q->ovFlags & OVF_RENEW))
+    if (Mark_Get(play, q->ovType, q->sceneId, q->roomId, q->id) && !(q->ovFlags & OVF_RENEW))
     {
         qNothing.gi = GI_NOTHING;
         qPtr = &qNothing;
@@ -683,3 +696,4 @@ Actor_ItemDecoy* Item_AddWithDecoy(PlayState* play, const ComboItemQuery* q)
 
     return decoy;
 }
+

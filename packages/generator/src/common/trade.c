@@ -45,6 +45,11 @@ const u8 kOotHookshot[] = {
     ITEM_OOT_LONGSHOT,
 };
 
+const u8 kOotBomb[] = {
+    ITEM_OOT_BOMB,
+    ITEM_OOT_POWDER_KEG,
+};
+
 const u8 kMmTrade1[] = {
     ITEM_MM_SPELL_FIRE,
     ITEM_MM_MOON_TEAR,
@@ -88,6 +93,27 @@ const u8 kMmGFSHammer[] = {
 const u8 kMmPictoBoom[] = {
     ITEM_MM_PICTOGRAPH_BOX,
     ITEM_MM_BOOMERANG,
+};
+
+const u8 kOotHammerGFS[] = {
+    ITEM_OOT_HAMMER,
+    ITEM_OOT_GREAT_FAIRY_SWORD,
+};
+
+const u8 kMmBowSlingshot[] = {
+    ITEM_MM_BOW,
+    ITEM_MM_SLINGSHOT,
+};
+
+const u8 kMmStoneGerudoSkull[] = {
+    ITEM_MM_MASK_STONE,
+    ITEM_MM_MASK_GERUDO,
+    ITEM_MM_MASK_SKULL,
+};
+
+const u8 kMmGibdoSpooky[] = {
+    ITEM_MM_MASK_GIBDO,
+    ITEM_MM_MASK_SPOOKY,
 };
 
 /* Return value is used to index gVertex */
@@ -134,11 +160,29 @@ s32 comboGetSlotExtras(u32 slot, u8** outItemPtr, u32* outFlags, const u8** outT
         *outTableSize = ARRAY_COUNT(kMmGFSHammer);
         result = 5;
         break;
-    case ITEM_MM_PICTOGRAPH_BOX:
+    case ITS_MM_PICTOBOX:
         *outFlags = gMmExtraItems.boomPicto;
         *outTable = kMmPictoBoom;
         *outTableSize = ARRAY_COUNT(kMmPictoBoom);
         result = 6;
+        break;
+    case ITS_MM_BOW:
+        *outFlags = gMmExtraItems.bowSlingshot;
+        *outTable = kMmBowSlingshot;
+        *outTableSize = ARRAY_COUNT(kMmBowSlingshot);
+        result = 7;
+        break;
+    case ITS_MM_MASK_STONE:
+        *outFlags = gMmExtraItems.stoneGerudoSkull;
+        *outTable = kMmStoneGerudoSkull;
+        *outTableSize = ARRAY_COUNT(kMmStoneGerudoSkull);
+        result = 8;
+        break;
+    case ITS_MM_MASK_GIBDO:
+        *outFlags = gMmExtraItems.gibdoSpooky;
+        *outTable = kMmGibdoSpooky;
+        *outTableSize = ARRAY_COUNT(kMmGibdoSpooky);
+        result = 9;
         break;
 #else
     case ITS_OOT_TRADE_ADULT:
@@ -164,6 +208,18 @@ s32 comboGetSlotExtras(u32 slot, u8** outItemPtr, u32* outFlags, const u8** outT
         *outTable = kOotOcarina;
         *outTableSize = ARRAY_COUNT(kOotOcarina);
         result = 3;
+        break;
+    case ITS_OOT_BOMBS:
+        *outFlags = gOotExtraItems.bombSlot;
+        *outTable = kOotBomb;
+        *outTableSize = ARRAY_COUNT(kOotBomb);
+        result = 4;
+        break;
+    case ITS_OOT_HAMMER:
+        *outFlags = gOotExtraItems.gfsHammer;
+        *outTable = kOotHammerGFS;
+        *outTableSize = ARRAY_COUNT(kOotHammerGFS);
+        result = 5;
         break;
 #endif
     default:

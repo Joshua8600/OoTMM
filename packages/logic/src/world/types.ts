@@ -20,7 +20,7 @@ export type WorldArea = {
   region: string;
 };
 
-export type WorldCheckType = 'chest' | 'collectible' | 'gs' | 'sf' | 'cow' | 'shop' | 'scrub' | 'sr' | 'pot' | 'crate' | 'barrel' | 'grass' | 'tree' | 'bush' | 'rock' | 'soil' | 'wonder' | 'fish' | 'fairy' | 'snowball' | 'hive' | 'rupee' | 'heart' | 'fairy_spot' | 'butterfly' | 'redboulder' | 'icicle' | 'redice';
+export type WorldCheckType = 'chest' | 'collectible' | 'gs' | 'sf' | 'cow' | 'shop' | 'scrub' | 'sr' | 'pot' | 'crate' | 'barrel' | 'grass' | 'tree' | 'bush' | 'rock' | 'soil' | 'wonder' | 'fish' | 'fairy' | 'snowball' | 'hive' | 'rupee' | 'heart' | 'fairy_spot' | 'butterfly' | 'boulder-red' | 'boulder-silver' | 'icicle' | 'redice';
 
 type WorldCheckNumeric = {
   type: WorldCheckType;
@@ -75,7 +75,8 @@ export type World = {
   songLocations: Set<string>;
   warpLocations: Set<string>;
   prices: number[];
-  songEvents: number[];
+  songEventsOot: number[];
+  songEventsMm: number[];
   bossIds: number[];
   entranceOverrides: Map<string, string>;
   entranceOverridesRev: Map<string, readonly string[]>;

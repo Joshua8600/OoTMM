@@ -422,15 +422,26 @@ OotExtraTrade;
 
 typedef struct
 {
-    u8 rutoLetter:1;
-    u8 unused:7;
-    u8 hookshot;
-    u8 shield;
-    u8 ocarina;
+    u16 rutoLetter:1;
+    u16 hookshot:2;
+    u16 shield:2;
+    u16 ocarina:2;
+    u16 bombSlot:2;
+    u16 gfsHammer:2;
+    u16 unused:5;
     u8 bottleAdultSlot;
     u8 bottleChildSlot;
 }
 OotExtraItems;
+
+typedef struct
+{
+    s8 kegAmmo;
+    s8 unused0;
+    s8 unused1;
+    s8 unused2;
+}
+OotExtraAmmo;
 
 typedef struct
 {
@@ -464,9 +475,34 @@ typedef struct ALIGNED(16)
     u8  scrubs[8];
     u8  sr[16];
     OotRespawnData fwRespawnDungeonEntrance[2];
+    s16 powderKegTimer;
     u8  hasElegy:1;
     u8  chateauActive:1;
+    u8  hasSongHealing:1;
+    u8  hasSongSoaring:1;
+    u8  hasSongAwakening:1;
+    u8  hasSongGoronHalf:1;
+    u8  hasSongGoron:1;
+    u8  hasSongZora:1;
+    u8  hasSongOrder:1;
 }
 OotCustomSave;
+
+#define CS_INDEX_0 0xFFF0
+#define CS_INDEX_1 0xFFF1
+#define CS_INDEX_2 0xFFF2
+#define CS_INDEX_3 0xFFF3
+#define CS_INDEX_4 0xFFF4
+#define CS_INDEX_5 0xFFF5
+#define CS_INDEX_6 0xFFF6
+#define CS_INDEX_7 0xFFF7
+#define CS_INDEX_8 0xFFF8
+#define CS_INDEX_9 0xFFF9
+#define CS_INDEX_A 0xFFFA
+#define CS_INDEX_B 0xFFFB
+#define CS_INDEX_C 0xFFFC
+#define CS_INDEX_D 0xFFFD // does not load a cutscene scene layer (see above)
+#define CS_INDEX_E 0xFFFE
+#define CS_INDEX_F 0xFFFF
 
 #endif

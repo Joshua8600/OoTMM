@@ -2,7 +2,7 @@
 - { id: OOT_NUTS_5, item: OOT_NUTS_5, type: MINOR, add: [OOT_NUTS, 5], flags: 0x0c, draw: DEKU_NUT, object: [oot, 0x00bb], name: "<C0>5 Deku Nuts" }
 - { id: OOT_BOMBCHU_10, item: OOT_BOMBCHU_10, type: NORMAL, add: [OOT_BOMBCHU, 10], flags: 0x80, draw: BOMBCHU, object: [oot, 0x00d9], name: "<C0>10 Bombchu" }
 - { id: OOT_BOW, item: OOT_BOW, type: MAJOR, add: [OOT_BOW, 1], flags: 0x80, draw: OOT_BOW, object: [oot, 0x00e9], name: "the <C1>Fairy Bow" }
-- { id: OOT_SLINGSHOT, item: OOT_SLINGSHOT, type: MAJOR, add: [SLINGSHOT, 1], flags: 0x80, draw: OOT_SLINGSHOT, object: [oot, 0x00e7], name: "the <C1>Fairy Slingshot" }
+- { id: OOT_SLINGSHOT, item: OOT_SLINGSHOT, type: MAJOR, add: [OOT_SLINGSHOT, 1], flags: 0x80, draw: OOT_SLINGSHOT, object: [oot, 0x00e7], name: "the <C1>Fairy Slingshot" }
 - { id: OOT_BOOMERANG, item: OOT_BOOMERANG, type: MAJOR, add: OOT_NORMAL, flags: 0x80, draw: OOT_BOOMERANG, object: [oot, 0x00e8], name: "the <C1>Boomerang" }
 - { id: OOT_STICK, item: OOT_STICK, type: MINOR, add: [OOT_STICKS, 1], flags: 0x0d, draw: DEKU_STICK, object: [oot, 0x00c7], name: "a <C0>Deku Stick" }
 - { id: OOT_HOOKSHOT, item: OOT_HOOKSHOT, type: MAJOR, add: [OOT_HOOKSHOT, 1], flags: 0x80, draw: OOT_HOOKSHOT, object: [oot, 0x00dd], name: "the <C1>Hookshot" }
@@ -10,7 +10,7 @@
 - { id: OOT_LENS, item: OOT_LENS, type: MAJOR, add: OOT_NORMAL, flags: 0x80, draw: LENS, object: [oot, 0x00ea], name: "the <C1>Lens of Truth" }
 - { id: OOT_ZELDA_LETTER, item: OOT_ZELDA_LETTER, type: MAJOR, add: [OOT_TRADE_CHILD, 2], flags: 0x80, draw: OOT_ZELDA_LETTER, object: [oot, 0x00ef], name: "<C1>Zelda's Letter" }
 - { id: OOT_OCARINA_TIME, item: OOT_OCARINA_TIME, type: MAJOR, add: [OOT_OCARINA, 2], flags: 0x80, draw: OCARINA_TIME, object: [oot, 0x00de], name: "the <C1>Ocarina of Time" }
-- { id: OOT_HAMMER, item: OOT_HAMMER, type: MAJOR, add: OOT_NORMAL, flags: 0x80, draw: OOT_MEGATON_HAMMER, object: [oot, 0x00f6], name: "the <C1>Megaton Hammer" }
+- { id: OOT_HAMMER, item: OOT_HAMMER, type: MAJOR, add: [OOT_HAMMER_GFS, 0], flags: 0x80, draw: OOT_MEGATON_HAMMER, object: [oot, 0x00f6], name: "the <C1>Megaton Hammer" }
 - { id: OOT_COJIRO, item: OOT_COJIRO, type: MAJOR, add: [OOT_TRADE_ADULT, 2], flags: 0x80, draw: OOT_COJIRO, object: [oot, 0x0109], name: "<C1>Cojiro" }
 - { id: OOT_BOTTLE_EMPTY, item: OOT_BOTTLE_EMPTY, type: MAJOR, add: OOT_BOTTLE_NEW, flags: 0x80, draw: BOTTLE_EMPTY, object: [oot, 0x00c6], name: "an <C1>Empty Bottle" }
 - { id: OOT_POTION_RED, item: OOT_POTION_RED, type: MINOR, add: OOT_BOTTLE_REFILL, flags: 0x80, draw: POTION_RED, object: [oot, 0x00eb], name: "a <C0>Red Potion" }
@@ -57,13 +57,13 @@
 - { id: OOT_STONE_OF_AGONY, item: OOT_STONE_OF_AGONY, type: MAJOR, add: [OOT_QUEST, QUEST_OOT_STONE_AGONY], flags: 0x80, draw: STONE_OF_AGONY, object: [oot, 0x00c8], name: "the <C1>Stone of Agony" }
 - { id: OOT_GERUDO_CARD, item: OOT_GERUDO_CARD, type: MAJOR, add: [OOT_QUEST, QUEST_OOT_GERUDO_CARD], flags: 0x80, draw: OOT_GERUDO_CARD, object: [oot, 0x00d7], name: "the <C1>Gerudo's Card" }
 - { id: OOT_OCARINA_FAIRY, item: OOT_OCARINA_FAIRY, type: MAJOR, add: [OOT_OCARINA, 1], flags: 0x80, draw: OOT_OCARINA_FAIRY, object: [oot, 0x010e], name: "the <C1>Fairy Ocarina" }
-- { id: OOT_DEKU_SEEDS_5, item: OOT_SEEDS_5, type: MINOR, add: [SEEDS, 5], flags: 0x50, draw: OOT_SEEDS, object: [oot, 0x0119], name: "<C0>5 Deku Seeds" }
+- { id: OOT_DEKU_SEEDS_5, item: OOT_SEEDS_5, type: MINOR, add: [OOT_SEEDS, 5], flags: 0x50, draw: OOT_SEEDS, object: [oot, 0x0119], name: "<C0>5 Deku Seeds" }
 - { id: OOT_HEART_CONTAINER, item: OOT_HEART_CONTAINER, type: HEART, add: [OOT_HEART_PIECE, 4], flags: 0x80, draw: HEART_CONTAINER, object: [oot, 0x00bd], name: "a <C0>Heart Container" }
 - { id: OOT_HEART_PIECE, item: OOT_HEART_PIECE, type: HEART, add: [OOT_HEART_PIECE, 1], flags: 0x80, draw: HEART_PIECE, object: [oot, 0x00bd], name: "a <C0>Piece of Heart" }
 - { id: OOT_BOSS_KEY, item: OOT_BOSS_KEY, type: BOSS_KEY, add: [OOT_BOSS_KEY, 0xffff], flags: 0x80, draw: BOSS_KEY, object: [oot, 0x00b9], name: "the <C0>Boss Key" }
 - { id: OOT_COMPASS, item: OOT_COMPASS, type: MAP_COMPASS, add: [OOT_COMPASS, 0xffff], flags: 0x80, draw: COMPASS, object: [oot, 0x00b8], name: "the <C0>Compass" }
 - { id: OOT_MAP, item: OOT_MAP, type: MAP_COMPASS, add: [OOT_MAP, 0xffff], flags: 0x80, draw: MAP, object: [oot, 0x00c8], name: "the <C0>Dungeon Map" }
-- { id: OOT_SMALL_KEY, item: OOT_SMALL_KEY, type: KEY, add: [OOT_SMALL_KEY, 0xffff], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key" }
+- { id: OOT_SMALL_KEY, item: OOT_SMALL_KEY, type: KEY, add: [OOT_SMALL_KEY, 0xffff], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key" }
 - { id: OOT_MAGIC_JAR_SMALL, item: OOT_MAGIC_JAR_SMALL, type: MINOR, add: [OOT_MAGIC, 1], flags: 0x6f, draw: MAGIC_SMALL, object: [oot, 0x00cd], name: "a <C0>Small Magic Jar" }
 - { id: OOT_MAGIC_JAR_LARGE, item: OOT_MAGIC_JAR_LARGE, type: MINOR, add: [OOT_MAGIC, 2], flags: 0x6e, draw: MAGIC_LARGE, object: [oot, 0x00cd], name: "a <C0>Large Magic Jar" }
 - { id: OOT_WALLET2, item: OOT_WALLET2, type: MAJOR, add: [OOT_WALLET, 2], flags: 0x80, draw: WALLET2, object: [oot, 0x00d1], name: "the <C1>Adult's Wallet" }
@@ -92,8 +92,8 @@
 - { id: OOT_SPELL_FIRE, item: OOT_SPELL_FIRE, type: MAJOR, add: OOT_NORMAL, flags: 0x80, draw: OOT_SPELL_FIRE, object: [oot, 0x015d], name: "<C1>Din's Fire" }
 - { id: OOT_SPELL_WIND, item: OOT_SPELL_WIND, type: MAJOR, add: OOT_NORMAL, flags: 0x80, draw: OOT_SPELL_WIND, object: [oot, 0x015d], name: "<C1>Farore's Wind" }
 - { id: OOT_SPELL_LOVE, item: OOT_SPELL_LOVE, type: MAJOR, add: OOT_NORMAL, flags: 0x80, draw: OOT_SPELL_LOVE, object: [oot, 0x015d], name: "<C1>Nayru's Love" }
-- { id: OOT_BULLET_BAG, item: OOT_BULLET_BAG, type: MAJOR, add: [SLINGSHOT, 1], flags: 0x80, draw: OOT_BULLET_BAG2, object: [oot, 0x017b] }
-- { id: OOT_BULLET_BAG2, item: OOT_BULLET_BAG2, type: MAJOR, add: [SLINGSHOT, 2], flags: 0x80, draw: OOT_BULLET_BAG2, object: [oot, 0x017b], name: "the <C1>Large Bullet Bag" }
+- { id: OOT_BULLET_BAG, item: OOT_BULLET_BAG, type: MAJOR, add: [OOT_SLINGSHOT, 1], flags: 0x80, draw: OOT_BULLET_BAG2, object: [oot, 0x017b] }
+- { id: OOT_BULLET_BAG2, item: OOT_BULLET_BAG2, type: MAJOR, add: [OOT_SLINGSHOT, 2], flags: 0x80, draw: OOT_BULLET_BAG2, object: [oot, 0x017b], name: "the <C1>Large Bullet Bag" }
 - { id: OOT_STICKS_5, item: OOT_STICKS_5, type: MINOR, add: [OOT_STICKS, 5], flags: 0x0d, draw: DEKU_STICK, object: [oot, 0x00c7], name: "<C0>5 Deku Sticks" }
 - { id: OOT_STICKS_10, item: OOT_STICKS_10, type: MINOR, add: [OOT_STICKS, 10], flags: 0x0d, draw: DEKU_STICK, object: [oot, 0x00c7], name: "<C0>10 Deku Sticks" }
 - { id: OOT_NUTS_5_ALT, item: OOT_NUTS_5, type: MINOR, add: [OOT_NUTS, 5], flags: 0x0c, draw: DEKU_NUT, object: [oot, 0x00bb], name: "<C0>5 Deku Nuts" }
@@ -102,7 +102,7 @@
 - { id: OOT_BOMBS_10, item: OOT_BOMBS_10, type: MINOR, add: [OOT_BOMBS, 10], flags: 0x59, draw: BOMB, object: [oot, 0x00ce], name: "<C0>10 Bombs" }
 - { id: OOT_BOMBS_20, item: OOT_BOMBS_20, type: MINOR, add: [OOT_BOMBS, 20], flags: 0x59, draw: BOMB, object: [oot, 0x00ce], name: "<C0>20 Bombs" }
 - { id: OOT_BOMBS_30, item: OOT_BOMBS_30, type: MINOR, add: [OOT_BOMBS, 30], flags: 0x59, draw: BOMB, object: [oot, 0x00ce], name: "<C0>30 Bombs" }
-- { id: OOT_DEKU_SEEDS_30, item: OOT_SEEDS_30, type: MINOR, add: [SEEDS, 30], flags: 0x50, draw: OOT_SEEDS, object: [oot, 0x0119], name: "<C0>30 Deku Seeds" }
+- { id: OOT_DEKU_SEEDS_30, item: OOT_SEEDS_30, type: MINOR, add: [OOT_SEEDS, 30], flags: 0x50, draw: OOT_SEEDS, object: [oot, 0x0119], name: "<C0>30 Deku Seeds" }
 - { id: OOT_BOMBCHU_5, item: OOT_BOMBCHU_5, type: NORMAL, add: [OOT_BOMBCHU, 5], flags: 0x80, draw: BOMBCHU, object: [oot, 0x00d9], name: "<C0>5 Bombchu" }
 - { id: OOT_BOMBCHU_20, item: OOT_BOMBCHU_20, type: NORMAL, add: [OOT_BOMBCHU, 20], flags: 0x80, draw: BOMBCHU, object: [oot, 0x00d9], name: "<C0>20 Bombchu" }
 - { id: OOT_FISH, item: OOT_FISH, type: MINOR, add: OOT_BOTTLE_REFILL, flags: 0x80, draw: FISH, object: [oot, 0x00f4], name: "a <C0>Fish" }
@@ -110,7 +110,7 @@
 - { id: OOT_BLUE_FIRE, item: OOT_BLUE_FIRE, type: MINOR, add: OOT_BOTTLE_REFILL, flags: 0x80, draw: OOT_BLUE_FIRE, object: [oot, 0x0173], name: "some <C0>Blue Fire" }
 - { id: OOT_POE, item: OOT_POE, type: MINOR, add: OOT_BOTTLE_REFILL, flags: 0x80, draw: POE, object: [oot, 0x0176], name: "a <C0>Poe" }
 - { id: OOT_BIG_POE, item: OOT_BIG_POE, type: MINOR, add: OOT_BOTTLE_REFILL, flags: 0x80, draw: BIG_POE, object: [oot, 0x0176], name: "a <C0>Big Poe" }
-- { id: OOT_TC_SMALL_KEY, item: OOT_SMALL_KEY, type: KEY, add: [OOT_SMALL_KEY, 0xffff], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key" }
+- { id: OOT_TC_SMALL_KEY, item: OOT_SMALL_KEY, type: KEY, add: [OOT_SMALL_KEY, 0xffff], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key" }
 - { id: OOT_TC_RUPEE_GREEN, item: OOT_RUPEE_GREEN, type: RUPEE, add: [OOT_RUPEE, 1], flags: 0x00, draw: [RUPEE, 1], object: [mm, 0x013f], name: "a <C0>Green Rupee" }
 - { id: OOT_TC_RUPEE_BLUE, item: OOT_RUPEE_BLUE, type: RUPEE, add: [OOT_RUPEE, 5], flags: 0x01, draw: [RUPEE, 2], object: [mm, 0x013f], name: "a <C0>Blue Rupee" }
 - { id: OOT_TC_RUPEE_RED, item: OOT_RUPEE_RED, type: RUPEE, add: [OOT_RUPEE, 20], flags: 0x02, draw: [RUPEE, 3], object: [mm, 0x013f], name: "a <C0>Red Rupee" }
@@ -120,7 +120,7 @@
 - { id: OOT_STICK_UPGRADE2, item: OOT_STICK_UPGRADE2, type: MAJOR, add: [OOT_STICK_UPGRADE, 3], flags: 0x80, draw: OOT_STICK_UPGRADE2, object: [oot, 0x00c7], name: "the <C1>Second Deku Stick Upgrade" }
 - { id: OOT_NUT_UPGRADE, item: OOT_NUT_UPGRADE, type: MAJOR, add: [OOT_NUT_UPGRADE, 2], flags: 0x80, draw: OOT_NUT_UPGRADE, object: [oot, 0x00bb], name: "the <C1>Deku Nut Upgrade" }
 - { id: OOT_NUT_UPGRADE2, item: OOT_NUT_UPGRADE2, type: MAJOR, add: [OOT_NUT_UPGRADE, 3], flags: 0x80, draw: OOT_NUT_UPGRADE2, object: [oot, 0x00bb], name: "the <C1>Second Deku Nut Upgrade" }
-- { id: OOT_BULLET_BAG3, item: OOT_BULLET_BAG3, type: MAJOR, add: [SLINGSHOT, 3], flags: 0x80, draw: OOT_BULLET_BAG3, object: [oot, 0x017b], name: "the <C1>Largest Bullet Bag" }
+- { id: OOT_BULLET_BAG3, item: OOT_BULLET_BAG3, type: MAJOR, add: [OOT_SLINGSHOT, 3], flags: 0x80, draw: OOT_BULLET_BAG3, object: [oot, 0x017b], name: "the <C1>Largest Bullet Bag" }
 - { id: OOT_UNUSED_ICE_TRAP, flags: 0x00 }
 - { id: OOT_UNK_7D, flags: 0x00 }
 - { id: OOT_UNK_7E, flags: 0x00 }
@@ -139,6 +139,13 @@
 - { id: OOT_SONG_TIME, type: MAJOR, add: [OOT_QUEST, QUEST_OOT_SONG_TIME], flags: 0x80, draw: [NOTE, 0x01], object: [oot, 0x00b6], name: "the <C2>Song of Time" }
 - { id: OOT_SONG_STORMS, type: MAJOR, add: [OOT_QUEST, QUEST_OOT_SONG_STORMS], flags: 0x80, draw: [NOTE, 0x00], object: [oot, 0x00b6], name: "the <C2>Song of Storms" }
 - { id: OOT_SONG_EMPTINESS, type: MAJOR, add: OOT_SONG_EMPTINESS, flags: 0x80, draw: [NOTE, 0x84], object: [oot, 0x00b6], name: "the <C2>Elegy of Emptiness" }
+- { id: OOT_SONG_HEALING, type: MAJOR, add: OOT_SONG_HEALING, flags: 0x80, draw: [NOTE, 0x02], object: [oot, 0x00b6], name: "the <C2>Song of Healing" }
+- { id: OOT_SONG_SOARING, type: MAJOR, add: OOT_SONG_SOARING, flags: 0x80, draw: [NOTE, 0x05], object: [oot, 0x00b6], name: "the <C2>Song of Soaring" }
+- { id: OOT_SONG_AWAKENING, type: MAJOR, add: OOT_SONG_AWAKENING, flags: 0x80, draw: [NOTE, 0x82], object: [oot, 0x00b6], name: "the <C2>Sonata of Awakening" }
+- { id: OOT_SONG_GORON, type: MAJOR, add: OOT_SONG_GORON, flags: 0x80, draw: [NOTE, 0x85], object: [oot, 0x00b6], name: "the <C2>Goron Lullaby" }
+- { id: OOT_SONG_GORON_HALF, type: MAJOR, add: OOT_SONG_GORON_HALF, flags: 0x80, draw: [NOTE, 0x85], object: [oot, 0x00b6], name: "the <C2>Goron Lullaby Intro" }
+- { id: OOT_SONG_ZORA, type: MAJOR, add: OOT_SONG_ZORA, flags: 0x80, draw: [NOTE, 0x81], object: [oot, 0x00b6], name: "the <C2>New Wave Bossa Nova" }
+- { id: OOT_SONG_ORDER, type: MAJOR, add: OOT_SONG_ORDER, flags: 0x80, draw: [NOTE, 0x80], object: [oot, 0x00b6], name: "the <C2>Oath to Order" }
 - { id: OOT_SONG_NOTE_TP_FOREST, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_TP_FOREST], flags: 0x80, draw: [NOTE, 0xc2], object: [oot, 0x00b6], name: "a <C2>Minuet of Forest Note" }
 - { id: OOT_SONG_NOTE_TP_FIRE, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_TP_FIRE], flags: 0x80, draw: [NOTE, 0xc5], object: [oot, 0x00b6], name: "a <C2>Bolero of Fire Note" }
 - { id: OOT_SONG_NOTE_TP_WATER, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_TP_WATER], flags: 0x80, draw: [NOTE, 0xc1], object: [oot, 0x00b6], name: "a <C2>Serenade of Water Note" }
@@ -146,12 +153,18 @@
 - { id: OOT_SONG_NOTE_TP_SHADOW, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_TP_SHADOW], flags: 0x80, draw: [NOTE, 0xc0], object: [oot, 0x00b6], name: "a <C2>Nocturne of Shadow Note" }
 - { id: OOT_SONG_NOTE_TP_LIGHT, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_TP_LIGHT], flags: 0x80, draw: [NOTE, 0xc3], object: [oot, 0x00b6], name: "a <C2>Prelude of Light Note" }
 - { id: OOT_SONG_NOTE_ZELDA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_ZELDA], flags: 0x80, draw: [NOTE, 0x45], object: [oot, 0x00b6], name: "a <C2>Zelda's Lullaby Note" }
-- { id: OOT_SONG_NOTE_EPONA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_EPONA], flags: 0x80, draw: [NOTE, 0x44], object: [oot, 0x00b6], name: "a <C2>Epona's Song Note" }
+- { id: OOT_SONG_NOTE_EPONA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_EPONA], flags: 0x80, draw: [NOTE, 0x44], object: [oot, 0x00b6], name: "an <C2>Epona's Song Note" }
 - { id: OOT_SONG_NOTE_SARIA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_SARIA], flags: 0x80, draw: [NOTE, 0x42], object: [oot, 0x00b6], name: "a <C2>Saria's Song Note" }
 - { id: OOT_SONG_NOTE_SUN, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_SUN], flags: 0x80, draw: [NOTE, 0x43], object: [oot, 0x00b6], name: "a <C2>Sun's Song Note" }
 - { id: OOT_SONG_NOTE_TIME, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_TIME], flags: 0x80, draw: [NOTE, 0x41], object: [oot, 0x00b6], name: "a <C2>Song of Time Note" }
 - { id: OOT_SONG_NOTE_STORMS, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_STORMS], flags: 0x80, draw: [NOTE, 0x40], object: [oot, 0x00b6], name: "a <C2>Song of Storms Note" }
-- { id: OOT_SONG_NOTE_EMPTINESS, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_EMPTINESS], flags: 0x80, draw: [NOTE, 0xc4], object: [oot, 0x00b6], name: "a <C2>Elegy of Emptiness Note" }
+- { id: OOT_SONG_NOTE_EMPTINESS, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_EMPTINESS], flags: 0x80, draw: [NOTE, 0xc4], object: [oot, 0x00b6], name: "an <C2>Elegy of Emptiness Note" }
+- { id: OOT_SONG_NOTE_HEALING, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_HEALING], flags: 0x80, draw: [NOTE, 0x42], object: [oot, 0x00b6], name: "a <C2>Song of Healing Note" }
+- { id: OOT_SONG_NOTE_SOARING, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_SOARING], flags: 0x80, draw: [NOTE, 0x45], object: [oot, 0x00b6], name: "a <C2>Song of Soaring Note" }
+- { id: OOT_SONG_NOTE_AWAKENING, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_AWAKENING], flags: 0x80, draw: [NOTE, 0xc2], object: [oot, 0x00b6], name: "a <C2>Sonata of Awakening Note" }
+- { id: OOT_SONG_NOTE_GORON, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_GORON], flags: 0x80, draw: [NOTE, 0xc5], object: [oot, 0x00b6], name: "a <C2>Goron Lullaby Note" }
+- { id: OOT_SONG_NOTE_ZORA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_ZORA], flags: 0x80, draw: [NOTE, 0xc1], object: [oot, 0x00b6], name: "a <C2>New Wave Bossa Nova Note" }
+- { id: OOT_SONG_NOTE_ORDER, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_ORDER], flags: 0x80, draw: [NOTE, 0xc0], object: [oot, 0x00b6], name: "an <C2>Oath to Order Note" }
 - { id: OOT_SWORD_MASTER, type: MAJOR, add: [OOT_SWORD, 2], flags: 0x80, draw: OOT_SWORD_MASTER, object: GI_MASTER_SWORD, name: "the <C1>Master Sword" }
 - { id: OOT_STONE_EMERALD, type: MAJOR, add: [OOT_QUEST, QUEST_OOT_STONE_EMERALD], flags: 0x80, draw: OOT_STONE_EMERALD, object: GI_STONE_EMERALD, name: "the <C3>Kokiri's Emerald" }
 - { id: OOT_STONE_RUBY, type: MAJOR, add: [OOT_QUEST, QUEST_OOT_STONE_RUBY], flags: 0x80, draw: OOT_STONE_RUBY, object: GI_STONE_RUBY, name: "the <C3>Goron's Ruby" }
@@ -167,15 +180,15 @@
 - { id: OOT_DEFENSE_UPGRADE, type: MAJOR, add: OOT_DEFENSE_UPGRADE, flags: 0x80, draw: DEFENSE_UPGRADE, object: [oot, 0x00bd], name: "the <C1>Defense Upgrade" }
 - { id: OOT_PROGRESSIVE_SHIELD_DEKU, type: MAJOR, add: [OOT_SHIELD, 0x101], flags: 0xa0, draw: [OOT_SHIELD_DEKU, 1], object: [oot, 0x00cb], name: "the <C1>Progressive Deku Shield" }
 - { id: OOT_PROGRESSIVE_SHIELD_HYLIAN, type: MAJOR, add: [OOT_SHIELD, 0x102], flags: 0xa0, draw: [OOT_SHIELD_HYLIAN, 1], object: [oot, 0x00dc], name: "the <C1>Progressive Hylian Shield" }
-- { id: OOT_SMALL_KEY_FOREST, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TEMPLE_FOREST], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key (Forest)" }
-- { id: OOT_SMALL_KEY_FIRE, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TEMPLE_FIRE], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key (Fire)" }
-- { id: OOT_SMALL_KEY_WATER, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TEMPLE_WATER], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key (Water)" }
-- { id: OOT_SMALL_KEY_SPIRIT, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TEMPLE_SPIRIT], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key (Spirit)" }
-- { id: OOT_SMALL_KEY_SHADOW, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TEMPLE_SHADOW], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key (Shadow)" }
-- { id: OOT_SMALL_KEY_GANON, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_INSIDE_GANON_CASTLE], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key (Ganon)" }
-- { id: OOT_SMALL_KEY_BOTW, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_BOTTOM_OF_THE_WELL], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key (Well)" }
-- { id: OOT_SMALL_KEY_GF, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_THIEVES_HIDEOUT], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key (Hideout)" }
-- { id: OOT_SMALL_KEY_GTG, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_GERUDO_TRAINING_GROUND], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key (GTG)" }
+- { id: OOT_SMALL_KEY_FOREST, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TEMPLE_FOREST], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key (Forest)" }
+- { id: OOT_SMALL_KEY_FIRE, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TEMPLE_FIRE], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key (Fire)" }
+- { id: OOT_SMALL_KEY_WATER, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TEMPLE_WATER], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key (Water)" }
+- { id: OOT_SMALL_KEY_SPIRIT, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TEMPLE_SPIRIT], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key (Spirit)" }
+- { id: OOT_SMALL_KEY_SHADOW, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TEMPLE_SHADOW], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key (Shadow)" }
+- { id: OOT_SMALL_KEY_GANON, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_INSIDE_GANON_CASTLE], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key (Ganon)" }
+- { id: OOT_SMALL_KEY_BOTW, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_BOTTOM_OF_THE_WELL], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key (Well)" }
+- { id: OOT_SMALL_KEY_GF, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_THIEVES_HIDEOUT], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key (Hideout)" }
+- { id: OOT_SMALL_KEY_GTG, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_GERUDO_TRAINING_GROUND], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key (GTG)" }
 - { id: OOT_BOSS_KEY_FOREST, type: BOSS_KEY, add: [OOT_BOSS_KEY, SCE_OOT_TEMPLE_FOREST], flags: 0x80, draw: BOSS_KEY, object: [oot, 0x00b9], name: "the <C0>Boss Key (Forest)" }
 - { id: OOT_BOSS_KEY_FIRE, type: BOSS_KEY, add: [OOT_BOSS_KEY, SCE_OOT_TEMPLE_FIRE], flags: 0x80, draw: BOSS_KEY, object: [oot, 0x00b9], name: "the <C0>Boss Key (Fire)" }
 - { id: OOT_BOSS_KEY_WATER, type: BOSS_KEY, add: [OOT_BOSS_KEY, SCE_OOT_TEMPLE_WATER], flags: 0x80, draw: BOSS_KEY, object: [oot, 0x00b9], name: "the <C0>Boss Key (Water)" }
@@ -331,16 +344,16 @@
 - { id: OOT_SOUL_ANIMAL_BUTTERFLY, type: SOUL, add: [OOT_SOUL, 0x3003], flags: 0x80, draw: [GS_SOUL, 6], object: [oot, 0x015c], name: "the <C1>Soul of Butterflies" }
 - { id: OOT_SOUL_MISC_GS, type: SOUL, add: [OOT_SOUL, 0x4000], flags: 0x80, draw: [GS_SOUL, 7], object: [oot, 0x015c], name: "the <C1>Soul of Gold Skulltulas" }
 - { id: OOT_SOUL_MISC_BUSINESS_SCRUB, type: SOUL, add: [OOT_SOUL, 0x4001], flags: 0x80, draw: [GS_SOUL, 7], object: [oot, 0x015c], name: "the <C1>Soul of Business Scrubs" }
-- { id: OOT_KEY_RING, type: KEY, add: [OOT_KEY_RING, 0xffff], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "the <C0>Key Ring" }
-- { id: OOT_KEY_RING_FOREST, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_FOREST], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "the <C0>Key Ring (Forest)" }
-- { id: OOT_KEY_RING_FIRE, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_FIRE], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "the <C0>Key Ring (Fire)" }
-- { id: OOT_KEY_RING_WATER, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_WATER], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "the <C0>Key Ring (Water)" }
-- { id: OOT_KEY_RING_SPIRIT, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_SPIRIT], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "the <C0>Key Ring (Spirit)" }
-- { id: OOT_KEY_RING_SHADOW, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_SHADOW], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "the <C0>Key Ring (Shadow)" }
-- { id: OOT_KEY_RING_GANON, type: KEY, add: [OOT_KEY_RING, SCE_OOT_INSIDE_GANON_CASTLE], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "the <C0>Key Ring (Ganon)" }
-- { id: OOT_KEY_RING_BOTW, type: KEY, add: [OOT_KEY_RING, SCE_OOT_BOTTOM_OF_THE_WELL], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "the <C0>Key Ring (Well)" }
-- { id: OOT_KEY_RING_GF, type: KEY, add: [OOT_KEY_RING, SCE_OOT_THIEVES_HIDEOUT], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "the <C0>Key Ring (Hideout)" }
-- { id: OOT_KEY_RING_GTG, type: KEY, add: [OOT_KEY_RING, SCE_OOT_GERUDO_TRAINING_GROUND], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "the <C0>Key Ring (GTG)" }
+- { id: OOT_KEY_RING, type: KEY, add: [OOT_KEY_RING, 0xffff], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring" }
+- { id: OOT_KEY_RING_FOREST, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_FOREST], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (Forest)" }
+- { id: OOT_KEY_RING_FIRE, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_FIRE], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (Fire)" }
+- { id: OOT_KEY_RING_WATER, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_WATER], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (Water)" }
+- { id: OOT_KEY_RING_SPIRIT, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_SPIRIT], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (Spirit)" }
+- { id: OOT_KEY_RING_SHADOW, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_SHADOW], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (Shadow)" }
+- { id: OOT_KEY_RING_GANON, type: KEY, add: [OOT_KEY_RING, SCE_OOT_INSIDE_GANON_CASTLE], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (Ganon)" }
+- { id: OOT_KEY_RING_BOTW, type: KEY, add: [OOT_KEY_RING, SCE_OOT_BOTTOM_OF_THE_WELL], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (Well)" }
+- { id: OOT_KEY_RING_GF, type: KEY, add: [OOT_KEY_RING, SCE_OOT_THIEVES_HIDEOUT], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (Hideout)" }
+- { id: OOT_KEY_RING_GTG, type: KEY, add: [OOT_KEY_RING, SCE_OOT_GERUDO_TRAINING_GROUND], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (GTG)" }
 - { id: OOT_SKELETON_KEY, type: MAJOR, add: OOT_SKELETON_KEY, flags: 0x80, draw: SKELETON_KEY, object: SKELETON_KEY, name: "the <C1>Skeleton Key" }
 - { id: OOT_COIN_RED, type: MAJOR, add: [COIN, 0], flags: 0x80, draw: COIN_RED, object: [oot, 0x012e], name: "a <C1>Red Coin" }
 - { id: OOT_COIN_GREEN, type: MAJOR, add: [COIN, 1], flags: 0x80, draw: COIN_GREEN, object: [oot, 0x012e], name: "a <C1>Green Coin" }
@@ -377,8 +390,8 @@
 - { id: OOT_BUTTON_C_LEFT, type: MAJOR, add: [OOT_BUTTON, 2], flags: 0x80, draw: BUTTON_C_LEFT, object: BTN_C_HORIZONTAL, name: "the <C1>C-Left Button" }
 - { id: OOT_BUTTON_C_UP, type: MAJOR, add: [OOT_BUTTON, 3], flags: 0x80, draw: BUTTON_C_UP, object: BTN_C_VERTICAL, name: "the <C1>C-Up Button" }
 - { id: OOT_BUTTON_C_DOWN, type: MAJOR, add: [OOT_BUTTON, 4], flags: 0x80, draw: BUTTON_C_DOWN, object: BTN_C_VERTICAL, name: "the <C1>C-Down Button" }
-- { id: OOT_SMALL_KEY_TCG, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TREASURE_SHOP], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "a <C0>Small Key (Chest Game)" }
-- { id: OOT_KEY_RING_TCG, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TREASURE_SHOP], flags: 0x80, draw: SMALL_KEY, object: [oot, 0x00aa], name: "the <C0>Key Ring (Chest Game)" }
+- { id: OOT_SMALL_KEY_TCG, type: KEY, add: [OOT_SMALL_KEY, SCE_OOT_TREASURE_SHOP], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "a <C0>Small Key (Chest Game)" }
+- { id: OOT_KEY_RING_TCG, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TREASURE_SHOP], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (Chest Game)" }
 - { id: OOT_BOTTLE_POTION_RED, item: OOT_POTION_RED, type: MAJOR, add: OOT_BOTTLE_NEW, flags: 0x80, draw: BOTTLE_POTION, object: [mm, 0x0196], name:  "a <C1>bottle of Red Potion" }
 - { id: OOT_BOTTLE_POTION_GREEN, item: OOT_POTION_GREEN, type: MAJOR, add: OOT_BOTTLE_NEW, flags: 0x80, draw: [BOTTLE_POTION, 0x01], object: [mm, 0x0196], name:  "a <C1>bottle of Green Potion" }
 - { id: OOT_BOTTLE_POTION_BLUE, item: OOT_POTION_BLUE, type: MAJOR, add: OOT_BOTTLE_NEW, flags: 0x80, draw: [BOTTLE_POTION, 0x02], object: [mm, 0x0196], name:  "a <C1>bottle of Blue Potion" }
@@ -448,14 +461,16 @@
 - { id: OOT_FAIRY_BIG, type: MINOR, add: OOT_FAIRY_BIG, flags: 0x80, draw: FAIRY_BIG, object: [oot, 0x0177], name: "a <C0>Big Fairy" }
 - { id: OOT_MASK_BLAST, type: MASK, add: [OOT_TRADE_CHILD, XITEM_OOT_CHILD_MASK_BLAST], flags: 0x80, draw: MM_MASK_BLAST, object: [mm, 0x026d], name: "the <C1>Blast Mask" }
 - { id: OOT_MASK_STONE, type: MASK, add: [OOT_TRADE_CHILD, XITEM_OOT_CHILD_MASK_STONE], flags: 0x80, draw: MM_MASK_STONE, object: [mm, 0x0254], name: "the <C1>Stone Mask" }
-- { id: OOT_MASK_KAMARO, type: MASK, add: [OOT_TRADE_CHILD, XITEM_OOT_CHILD_MASK_KAMARO], flags: 0x80, draw: MM_MASK_KAMARO, object: [mm, 0x027d], name: "the <C1>Kamaro Mask" }
+- { id: OOT_MASK_KAMARO, type: MASK, add: [OOT_TRADE_CHILD, XITEM_OOT_CHILD_MASK_KAMARO], flags: 0x80, draw: MM_MASK_KAMARO, object: [mm, 0x027d], name: "the <C1>Kamaro's Mask" }
 - { id: OOT_SCALE_BRONZE, type: MAJOR, add: [OOT_SCALE, 1], flags: 0x80, draw: [SCALE, 1], object: [oot, 0x00db], name: "the <C1>Bronze Scale" }
+- { id: OOT_GREAT_FAIRY_SWORD, item: OOT_GREAT_FAIRY_SWORD, type: MAJOR, add: [OOT_HAMMER_GFS, 1], flags: 0x80, draw: MM_GREAT_FAIRY_SWORD, object: [mm, 0x01fb], name: "the <C1>Great Fairy's Sword" }
 - { id: OOT_WEIRD_MUSHROOM, item: OOT_MAGIC_MUSHROOM, type: MINOR, add: OOT_BOTTLE_REFILL, flags: 0x80, draw: MM_MAGIC_MUSHROOM, object: [mm, 0x021d], name: "a <C0>Magic Mushroom" }
 - { id: OOT_CHATEAU, item: OOT_CHATEAU, type: MINOR, add: OOT_BOTTLE_REFILL, flags: 0x80, draw: MM_CHATEAU, object: [mm, 0x00c1], name: "some <C0>Chateau Romani" }
 - { id: OOT_GOLD_DUST, item: OOT_GOLD_DUST, type: MINOR, add: OOT_BOTTLE_REFILL, flags: 0x80, draw: MM_GOLD_DUST, object: [mm, 0x01e8] }
 - { id: OOT_SEAHORSE2, item: OOT_SEAHORSE, type: NORMAL, add: OOT_BOTTLE_REFILL, flags: 0x80, draw: MM_SEAHORSE, object: [mm, 0x01f0], name: "a <C0>Seahorse" }
 - { id: OOT_BOTTLED_GOLD_DUST, item: OOT_GOLD_DUST, type: MAJOR, add: OOT_BOTTLE_NEW, flags: 0x80, draw: MM_BOTTLED_GOLD_DUST, object: [mm, 0x01e9], name: "a <C1>bottle of Gold Dust" }
 - { id: OOT_BOTTLE_CHATEAU, item: OOT_CHATEAU, type: MAJOR, add: OOT_BOTTLE_NEW, flags: 0x80, draw: MM_BOTTLE_CHATEAU, object: [mm, 0x0227], name: "a bottle of <C0>Chateau Romani" }
+- { id: OOT_POWDER_KEG, item: OOT_POWDER_KEG, type: MAJOR, add: [OOT_KEG, 1], flags: 0x80, draw: MM_KEG, object: [mm, 0x01ca], name: "a <C0>Powder Keg" }
 - { id: OOT_TRAP_ICE, type: MINOR, add: [TRAP, 0x00], flags: 0x80, draw: [TRAP, 0x00], name: "an <COLOR_BLUE>Ice Trap" }
 - { id: OOT_TRAP_FIRE, type: MINOR, add: [TRAP, 0x01], flags: 0x80, draw: [TRAP, 0x01], name: "a <COLOR_BLUE>Fire Trap" }
 - { id: OOT_TRAP_SHOCK, type: MINOR, add: [TRAP, 0x02], flags: 0x80, object: EFFECT_SHOCK, draw: [TRAP, 0x02], name: "a <COLOR_BLUE>Shock Trap" }
@@ -464,6 +479,33 @@
 - { id: OOT_TRAP_KNOCKBACK, type: MINOR, add: [TRAP, 0x05], flags: 0x80, object: [oot, 0x085], draw: [TRAP, 0x05], name: "a <COLOR_BLUE>Knockback Trap" }
 - { id: OOT_TRAP_RUPOOR, type: RUPEE, add: [TRAP, 0x06], flags: 0x80, draw: [RUPEE, 0], object: [mm, 0x013f], name: "a <COLOR_BLUE>Rupoor" }
 - { id: OOT_PLATINUM_TOKEN, type: MAJOR, add: OOT_PLATINUM_TOKEN, flags: 0x80, draw: [GS_SOUL, 8], object: [oot, 0x015c], name: "the <C0>Platinum Token" }
+- { id: OOT_RUSTY_KEY_TREASURE_CHEST_GAME,       type: KEY, add: [OOT_RUSTY_KEY, 0x00], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Treasure Chest Game)" }
+- { id: OOT_RUSTY_KEY_GUARD_HOUSE,               type: KEY, add: [OOT_RUSTY_KEY, 0x01], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Guard House)" }
+- { id: OOT_RUSTY_KEY_HYRULE_CASTLE,             type: KEY, add: [OOT_RUSTY_KEY, 0x02], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Hyrule Castle)" }
+- { id: OOT_RUSTY_KEY_DOG_LADY_HOUSE,            type: KEY, add: [OOT_RUSTY_KEY, 0x03], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Dog Lady House)" }
+- { id: OOT_RUSTY_KEY_BACK_ALLEY_HOUSE,          type: KEY, add: [OOT_RUSTY_KEY, 0x04], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Back Alley House)" }
+- { id: OOT_RUSTY_KEY_BOMBCHU_SHOP,              type: KEY, add: [OOT_RUSTY_KEY, 0x05], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Bombchu Shop)" }
+- { id: OOT_RUSTY_KEY_MASK_SHOP,                 type: KEY, add: [OOT_RUSTY_KEY, 0x06], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Mask Shop)" }
+- { id: OOT_RUSTY_KEY_CHILD_BAZAAR,              type: KEY, add: [OOT_RUSTY_KEY, 0x07], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Child Bazaar)" }
+- { id: OOT_RUSTY_KEY_CHILD_POTION_SHOP,         type: KEY, add: [OOT_RUSTY_KEY, 0x08], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Child Potion Shop)" }
+- { id: OOT_RUSTY_KEY_CHILD_SHOOTING_GALLERY,    type: KEY, add: [OOT_RUSTY_KEY, 0x09], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Child Shooting Gallery)" }
+- { id: OOT_RUSTY_KEY_BOMBCHU_BOWLING,           type: KEY, add: [OOT_RUSTY_KEY, 0x0a], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Bombchu Bowling)" }
+- { id: OOT_RUSTY_KEY_LABORATORY,                type: KEY, add: [OOT_RUSTY_KEY, 0x0b], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Laboratory)" }
+- { id: OOT_RUSTY_KEY_FISHING_POND,              type: KEY, add: [OOT_RUSTY_KEY, 0x0c], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Fishing Pond)" }
+- { id: OOT_RUSTY_KEY_SILO,                      type: KEY, add: [OOT_RUSTY_KEY, 0x0d], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Silo)" }
+- { id: OOT_RUSTY_KEY_RANCH_STABLE,              type: KEY, add: [OOT_RUSTY_KEY, 0x0e], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Ranch Stable)" }
+- { id: OOT_RUSTY_KEY_RANCH_HOUSE,               type: KEY, add: [OOT_RUSTY_KEY, 0x0f], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Ranch House)" }
+- { id: OOT_RUSTY_KEY_RANCH_HOUSE_ROOM,          type: KEY, add: [OOT_RUSTY_KEY, 0x10], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Malon's Room)" }
+- { id: OOT_RUSTY_KEY_GRAVEYARD,                 type: KEY, add: [OOT_RUSTY_KEY, 0x11], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Kakariko Graveyard Hut)" }
+- { id: OOT_RUSTY_KEY_WINDMILL,                  type: KEY, add: [OOT_RUSTY_KEY, 0x12], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Windmill)" }
+- { id: OOT_RUSTY_KEY_IMPA_HOUSE,                type: KEY, add: [OOT_RUSTY_KEY, 0x13], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Impa's House)" }
+- { id: OOT_RUSTY_KEY_CARPENTER_HOUSE,           type: KEY, add: [OOT_RUSTY_KEY, 0x14], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Carpenter House)" }
+- { id: OOT_RUSTY_KEY_GRANNY_POTION_SHOP,        type: KEY, add: [OOT_RUSTY_KEY, 0x15], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Granny Potion Shop)" }
+- { id: OOT_RUSTY_KEY_ADULT_SHOOTING_GALLERY,    type: KEY, add: [OOT_RUSTY_KEY, 0x16], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Adult Shooting Gallery)" }
+- { id: OOT_RUSTY_KEY_SKULLTULA_HOUSE,           type: KEY, add: [OOT_RUSTY_KEY, 0x17], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Skulltula House)" }
+- { id: OOT_RUSTY_KEY_ADULT_BAZAAR,              type: KEY, add: [OOT_RUSTY_KEY, 0x18], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Adult Bazaar)" }
+- { id: OOT_RUSTY_KEY_ADULT_POTION_SHOP,         type: KEY, add: [OOT_RUSTY_KEY, 0x19], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Adult Potion Shop)" }
+- { id: OOT_RUSTY_KEY_ADULT_POTION_SHOP_BACK,    type: KEY, add: [OOT_RUSTY_KEY, 0x1a], flags: 0x80, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Adult Potion Shop Back)" }
 - { id: MM_RUPEE_GREEN, item: MM_RUPEE_GREEN, type: RUPEE, add: [MM_RUPEE, 1], flags: 0x00, draw: [RUPEE, 1], object: [mm, 0x013f], name: "a <C0>Green Rupee" }
 - { id: MM_RUPEE_BLUE, item: MM_RUPEE_BLUE, type: RUPEE, add: [MM_RUPEE, 5], flags: 0x01, draw: [RUPEE, 2], object: [mm, 0x013f], name: "a <C0>Blue Rupee" }
 - { id: MM_RUPEE_RED_10, item: MM_RUPEE_RED10, type: RUPEE, add: [MM_RUPEE, 10], flags: 0x02, draw: [RUPEE, 3], object: [mm, 0x013f], name: "a <C0>Red Rupee" }
@@ -520,7 +562,7 @@
 - { id: MM_SHIELD_MIRROR, item: MM_SHIELD_MIRROR, type: MAJOR, add: [MM_SHIELD, 3], flags: 0xa0, draw: MM_SHIELD_MIRROR, object: [mm, 0x00c3], name: "the <C1>Mirror Shield" }
 - { id: MM_PROGRESSIVE_SHIELD_DEKU, type: MAJOR, add: [MM_SHIELD, 0x101], flags: 0xa0, draw: [OOT_SHIELD_DEKU, 1], object: [oot, 0x00cb], name: "the <C1>Progressive Deku Shield" }
 - { id: MM_PROGRESSIVE_SHIELD_HERO, type: MAJOR, add: [MM_SHIELD, 0x102], flags: 0xa0, draw: [MM_SHIELD_HERO, 1], object: [mm, 0x00b3], name: "the <C1>Progressive Hero's Shield" }
-- { id: MM_POWDER_KEG, item: MM_POWDER_KEG, type: MAJOR, add: [KEG, 1], flags: 0x80, draw: MM_KEG, object: [mm, 0x01ca], name: "a <C0>Powder Keg" }
+- { id: MM_POWDER_KEG, item: MM_POWDER_KEG, type: MAJOR, add: [MM_KEG, 1], flags: 0x80, draw: MM_KEG, object: [mm, 0x01ca], name: "a <C0>Powder Keg" }
 - { id: MM_MAGIC_BEAN, item: MM_MAGIC_BEAN, type: MAJOR, add: [MM_BEANS, 1], flags: 0x80, draw: MAGIC_BEAN, object: [mm, 0x00c6], name: "a <C0>Magic Bean" }
 - { id: MM_BOMBCHU, item: MM_BOMBCHU_ALT, type: NORMAL, add: [MM_BOMBCHU, 1], flags: 0xc0, draw: BOMBCHU, object: [mm, 0x00b0], name: "a <C1>Bombchu" }
 - { id: MM_SWORD_KOKIRI, item: MM_SWORD_KOKIRI, type: MAJOR, add: [MM_SWORD, 1], flags: 0xa0, draw: MM_SWORD_KOKIRI, object: [mm, 0x0148], name: "the <C1>Kokiri Sword" }
@@ -528,7 +570,7 @@
 - { id: MM_SWORD_GILDED, item: MM_SWORD_GILDED, type: MAJOR, add: [MM_SWORD, 3], flags: 0xa0, draw: MM_SWORD_GILDED, object: [mm, 0x01fa], name: "the <C1>Gilded Sword" }
 - { id: MM_BOMBCHU_5, item: MM_BOMBCHU_5, type: NORMAL, add: [MM_BOMBCHU, 5], flags: 0xc0, draw: BOMBCHU, object: [mm, 0x00b0], name: "<C0>5 Bombchu" }
 - { id: MM_GREAT_FAIRY_SWORD, item: MM_GREAT_FAIRY_SWORD, type: MAJOR, add: [MM_GFS_HAMMER, 0], flags: 0xa0, draw: MM_GREAT_FAIRY_SWORD, object: [mm, 0x01fb], name: "the <C1>Great Fairy's Sword" }
-- { id: MM_SMALL_KEY, item: MM_SMALL_KEY, type: KEY, add: [MM_SMALL_KEY, 0xffff], flags: 0xa0, draw: SMALL_KEY, object: [mm, 0x0086], name: "a <C0>Small Key" }
+- { id: MM_SMALL_KEY, item: MM_SMALL_KEY, type: KEY, add: [MM_SMALL_KEY, 0xffff], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "a <C0>Small Key" }
 - { id: MM_BOSS_KEY, item: MM_BOSS_KEY, type: BOSS_KEY, add: [MM_BOSS_KEY, 0xffff], flags: 0xa0, draw: BOSS_KEY, object: [mm, 0x0092], name: "the <C0>Boss Key" }
 - { id: MM_MAP, item: MM_MAP, type: MAP_COMPASS, add: [MM_MAP, 0xffff], flags: 0xa0, draw: MAP, object: [mm, 0x00a0], name: "the <C0>Dungeon Map" }
 - { id: MM_COMPASS, item: MM_COMPASS, type: MAP_COMPASS, add: [MM_COMPASS, 0xffff], flags: 0xa0, draw: COMPASS, object: [mm, 0x0091], name: "the <C0>Compass" }
@@ -565,15 +607,18 @@
 - { id: MM_MASK_POSTMAN, item: MM_MASK_POSTMAN, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MM_MASK_POSTMAN, object: [mm, 0x0225], name: "the <C1>Postman's Hat" }
 - { id: MM_MASK_COUPLE, item: MM_MASK_COUPLE, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MM_MASK_COUPLE, object: [mm, 0x0282], name: "the <C1>Couple's Mask" }
 - { id: MM_MASK_GREAT_FAIRY, item: MM_MASK_GREAT_FAIRY, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MM_MASK_GREAT_FAIRY, object: [mm, 0x020a], name: "the <C1>Great Fairy Mask" }
-- { id: MM_MASK_GIBDO, item: MM_MASK_GIBDO, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MM_MASK_GIBDO, object: [mm, 0x020b], name: "the <C1>Gibdo Mask" }
+- { id: MM_MASK_GIBDO, item: MM_MASK_GIBDO, type: MASK, add: [MM_GIBDOSPOOKY, 0], flags: 0xa0, draw: MM_MASK_GIBDO, object: [mm, 0x020b], name: "the <C1>Gibdo Mask" }
 - { id: MM_MASK_DON_GERO, item: MM_MASK_DON_GERO, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MM_MASK_DON_GERO, object: [mm, 0x0266], name: "the <C1>Don Gero's Mask" }
 - { id: MM_MASK_KAMARO, item: MM_MASK_KAMARO, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MM_MASK_KAMARO, object: [mm, 0x027d], name: "the <C1>Kamaro's Mask" }
 - { id: MM_MASK_TRUTH, item: MM_MASK_TRUTH, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MASK_TRUTH, object: [mm, 0x0104], name: "the <C1>Mask of Truth" }
-- { id: MM_MASK_STONE, item: MM_MASK_STONE, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MM_MASK_STONE, object: [mm, 0x0254], name: "the <C1>Stone Mask" }
+- { id: MM_MASK_STONE, item: MM_MASK_STONE, type: MASK, add: [MM_STONEGERUDOSKULL, 0], flags: 0xa0, draw: MM_MASK_STONE, object: [mm, 0x0254], name: "the <C1>Stone Mask" }
 - { id: MM_MASK_BREMEN, item: MM_MASK_BREMEN, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MM_MASK_BREMEN, object: [mm, 0x025a], name: "the <C1>Bremen Mask" }
 - { id: MM_MASK_BLAST, item: MM_MASK_BLAST, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MM_MASK_BLAST, object: [mm, 0x026d], name: "the <C1>Blast Mask" }
 - { id: MM_MASK_SCENTS, item: MM_MASK_SCENTS, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MM_MASK_SCENTS, object: [mm, 0x027e], name: "the <C1>Mask of Scents" }
 - { id: MM_MASK_KAFEI, item: MM_MASK_KAFEI, type: MASK, add: MM_NORMAL, flags: 0xa0, draw: MM_MASK_KAFEI, object: [mm, 0x0258], name: "the <C1>Kafei's Mask" }
+- { id: MM_MASK_GERUDO, item: MM_MASK_GERUDO, type: MASK, add: [MM_STONEGERUDOSKULL, 1], flags: 0x80, draw: OOT_MASK_GERUDO, object: [oot, 0x0152], name: "the <C1>Gerudo Mask" }
+- { id: MM_MASK_SKULL, item: MM_MASK_SKULL, type: MASK, add: [MM_STONEGERUDOSKULL, 2], flags: 0x80, draw: OOT_MASK_SKULL, object: [oot, 0x0136], name: "the <C1>Skull Mask" }
+- { id: MM_MASK_SPOOKY, item: MM_MASK_SPOOKY, type: MASK, add: [MM_GIBDOSPOOKY, 1], flags: 0x80, draw: OOT_MASK_SPOOKY, object: [oot, 0x0135], name: "the <C1>Spooky Mask" }
 - { id: MM_CHATEAU, item: MM_CHATEAU, type: MINOR, add: MM_BOTTLE_REFILL, flags: 0x80, draw: MM_CHATEAU, object: [mm, 0x00c1], name: "some <C0>Chateau Romani" }
 - { id: MM_MILK, item: MM_MILK, type: MINOR, add: MM_BOTTLE_REFILL, flags: 0x80, draw: MILK, object: [mm, 0x00c1], name: "some <C0>Milk" }
 - { id: MM_GOLD_DUST, item: MM_GOLD_DUST, type: MINOR, add: MM_BOTTLE_REFILL, flags: 0x80, draw: MM_GOLD_DUST, object: [mm, 0x01e8] }
@@ -608,18 +653,34 @@
 - { id: MM_SONG_SOARING, type: MAJOR, add: [MM_QUEST, QUEST_MM_SONG_SOARING], flags: 0xa0, draw: [NOTE, 0x05], object: [mm, 0x008f], name: "the <C2>Song of Soaring" }
 - { id: MM_SONG_STORMS, type: MAJOR, add: [MM_QUEST, QUEST_MM_SONG_STORMS], flags: 0xa0, draw: [NOTE, 0x00], object: [mm, 0x008f], name: "the <C2>Song of Storms" }
 - { id: MM_SONG_SUN, type: MAJOR, add: [MM_QUEST, QUEST_MM_SONG_SUN], flags: 0xa0, draw: [NOTE, 0x03], object: [mm, 0x008f], name: "the <C2>Sun's Song" }
+- { id: MM_SONG_TP_FOREST, type: MAJOR, add: [MM_SONG_OOT, MM_SONG_OOT_TP_FOREST], flags: 0x80, draw: [NOTE, 0x82], object: [mm, 0x008f], name: "the <C2>Minuet of Forest" }
+- { id: MM_SONG_TP_FIRE, type: MAJOR, add: [MM_SONG_OOT, MM_SONG_OOT_TP_FIRE], flags: 0x80, draw: [NOTE, 0x85], object: [mm, 0x008f], name: "the <C2>Bolero of Fire" }
+- { id: MM_SONG_TP_WATER, type: MAJOR, add: [MM_SONG_OOT, MM_SONG_OOT_TP_WATER], flags: 0x80, draw: [NOTE, 0x81], object: [mm, 0x008f], name: "the <C2>Serenade of Water" }
+- { id: MM_SONG_TP_SPIRIT, type: MAJOR, add: [MM_SONG_OOT, MM_SONG_OOT_TP_SPIRIT], flags: 0x80, draw: [NOTE, 0x84], object: [mm, 0x008f], name: "the <C2>Requiem of Spirit" }
+- { id: MM_SONG_TP_SHADOW, type: MAJOR, add: [MM_SONG_OOT, MM_SONG_OOT_TP_SHADOW], flags: 0x80, draw: [NOTE, 0x80], object: [mm, 0x008f], name: "the <C2>Nocturne of Shadow" }
+- { id: MM_SONG_TP_LIGHT, type: MAJOR, add: [MM_SONG_OOT, MM_SONG_OOT_TP_LIGHT], flags: 0x80, draw: [NOTE, 0x83], object: [mm, 0x008f], name: "the <C2>Prelude of Light" }
+- { id: MM_SONG_ZELDA, type: MAJOR, add: [MM_SONG_OOT, MM_SONG_OOT_ZELDA], flags: 0x80, draw: [NOTE, 0x05], object: [mm, 0x008f], name: "<C2>Zelda's Lullaby" }
+- { id: MM_SONG_SARIA, type: MAJOR, add: [MM_SONG_OOT, MM_SONG_OOT_SARIA], flags: 0x80, draw: [NOTE, 0x02], object: [mm, 0x008f], name: "<C2>Saria's Song" }
 - { id: MM_SONG_GORON_HALF, type: MAJOR, add: [MM_QUEST, QUEST_MM_SONG_GORON_HALF], flags: 0xa0, draw: [NOTE, 0x85], object: [mm, 0x008f], name: "the <C2>Lullaby Intro" }
 - { id: MM_SONG_NOTE_AWAKENING, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_AWAKENING], flags: 0xa0, draw: [NOTE, 0xc2], object: [mm, 0x008f], name: "a <C2>Sonata of Awakening Note" }
 - { id: MM_SONG_NOTE_GORON, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_GORON], flags: 0xa0, draw: [NOTE, 0xc5], object: [mm, 0x008f], name: "a <C2>Goron Lullaby Note" }
 - { id: MM_SONG_NOTE_ZORA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_ZORA], flags: 0xa0, draw: [NOTE, 0xc1], object: [mm, 0x008f], name: "a <C2>New Wave Bossa Nova Note" }
 - { id: MM_SONG_NOTE_EMPTINESS, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_EMPTINESS], flags: 0xa0, draw: [NOTE, 0xc4], object: [mm, 0x008f], name: "a <C2>Elegy of Emptiness Note" }
-- { id: MM_SONG_NOTE_ORDER, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_ORDER], flags: 0xa0, draw: [NOTE, 0xc0], object: [mm, 0x008f], name: "a <C2>Oath to Order Note" }
+- { id: MM_SONG_NOTE_ORDER, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_ORDER], flags: 0xa0, draw: [NOTE, 0xc0], object: [mm, 0x008f], name: "an <C2>Oath to Order Note" }
 - { id: MM_SONG_NOTE_TIME, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_TIME], flags: 0xa0, draw: [NOTE, 0x41], object: [mm, 0x008f], name: "a <C2>Song of Time Note" }
 - { id: MM_SONG_NOTE_HEALING, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_HEALING], flags: 0xa0, draw: [NOTE, 0x42], object: [mm, 0x008f], name: "a <C2>Song of Healing Note" }
-- { id: MM_SONG_NOTE_EPONA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_EPONA], flags: 0xa0, draw: [NOTE, 0x44], object: [mm, 0x008f], name: "a <C2>Epona's Song Note" }
+- { id: MM_SONG_NOTE_EPONA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_EPONA], flags: 0xa0, draw: [NOTE, 0x44], object: [mm, 0x008f], name: "an <C2>Epona's Song Note" }
 - { id: MM_SONG_NOTE_SOARING, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_SOARING], flags: 0xa0, draw: [NOTE, 0x45], object: [mm, 0x008f], name: "a <C2>Song of Soaring Note" }
 - { id: MM_SONG_NOTE_STORMS, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_STORMS], flags: 0xa0, draw: [NOTE, 0x40], object: [mm, 0x008f], name: "a <C2>Song of Storms Note" }
 - { id: MM_SONG_NOTE_SUN, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_SUN], flags: 0xa0, draw: [NOTE, 0x43], object: [mm, 0x008f], name: "a <C2>Sun's Song Note" }
+- { id: MM_SONG_NOTE_TP_FOREST, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_TP_FOREST], flags: 0x80, draw: [NOTE, 0xc2], object: [mm, 0x008f], name: "a <C2>Minuet of Forest Note" }
+- { id: MM_SONG_NOTE_TP_FIRE, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_TP_FIRE], flags: 0x80, draw: [NOTE, 0xc5], object: [mm, 0x008f], name: "a <C2>Bolero of Fire Note" }
+- { id: MM_SONG_NOTE_TP_WATER, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_TP_WATER], flags: 0x80, draw: [NOTE, 0xc1], object: [mm, 0x008f], name: "a <C2>Serenade of Water Note" }
+- { id: MM_SONG_NOTE_TP_SPIRIT, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_TP_SPIRIT], flags: 0x80, draw: [NOTE, 0xc4], object: [mm, 0x008f], name: "a <C2>Requiem of Spirit Note" }
+- { id: MM_SONG_NOTE_TP_SHADOW, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_TP_SHADOW], flags: 0x80, draw: [NOTE, 0xc0], object: [mm, 0x008f], name: "a <C2>Nocturne of Shadow Note" }
+- { id: MM_SONG_NOTE_TP_LIGHT, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_TP_LIGHT], flags: 0x80, draw: [NOTE, 0xc3], object: [mm, 0x008f], name: "a <C2>Prelude of Light Note" }
+- { id: MM_SONG_NOTE_ZELDA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_ZELDA], flags: 0x80, draw: [NOTE, 0x45], object: [mm, 0x008f], name: "a <C2>Zelda's Lullaby Note" }
+- { id: MM_SONG_NOTE_SARIA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_MM_SARIA], flags: 0x80, draw: [NOTE, 0x42], object: [mm, 0x008f], name: "a <C2>Saria's Song Note" }
 - { id: MM_REMAINS_ODOLWA, type: MAJOR, add: [MM_QUEST, QUEST_MM_REMAINS_ODOLWA], flags: 0xa0, draw: MM_REMAINS_ODOLWA, object: GI_REMAINS_ODOLWA, name: "<C3>Odolwa's Remains" }
 - { id: MM_REMAINS_GOHT, type: MAJOR, add: [MM_QUEST, QUEST_MM_REMAINS_GOHT], flags: 0xa0, draw: MM_REMAINS_GOHT, object: GI_REMAINS_GOHT, name: "<C3>Goht's Remains" }
 - { id: MM_REMAINS_GYORG, type: MAJOR, add: [MM_QUEST, QUEST_MM_REMAINS_GYORG], flags: 0xa0, draw: MM_REMAINS_GYORG, object: GI_REMAINS_GYORG, name: "<C3>Gyorg's Remains" }
@@ -627,10 +688,10 @@
 - { id: MM_GS_TOKEN_SWAMP, type: SKULL, add: GS_TOKEN_SWAMP, flags: 0x80, draw: [GS_SOUL, 1], object: [mm, 0x0125], name: "a <C0>Swamp Skulltula Token" }
 - { id: MM_GS_TOKEN_OCEAN, type: SKULL, add: GS_TOKEN_OCEAN, flags: 0x80, draw: [GS_SOUL, 2], object: [mm, 0x0125], name: "an <C0>Ocean Skulltula Token" }
 - { id: MM_PLATINUM_TOKEN, type: MAJOR, add: MM_PLATINUM_TOKEN, flags: 0xa0, draw: [GS_SOUL, 8], object: [mm, 0x0125], name: "the <C0>Platinum Token" }
-- { id: MM_SMALL_KEY_WF, type: KEY, add: [MM_SMALL_KEY, 0], flags: 0xa0, draw: SMALL_KEY, object: [mm, 0x0086], name: "a <C0>Small Key (Woodfall)" }
-- { id: MM_SMALL_KEY_SH, type: KEY, add: [MM_SMALL_KEY, 1], flags: 0xa0, draw: SMALL_KEY, object: [mm, 0x0086], name: "a <C0>Small Key (Snowhead)" }
-- { id: MM_SMALL_KEY_GB, type: KEY, add: [MM_SMALL_KEY, 2], flags: 0xa0, draw: SMALL_KEY, object: [mm, 0x0086], name: "a <C0>Small Key (Great Bay)" }
-- { id: MM_SMALL_KEY_ST, type: KEY, add: [MM_SMALL_KEY, 3], flags: 0xa0, draw: SMALL_KEY, object: [mm, 0x0086], name: "a <C0>Small Key (Stone Tower)" }
+- { id: MM_SMALL_KEY_WF, type: KEY, add: [MM_SMALL_KEY, 0], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "a <C0>Small Key (Woodfall)" }
+- { id: MM_SMALL_KEY_SH, type: KEY, add: [MM_SMALL_KEY, 1], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "a <C0>Small Key (Snowhead)" }
+- { id: MM_SMALL_KEY_GB, type: KEY, add: [MM_SMALL_KEY, 2], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "a <C0>Small Key (Great Bay)" }
+- { id: MM_SMALL_KEY_ST, type: KEY, add: [MM_SMALL_KEY, 3], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "a <C0>Small Key (Stone Tower)" }
 - { id: MM_BOSS_KEY_WF, type: BOSS_KEY, add: [MM_BOSS_KEY, 0], flags: 0xa0, draw: BOSS_KEY, object: [mm, 0x0092], name: "the <C0>Boss Key (Woodfall)" }
 - { id: MM_BOSS_KEY_SH, type: BOSS_KEY, add: [MM_BOSS_KEY, 1], flags: 0xa0, draw: BOSS_KEY, object: [mm, 0x0092], name: "the <C0>Boss Key (Snowhead)" }
 - { id: MM_BOSS_KEY_GB, type: BOSS_KEY, add: [MM_BOSS_KEY, 2], flags: 0xa0, draw: BOSS_KEY, object: [mm, 0x0092], name: "the <C0>Boss Key (Great Bay)" }
@@ -659,6 +720,11 @@
 - { id: MM_OWL_STONE_TOWER, type: MAJOR, add: [OWL, 9], flags: 0xa0, draw: MM_OWL, object: [mm, 0x0170], name: "an <C2>Owl Statue (Stone Tower)" }
 - { id: MM_OWL_HIDDEN, type: MAJOR, add: [OWL, 15], flags: 0xa0, draw: MM_OWL, object: [mm, 0x0170], name: "an <C2>Owl Statue (Hidden)" }
 - { id: MM_WALLET5, type: MAJOR, add: [MM_WALLET, 5], flags: 0xa0, draw: WALLET5, object: [mm, 0x00a8], name: "the <C1>Bottomless Wallet" }
+- { id: MM_SLINGSHOT, item: MM_SLINGSHOT, type: MAJOR, add: [MM_SLINGSHOT, 1], flags: 0x80, draw: OOT_SLINGSHOT, object: [oot, 0x00e7], name: "the <C1>Fairy Slingshot" }
+- { id: MM_DEKU_SEEDS_5, item: MM_SEEDS_5, type: MINOR, add: [ MM_SEEDS, 5 ], flags: 0x50, draw: OOT_SEEDS, object: [ oot, 0x0119 ], name: "<C0>5 Deku Seeds" }
+- { id: MM_DEKU_SEEDS_30, item: MM_SEEDS_30, type: MINOR, add: [MM_SEEDS, 30], flags: 0x50, draw: OOT_SEEDS, object: [oot, 0x0119], name: "<C0>30 Deku Seeds" }
+- { id: MM_BULLET_BAG2, item: MM_BULLET_BAG2, type: MAJOR, add: [ MM_SLINGSHOT, 2 ], flags: 0x80, draw: OOT_BULLET_BAG2, object: [ oot, 0x017b ], name: "the <C1>Large Bullet Bag" }
+- { id: MM_BULLET_BAG3, item: MM_BULLET_BAG3, type: MAJOR, add: [ MM_SLINGSHOT, 3], flags: 0x80, draw: OOT_BULLET_BAG3, object: [oot, 0x017b], name: "the <C1>Largest Bullet Bag" }
 - { id: MM_SOUL_ENEMY_OCTOROK, type: SOUL, add: [MM_SOUL, 0x0000], flags: 0xa0, draw: [GS_SOUL, 3], object: [mm, 0x0125], name: "the <C1>Soul of Octoroks" }
 - { id: MM_SOUL_ENEMY_WALLMASTER, type: SOUL, add: [MM_SOUL, 0x0001], flags: 0xa0, draw: [GS_SOUL, 3], object: [mm, 0x0125], name: "the <C1>Soul of Wallmasters" }
 - { id: MM_SOUL_ENEMY_DODONGO, type: SOUL, add: [MM_SOUL, 0x0002], flags: 0xa0, draw: [GS_SOUL, 3], object: [mm, 0x0125], name: "the <C1>Soul of Dodongos" }
@@ -771,11 +837,11 @@
 - { id: MM_SOUL_ANIMAL_BUTTERFLY, type: SOUL, add: [MM_SOUL, 0x3003], flags: 0x80, draw: [GS_SOUL, 6], object: [mm, 0x0125], name: "the <C1>Soul of Butterflies" }
 - { id: MM_SOUL_MISC_GS, type: SOUL, add: [MM_SOUL, 0x4000], flags: 0xa0, draw: [GS_SOUL, 7], object: [mm, 0x0125], name: "the <C1>Soul of Gold Skulltulas" }
 - { id: MM_SOUL_MISC_BUSINESS_SCRUB, type: SOUL, add: [MM_SOUL, 0x4001], flags: 0xa0, draw: [GS_SOUL, 7], object: [mm, 0x0125], name: "the <C1>Soul of Business Scrubs" }
-- { id: MM_KEY_RING, type: KEY, add: [MM_KEY_RING, 0xffff], flags: 0xa0, draw: SMALL_KEY, object: [mm, 0x0086], name: "the <C0>Key Ring" }
-- { id: MM_KEY_RING_WF, type: KEY, add: [MM_KEY_RING, 0], flags: 0xa0, draw: SMALL_KEY, object: [mm, 0x0086], name: "the <C0>Key Ring (Woodfall)" }
-- { id: MM_KEY_RING_SH, type: KEY, add: [MM_KEY_RING, 1], flags: 0xa0, draw: SMALL_KEY, object: [mm, 0x0086], name: "the <C0>Key Ring (Snowhead)" }
-- { id: MM_KEY_RING_GB, type: KEY, add: [MM_KEY_RING, 2], flags: 0xa0, draw: SMALL_KEY, object: [mm, 0x0086], name: "the <C0>Key Ring (Great Bay)" }
-- { id: MM_KEY_RING_ST, type: KEY, add: [MM_KEY_RING, 3], flags: 0xa0, draw: SMALL_KEY, object: [mm, 0x0086], name: "the <C0>Key Ring (Stone Tower)" }
+- { id: MM_KEY_RING, type: KEY, add: [MM_KEY_RING, 0xffff], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "the <C0>Key Ring" }
+- { id: MM_KEY_RING_WF, type: KEY, add: [MM_KEY_RING, 0], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "the <C0>Key Ring (Woodfall)" }
+- { id: MM_KEY_RING_SH, type: KEY, add: [MM_KEY_RING, 1], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "the <C0>Key Ring (Snowhead)" }
+- { id: MM_KEY_RING_GB, type: KEY, add: [MM_KEY_RING, 2], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "the <C0>Key Ring (Great Bay)" }
+- { id: MM_KEY_RING_ST, type: KEY, add: [MM_KEY_RING, 3], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "the <C0>Key Ring (Stone Tower)" }
 - { id: MM_SKELETON_KEY, type: MAJOR, add: MM_SKELETON_KEY, flags: 0xa0, draw: SKELETON_KEY, object: SKELETON_KEY, name: "the <C1>Skeleton Key" }
 - { id: MM_BUTTON_A, type: MAJOR, add: [MM_BUTTON, 0], flags: 0xa0, draw: BUTTON_A, object: BTN_A, name: "the <C1>A Button" }
 - { id: MM_BUTTON_C_RIGHT, type: MAJOR, add: [MM_BUTTON, 1], flags: 0xa0, draw: BUTTON_C_RIGHT, object: BTN_C_HORIZONTAL, name: "the <C1>C-Right Button" }
@@ -825,6 +891,45 @@
 - { id: MM_BOTTLE_RUTO_LETTER, item: MM_RUTO_LETTER, type: MAJOR, add: MM_BOTTLE_NEW, flags: 0x80, draw: OOT_BOTTLE_RUTO_LETTER, object: [oot, 0x010b], name: "<C1>Ruto's Letter" }
 - { id: MM_BOTTLE_BLUE_FIRE, item: MM_BLUE_FIRE, type: MAJOR, add: MM_BOTTLE_NEW, flags: 0x80, draw: BOTTLE_BLUE_FIRE, object: [oot, 0x00c6], name: "a <C1>Bottle of Blue Fire" }
 - { id: MM_BLUE_FIRE, item: MM_BLUE_FIRE, type: MINOR, add: MM_BOTTLE_REFILL, flags: 0x80, draw: OOT_BLUE_FIRE, object: [oot, 0x0173], name: "some <C0>Blue Fire" }
+- { id: MM_RUSTY_KEY_TOURIST_INFORMATION,       type: KEY, add: [MM_RUSTY_KEY, 0x00], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Tourist Information)" }
+- { id: MM_RUSTY_KEY_POTION_SHOP,               type: KEY, add: [MM_RUSTY_KEY, 0x01], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Potion Shop)" }
+- { id: MM_RUSTY_KEY_POST_OFFICE,               type: KEY, add: [MM_RUSTY_KEY, 0x02], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Post Office)" }
+- { id: MM_RUSTY_KEY_SWORDSMAN_SCHOOL,          type: KEY, add: [MM_RUSTY_KEY, 0x03], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Swordsman School)" }
+- { id: MM_RUSTY_KEY_LOTTERY,                   type: KEY, add: [MM_RUSTY_KEY, 0x04], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Lottery)" }
+- { id: MM_RUSTY_KEY_BOMB_SHOP,                 type: KEY, add: [MM_RUSTY_KEY, 0x05], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Bomb Shop)" }
+- { id: MM_RUSTY_KEY_TRADING_POST,              type: KEY, add: [MM_RUSTY_KEY, 0x06], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Trading Post)" }
+- { id: MM_RUSTY_KEY_CURIOSITY_SHOP,            type: KEY, add: [MM_RUSTY_KEY, 0x07], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Curiosity Shop)" }
+- { id: MM_RUSTY_KEY_KAFEI_HIDEOUT,             type: KEY, add: [MM_RUSTY_KEY, 0x08], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Kafei's Hideout)" }
+- { id: MM_RUSTY_KEY_TOWN_ARCHERY,              type: KEY, add: [MM_RUSTY_KEY, 0x09], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Town Archery)" }
+- { id: MM_RUSTY_KEY_SWAMP_ARCHERY,             type: KEY, add: [MM_RUSTY_KEY, 0x0a], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Swamp Archery)" }
+- { id: MM_RUSTY_KEY_OBSERVATORY,               type: KEY, add: [MM_RUSTY_KEY, 0x0b], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Observatory)" }
+- { id: MM_RUSTY_KEY_BLACKSMITH,                type: KEY, add: [MM_RUSTY_KEY, 0x0c], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Blacksmith)" }
+- { id: MM_RUSTY_KEY_MUSIC_HOUSE,               type: KEY, add: [MM_RUSTY_KEY, 0x0d], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Music House)" }
+- { id: MM_RUSTY_KEY_LABORATORY,                type: KEY, add: [MM_RUSTY_KEY, 0x0e], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Oceanic Laboratory)" }
+- { id: MM_RUSTY_KEY_BENEATH_GRAVEYARD,         type: KEY, add: [MM_RUSTY_KEY, 0x0f], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Beneath the Graveyard)" }
+- { id: MM_RUSTY_KEY_DAMPE_HOUSE,               type: KEY, add: [MM_RUSTY_KEY, 0x10], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Dampe's House)" }
+- { id: MM_RUSTY_KEY_MAYOR_RESIDENCE,           type: KEY, add: [MM_RUSTY_KEY, 0x11], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Mayor's Residence)" }
+- { id: MM_RUSTY_KEY_MAYOR_RESIDENCE_OFFICE,    type: KEY, add: [MM_RUSTY_KEY, 0x12], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Mayor's Residence Office)" }
+- { id: MM_RUSTY_KEY_MAYOR_RESIDENCE_SALON,     type: KEY, add: [MM_RUSTY_KEY, 0x13], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Mayor's Residence Salon)" }
+- { id: MM_RUSTY_KEY_MAYOR_RESIDENCE_KAFEI,     type: KEY, add: [MM_RUSTY_KEY, 0x14], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Kafei's Room)" }
+- { id: MM_RUSTY_KEY_TREASURE_CHEST_GAME,       type: KEY, add: [MM_RUSTY_KEY, 0x15], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Treasure Game)" }
+- { id: MM_RUSTY_KEY_HONEY_DARLING,             type: KEY, add: [MM_RUSTY_KEY, 0x16], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Honey & Darling)" }
+- { id: MM_RUSTY_KEY_MILK_BAR,                  type: KEY, add: [MM_RUSTY_KEY, 0x17], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Milk Bar)" }
+- { id: MM_RUSTY_KEY_DOG_RACETRACK,             type: KEY, add: [MM_RUSTY_KEY, 0x18], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Doggy Racetrack)" }
+- { id: MM_RUSTY_KEY_CUCCO_SHACK,               type: KEY, add: [MM_RUSTY_KEY, 0x19], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Cucco Shack)" }
+- { id: MM_RUSTY_KEY_RANCH_HOUSE,               type: KEY, add: [MM_RUSTY_KEY, 0x1a], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Romani Ranch House)" }
+- { id: MM_RUSTY_KEY_RANCH_BARN,                type: KEY, add: [MM_RUSTY_KEY, 0x1b], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Romani Ranch Barn)" }
+- { id: MM_RUSTY_KEY_RANCH_HOUSE_ROOM,          type: KEY, add: [MM_RUSTY_KEY, 0x1c], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Romani's Room)" }
+- { id: MM_RUSTY_KEY_ZORA_SHOP,                 type: KEY, add: [MM_RUSTY_KEY, 0x1d], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Zora Shop)" }
+- { id: MM_RUSTY_KEY_ZORA_JAPAS_ROOM,           type: KEY, add: [MM_RUSTY_KEY, 0x1e], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Japas' Room)" }
+- { id: MM_RUSTY_KEY_ZORA_TIJO_ROOM,            type: KEY, add: [MM_RUSTY_KEY, 0x1f], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Tijo's Room)" }
+- { id: MM_RUSTY_KEY_ZORA_LULU_ROOM,            type: KEY, add: [MM_RUSTY_KEY, 0x20], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Lulu's Room)" }
+- { id: MM_RUSTY_KEY_ZORA_EVAN_ROOM,            type: KEY, add: [MM_RUSTY_KEY, 0x21], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Evan's Room)" }
+- { id: MM_RUSTY_KEY_STOCK_POT_INN,             type: KEY, add: [MM_RUSTY_KEY, 0x22], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Stock Pot Inn)" }
+- { id: MM_RUSTY_KEY_STOCK_POT_INN_ROOF,        type: KEY, add: [MM_RUSTY_KEY, 0x23], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Stock Pot Inn Roof)" }
+- { id: MM_RUSTY_KEY_GRANDMA_ROOM,              type: KEY, add: [MM_RUSTY_KEY, 0x24], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Grandma's Room)" }
+- { id: MM_RUSTY_KEY_STOCK_POT_INN_STAFF_ROOM,  type: KEY, add: [MM_RUSTY_KEY, 0x25], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Stock Pot Inn Staff Room)" }
+- { id: MM_RUSTY_KEY_STOCK_POT_INN_DORMITORY,   type: KEY, add: [MM_RUSTY_KEY, 0x26], flags: 0xa0, draw: [SMALL_KEY, 1], object: [oot, 0x00aa], name: "a <C1>Rusty Key (Stock Pot Inn Dormitory)" }
 - { id: MM_MASK_MAJORA, type: MAJOR, add: [ENDGAME, 1], flags: 0xa0, draw: MASK_MAJORA, object: GI_MASK_MAJORA, name: "<C3>Majora's Mask" }
 - { id: MM_SOLD_OUT, flags: 0xa0, draw: OOT_SOLD_OUT, object: [mm, 0x0113] }
 - { id: NOTHING,  flags: 0xa0, name: "<C0>Nothing" }

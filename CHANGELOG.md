@@ -4,27 +4,93 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- Add silver boulder shuffle for Ocarina of Time.
+
+### Fixed
+
+- Fix the silver boulder in Desert Colossus incorrectly giving a shuffled wonder item when broken.
+
+## [31.1] - 2026-07-04
+
+### Fixed
+
+- Fix an inventory corruption bug with the Moon children.
+- Fixed the logic for Pirate Fortress Exterior entrance from Great Bay Coast not properly expecting a way to swim.
+
+## [31.0] - 2026-07-02
+
 ### Jokes
 
 - (**April Fools**) Add a fake actor randomizer for OoT, which actually replaces most enemies with very fast redeads.
 
 ### Added
 
+- Add Gerudo Mask, Skull Mask, and Spooky Mask to Majora's Mask.
+- Add quality of life setting to allow bow and slingshot to break beehives in OoT.
+- Add hyper enemies/bosses to both games, making them twice as fast.
+- Add Telescope ER.
+- Add Fairy Slingshot to Majora's Mask
+- Add Rusty Keys, locking a single overworld door each, in both games.
+- Add Great Fairy Sword to Ocarina of Time.
+- Add a setting to shuffle the final skulltula reward in Ocarina of Time.
+- Add easy pause buffering for both games - once paused, hold the Start button to advance one single frame.
 - Add Boomerang to Majora's Mask.
 - Add Kamaro's Mask to Ocarina of Time.
 - Add extra signs outside ganon's castle and on clock tower roof to hint the bridge & moon special conditions, when applicable.
 - Add a basic implementation of music categories.
 - Add a setting to avoid placing multiple playthrough hints for identical items.
+- Add a setting to shuffle the required songs for various events in MM (thanks Mizu Aoyuki for the icons).
+- Add Song of Soaring (OoT) and Ageless Song of Soaring to replace Cross-Games MM Song of Soaring.
+- Add Sonata of Awakening (OoT), Goron Lullaby (OoT), New Wave Bossa Nova (OoT), Oath to Order (OoT), which do nothing unless Song Events Shuffle is on.
+- Add Song of Healing (OoT), which heals signs and summons fairies at gossip stones.
+- Add Zelda's Lullaby (MM), which heals signs and summons fairies at gossip stones.
+- Add Saria's Song (MM), which makes some redeads dance and summons fairies at gossip stones.
+- Add Minuet of Forest (MM), Bolero of Fire (MM), Serenade of Water (MM), Requiem of Spirit (MM), Nocturne of Shadow (MM) and Prelude of Light (MM) to replace Cross-Games OoT Warp Songs.
+- Add Shared settings variants of each song above.
+- Add setting for MM-style air movement in OoT.
+- Add Powder Keg (OoT).
 
 ### Changed
 
+- The range to trigger the New Wave Bossa Nova Check (Zora Eggs) was increased: pull the zora guitar after watching them hatch.
+- Load Save Screen now shows all collected equipment upgrades and all available cross game items.
+- Blitz presets adjusted to use Song Event Plando to change the following Song Event Locations:
+
+    - Death Mountain Fairy Fountains and Goron City Darunia's Room from Zelda's Lullaby to Goron Lullaby.
+    - Zora's Fountain Fairy Fountain from Zelda's Lullaby to New Wave Bossa Nova.
+    - Desert Colossus Fairy Fountain from Zelda's Lullaby to Elegy of Emptiness.
+    - Kakariko Graveyard Royal Tomb from Zelda's Lullaby to Random.
+    - Water Temple Water Level from Zelda's Lullaby to New Wave Bossa Nova.
+    - Ikana Canyon Composer Cavern from Song of Storms to Zelda's Lullaby.
+    - Everything else not mentioned here is vanilla.
+
+- Save Screen now shows all collected equipment upgrades and all available cross game items.
+- Adjusted Beginner preset to have Ageless Soaring enabled.
+- Adjusted the Blitz presets in the following ways:
+    - Enable Ageless Soaring.
+    - Enable Ageless Great Fairy's Sword.
+    - Shuffle the Master Sword with a Master Sword hint. Master Sword does not lock age-access.
+    - Add Shared Extra Child Swords, remove starting child sword.
+    - Added MM Deku Shield to then share the Deku Shield. Removed the starting Hylian/Hero Shield.
+    - Enabled Song Event Shuffle for both games to modify some Song Events via plando.
+    - Moved MM Song of Time to starting items and put a recovery heart on Initial Song of Healing.
+    - Made the gibdos in Beneath the Well be Remorseless.
 - Paths that only differ by unshuffled items are now considered identical for hint importance purposes.
 - Revamped Woodfall Temple logic to better account for Bronze Scale and future-proofing for planned features.
 - "MM Termina Field Pot" location can now expect Long Hookshot to obtain.
 - Converted the "Clear State Dungeons (MM)" setting to a "Set" type to allow for random choice.
+- Rename Sun's Song in MM to Sun's Song (MM) to be consistent.
+- Change Blast Mask (OoT) explosion to be MM-style.
 
 ### Fixed
 
+- Fix logic for Secret Shrine Entrance Pots, and account for bronze scale logic for the underwater ones.
+- Fix logic for MM Termina Field Soil Observatory items not being in the right logic region.
+- Load Save screen properly lets you cycle to the next page if Only MM or Only OOT is on.
+- Fix Tatl sometimes crashing when you talk to her during 4th day.
+- Fix logic for MM Beneath The Graveyard Dampe Chest not checking for the poes soul.
 - Fix seeds requiring very early warp songs usage being sometimes unbeatable. (#905)
 - Auto-equip the deku mask when entering deku palace throne in ER if possible to avoid a potential seed brick.
 - Fix Haunted Wasteland Poe Guide being removed when Enemy Souls are on.
@@ -33,6 +99,8 @@ All notable changes to this project will be documented in this file.
 - Ensure the logic for vanilla Ice Cavern Silver Rupees in the Scythe room is sound.
 - Fix logic for Shared Kamaro's Mask.
 - Fix "OOT Kokiri Shop Wonder Item" location incorrectly expecting the Shopkeeper's Soul to obtain.
+- Fix frog game softlocking when playing a custom song.
+- Fix ammo amount to display in green when bombchu are at capacity.
 
 ## [30.1] - 2026-03-15
 
@@ -1697,7 +1765,9 @@ All notable changes to this project will be documented in this file.
 
 - Initial stable release.
 
-[Unreleased]: https://github.com/OoTMM/OoTMM/compare/v30.1...HEAD
+[Unreleased]: https://github.com/OoTMM/OoTMM/compare/v31.1...HEAD
+[31.1]: https://github.com/OoTMM/OoTMM/compare/v31.0...v31.1
+[31.0]: https://github.com/OoTMM/OoTMM/compare/v30.1...v31.0
 [30.1]: https://github.com/OoTMM/OoTMM/compare/v30.0...v30.1
 [30.0]: https://github.com/OoTMM/OoTMM/compare/v29.0...v30.0
 [29.0]: https://github.com/OoTMM/OoTMM/compare/v28.2...v29.0

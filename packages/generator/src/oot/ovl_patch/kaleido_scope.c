@@ -40,7 +40,7 @@ static int checkItemToggle(PlayState* play)
 
     if (p->cursorSpecialPos == 0)
     {
-        switch (p->screen_idx)
+        switch (p->pageIndex)
         {
         case PAUSE_ITEM:
             itemId = p->cursorItem[PAUSE_ITEM];
@@ -69,7 +69,26 @@ static int checkItemToggle(PlayState* play)
             }
             else
             {
+                u8 oldItem;
+                u8 newItem;
+                int wasEquipped;
+
+                oldItem = *itemPtr;
+                wasEquipped = isSlotEquippedOot(&gOotSave.info.equips, itemCursor);
+
                 comboToggleSlot(itemCursor);
+
+                newItem = *itemPtr;
+
+                if (itemCursor == ITS_OOT_HAMMER && wasEquipped)
+                {
+                    if ((oldItem == ITEM_OOT_GREAT_FAIRY_SWORD && newItem == ITEM_OOT_HAMMER)
+                        || (oldItem == ITEM_OOT_HAMMER && newItem == ITEM_OOT_GREAT_FAIRY_SWORD))
+                    {
+                        removeButtonItem(&gOotSave.info.equips, newItem);
+                    }
+                }
+
                 if (itemCursor == ITS_OOT_TRADE_ADULT
                     && isSlotEquippedOot(&gOotSave.info.childEquips, itemCursor)
                     && !comboIsTradeBottleOot(*itemPtr))
@@ -155,7 +174,7 @@ void KaleidoSetCursorColor(PlayState* play)
     /* Not on Z/R */
     if (p->cursorSpecialPos == 0)
     {
-        switch (p->screen_idx)
+        switch (p->pageIndex)
         {
         case PAUSE_ITEM:
             /* Item select */
@@ -198,7 +217,7 @@ static void KaleidoScope_HandleMapDungeonMenu(PlayState* play, void* unk, u32 ov
     KaleidoScopeHandler2 handler;
     int onMenu;
 
-    onMenu = play->pauseCtx.screen_idx == 1;
+    onMenu = play->pauseCtx.pageIndex == 1;
     if (onMenu && play->state.input[0].press.button & (L_TRIG | U_CBUTTONS))
         comboMenuNext();
 
@@ -590,7 +609,7 @@ static void KaleidoScope_UpdateOwlWarpNamePanel(PlayState* play)
     u16 texIndex;
 
     pauseCtx = &play->pauseCtx;
-    if ((pauseCtx->namedItem != pauseCtx->cursorItem[PAUSE_MAP]) || ((pauseCtx->screen_idx == 1) && (pauseCtx->cursorSpecialPos != 0)))
+    if ((pauseCtx->namedItem != pauseCtx->cursorItem[PAUSE_MAP]) || ((pauseCtx->pageIndex == 1) && (pauseCtx->cursorSpecialPos != 0)))
     {
         pauseCtx->namedItem = pauseCtx->cursorItem[PAUSE_MAP];
         texIndex = pauseCtx->namedItem;
@@ -633,6 +652,83 @@ static void soaringMessage(PlayState* play, u8 soaringIndex)
     comboTextAppendStr(&b, TEXT_CZ "?" TEXT_NL TEXT_NL TEXT_COLOR_GREEN TEXT_CHOICE2 "OK" TEXT_NL "No" TEXT_END);
 }
 
+#define OOT_HAMMER_SLOT_AGE_REQ_ADDR 0x80829d83
+#define OOT_AGE_REQ_NONE 9
+
+static u8 sHammerSlotAgeReqBackup;
+static u8 sHammerSlotAgeReqBackupValid;
+
+static u8* OotHammerSlotAgeReq(void)
+{
+    return OverlayAddr(OOT_HAMMER_SLOT_AGE_REQ_ADDR);
+}
+
+static void OotRestoreHammerSlotAgeReq(void)
+{
+    if (sHammerSlotAgeReqBackupValid)
+    {
+        *OotHammerSlotAgeReq() = sHammerSlotAgeReqBackup;
+        sHammerSlotAgeReqBackupValid = 0;
+    }
+}
+
+static int OotHammerSharedSlotItemAgeOk(u8 item)
+{
+    switch (item)
+    {
+    case ITEM_OOT_HAMMER:
+        return gSave.age == AGE_ADULT || Config_Flag(CFG_OOT_AGELESS_HAMMER);
+
+    case ITEM_OOT_GREAT_FAIRY_SWORD:
+        return gSave.age == AGE_CHILD || Config_Flag(CFG_OOT_AGELESS_GREAT_FAIRY_SWORD);
+
+    default:
+        return 1;
+    }
+}
+
+static void OotUpdateHammerSharedSlotAgeReq(PlayState* play)
+{
+    PauseContext* pauseCtx;
+    u16 slot;
+    u8 item;
+    u8* ageReq;
+
+    pauseCtx = &play->pauseCtx;
+    ageReq = OotHammerSlotAgeReq();
+
+    if (!sHammerSlotAgeReqBackupValid)
+    {
+        sHammerSlotAgeReqBackup = *ageReq;
+        sHammerSlotAgeReqBackupValid = 1;
+    }
+
+    if (pauseCtx->pageIndex != PAUSE_ITEM || pauseCtx->cursorSpecialPos != 0)
+    {
+        OotRestoreHammerSlotAgeReq();
+        return;
+    }
+
+    slot = pauseCtx->cursorPoint[PAUSE_ITEM];
+
+    if (slot != ITS_OOT_HAMMER)
+    {
+        OotRestoreHammerSlotAgeReq();
+        return;
+    }
+
+    item = gSave.info.inventory.items[slot];
+
+    if (OotHammerSharedSlotItemAgeOk(item))
+    {
+        *ageReq = OOT_AGE_REQ_NONE;
+    }
+    else
+    {
+        *ageReq = gSave.age == AGE_CHILD ? AGE_ADULT : AGE_CHILD;
+    }
+}
+
 static u32 sMapPageBgTextures[15];
 
 void KaleidoScope_BeforeUpdate(PlayState* play)
@@ -646,7 +742,7 @@ void KaleidoScope_BeforeUpdate(PlayState* play)
     InterfaceContext* interfaceCtx = &play->interfaceCtx;
     MessageContext* msgCtx = &play->msgCtx;
     Input* input = &play->state.input[0];
-
+    OotUpdateHammerSharedSlotAgeReq(play);
     if (pauseCtx->state >= PAUSE_STATE_OWLWARP_2 && pauseCtx->state <= PAUSE_STATE_OWLWARP_6)
     {
         pauseCtx->stickAdjX = input->rel.stick_x;
@@ -879,7 +975,7 @@ void KaleidoScope_BeforeUpdate(PlayState* play)
                     160.0f;
                 pauseCtx->namedItem = PAUSE_ITEM_NONE;
                 interfaceCtx->startAlpha = 0;
-                pauseCtx->screen_idx = gPrevPageIndex;
+                pauseCtx->pageIndex = gPrevPageIndex;
                 pauseCtx->cursorPoint[PAUSE_WORLD_MAP] = gPrevCursorPoint;
             }
             break;
@@ -1637,15 +1733,18 @@ s32 KaleidoScope_BeforeDraw(PlayState* play)
     return 0;
 }
 
-#define CUSTOM_ICON_SLOT_MAX 6
+#define CUSTOM_ICON_SLOT_MAX 8
 
 u32 GetItemTexture(u32 slotId, u8 item, u32 index)
 {
     static void* sExtraIconTradeChild[CUSTOM_ICON_SLOT_MAX][2];
     static u8 sExtraIconTradeChildItem[CUSTOM_ICON_SLOT_MAX][2];
-    u32* itemToIcon = (u32*)0x800f8d2c;
+    static u8 sExtraIconTradeChildAge[CUSTOM_ICON_SLOT_MAX][2];
+    static u8 sExtraIconTradeChildUsable[CUSTOM_ICON_SLOT_MAX][2];
 
+    u32* itemToIcon = (u32*)0x800f8d2c;
     s8 iconSlot;
+    u8 usable;
 
     switch (slotId)
     {
@@ -1667,6 +1766,12 @@ u32 GetItemTexture(u32 slotId, u8 item, u32 index)
     case ITS_OOT_BOTTLE4:
         iconSlot = 5;
         break;
+    case ITS_OOT_BOMBS:
+        iconSlot = 6;
+        break;
+    case ITS_OOT_HAMMER:
+        iconSlot = 7;
+        break;
     default:
         iconSlot = -1;
         break;
@@ -1678,26 +1783,57 @@ u32 GetItemTexture(u32 slotId, u8 item, u32 index)
         {
             sExtraIconTradeChild[iconSlot][index] = malloc(0x1000);
             sExtraIconTradeChildItem[iconSlot][index] = ITEM_NONE;
+            sExtraIconTradeChildAge[iconSlot][index] = 0xff;
+            sExtraIconTradeChildUsable[iconSlot][index] = 0xff;
         }
+
         if (sExtraIconTradeChild[iconSlot][index])
         {
-            if (sExtraIconTradeChildItem[iconSlot][index] != item)
+            s32 isBottle;
+
+            usable = 1;
+            isBottle =
+                (item >= ITEM_OOT_BOTTLE_EMPTY && item <= ITEM_OOT_POE) ||
+                (item >= ITEM_OOT_MAGIC_MUSHROOM && item <= ITEM_OOT_ZORA_EGG);
+
+            if (!isBottle)
+            {
+                if (slotId == ITS_OOT_TRADE_CHILD)
+                {
+                    usable = Config_Flag(CFG_OOT_AGELESS_CHILD_TRADE) || gSave.age == AGE_CHILD;
+                }
+                else if (slotId == ITS_OOT_TRADE_ADULT)
+                {
+                    usable = gSave.age == AGE_ADULT;
+                }
+                else if (slotId == ITS_OOT_HAMMER && item == ITEM_OOT_GREAT_FAIRY_SWORD)
+                {
+                    usable = Config_Flag(CFG_OOT_AGELESS_GREAT_FAIRY_SWORD) || gSave.age == AGE_CHILD;
+                }
+                else if (slotId == ITS_OOT_HAMMER && item == ITEM_OOT_HAMMER)
+                {
+                    usable = Config_Flag(CFG_OOT_AGELESS_HAMMER) || gSave.age == AGE_ADULT;
+                }
+            }
+
+            if (sExtraIconTradeChildItem[iconSlot][index] != item ||
+                sExtraIconTradeChildAge[iconSlot][index] != gSave.age ||
+                sExtraIconTradeChildUsable[iconSlot][index] != usable)
             {
                 sExtraIconTradeChildItem[iconSlot][index] = item;
                 comboItemIcon(sExtraIconTradeChild[iconSlot][index], sExtraIconTradeChildItem[iconSlot][index]);
-                s32 isBottle = (item >= ITEM_OOT_BOTTLE_EMPTY && item <= ITEM_OOT_POE) || (item >= ITEM_OOT_MAGIC_MUSHROOM && item <= ITEM_OOT_ZORA_EGG);
-                if (!isBottle)
+                if (!comboIsTradeBottleOot(item))
+                sExtraIconTradeChildAge[iconSlot][index] = gSave.age;
+                sExtraIconTradeChildUsable[iconSlot][index] = usable;
+
+                comboItemIcon(sExtraIconTradeChild[iconSlot][index], item);
+
+                if (!usable)
                 {
-                    if (slotId == ITS_OOT_TRADE_CHILD && !Config_Flag(CFG_OOT_AGELESS_CHILD_TRADE) && gSave.age != AGE_CHILD)
-                    {
-                        Grayscale(sExtraIconTradeChild[iconSlot][index], 0x400);
-                    }
-                    else if (slotId == ITS_OOT_TRADE_ADULT && gSave.age != AGE_ADULT)
-                    {
-                        Grayscale(sExtraIconTradeChild[iconSlot][index], 0x400);
-                    }
+                    Grayscale(sExtraIconTradeChild[iconSlot][index], 0x400);
                 }
             }
+
             return (u32)sExtraIconTradeChild[iconSlot][index] & 0x00ffffff;
         }
     }
@@ -1719,15 +1855,19 @@ static u8 GetNextItem(u32 slot, s32* outTableIndex)
     return ITEM_NONE;
 }
 
+#define MAX_CUSTOM_VERTEX 6
+
 /* Vertex buffers. */
-static Vtx gVertexBufs[(4 * 4) * 2];
+static Vtx gVertexBufs[(4 * MAX_CUSTOM_VERTEX) * 2];
 
 /* Vertex buffer pointers. */
-static Vtx* gVertex[4] = {
+static Vtx* gVertex[MAX_CUSTOM_VERTEX] = {
     &gVertexBufs[(4 * 0) * 2],
     &gVertexBufs[(4 * 1) * 2],
     &gVertexBufs[(4 * 2) * 2],
     &gVertexBufs[(4 * 3) * 2],
+    &gVertexBufs[(4 * 4) * 2],
+    &gVertexBufs[(4 * 5) * 2],
 };
 
 static Vtx* GetVtxBuffer(PlayState* play, u32 vertIdx, u32 slot) {
@@ -1858,9 +1998,17 @@ void KaleidoScope_LoadItemName(void* dst, s16 id)
     {
         comboLoadMmIcon(dst, 0xa27660, ITEM_MM_SPRING_WATER_HOT);
     }
-    else if (itemId == ITEM_OOT_ZORA_EGG    )
+    else if (itemId == ITEM_OOT_ZORA_EGG)
     {
         comboLoadMmIcon(dst, 0xa27660, ITEM_MM_ZORA_EGG);
+    }
+    else if (itemId == ITEM_OOT_POWDER_KEG)
+    {
+        comboLoadMmIcon(dst, 0xa27660, ITEM_MM_POWDER_KEG);
+    }
+    else if (itemId == ITEM_OOT_GREAT_FAIRY_SWORD)
+    {
+        comboLoadMmIcon(dst, 0xa27660, ITEM_MM_GREAT_FAIRY_SWORD);
     }
     else
     {
@@ -1922,3 +2070,144 @@ u8 KaleidoScope_GetSlotAgeRequirement(u16 item, u8 vanillaAgeRequirement)
     }
     return vanillaAgeRequirement;
 }
+
+#define ITEM_GRID_ROWS 4
+#define ITEM_GRID_COLS 6
+
+typedef enum ItemQuad {
+    // 0 to 23 are the ITEM_GRID_ROWS*ITEM_GRID_COLS item grid
+    // The values follow the `InventorySlot` enum
+    /*  0 */ ITEM_QUAD_GRID_FIRST,
+    /* 23 */ ITEM_QUAD_GRID_LAST = ITEM_GRID_ROWS * ITEM_GRID_COLS - 1,
+    // Markers indicating the currently equipped items
+    /* 24 */ ITEM_QUAD_GRID_SELECTED_C_LEFT,
+    /* 25 */ ITEM_QUAD_GRID_SELECTED_C_DOWN,
+    /* 26 */ ITEM_QUAD_GRID_SELECTED_C_RIGHT,
+    // Digits for showing ammo count
+    /* 27 */ ITEM_QUAD_AMMO_FIRST,
+    /* 27 */ ITEM_QUAD_AMMO_STICK_TENS = ITEM_QUAD_AMMO_FIRST,
+    /* 28 */ ITEM_QUAD_AMMO_STICK_ONES,
+    /* 29 */ ITEM_QUAD_AMMO_NUT_TENS,
+    /* 30 */ ITEM_QUAD_AMMO_NUT_ONES,
+    /* 31 */ ITEM_QUAD_AMMO_BOMB_TENS,
+    /* 32 */ ITEM_QUAD_AMMO_BOMB_ONES,
+    /* 33 */ ITEM_QUAD_AMMO_BOW_TENS,
+    /* 34 */ ITEM_QUAD_AMMO_BOW_ONES,
+    /* 35 */ ITEM_QUAD_AMMO_SLINGSHOT_TENS,
+    /* 36 */ ITEM_QUAD_AMMO_SLINGSHOT_ONES,
+    /* 37 */ ITEM_QUAD_AMMO_BOMBCHU_TENS,
+    /* 38 */ ITEM_QUAD_AMMO_BOMBCHU_ONES,
+    /* 39 */ ITEM_QUAD_AMMO_BEAN_TENS,
+    /* 40 */ ITEM_QUAD_AMMO_BEAN_ONES,
+    /* 41 */ ITEM_QUAD_MAX
+} ItemQuad;
+
+static s16 sAmmoVtxOffset[] = {
+    ITEM_QUAD_AMMO_STICK_TENS - ITEM_QUAD_AMMO_FIRST,     // ITEM_DEKU_STICK
+    ITEM_QUAD_AMMO_NUT_TENS - ITEM_QUAD_AMMO_FIRST,       // ITEM_DEKU_NUT
+    ITEM_QUAD_AMMO_BOMB_TENS - ITEM_QUAD_AMMO_FIRST,      // ITEM_BOMB
+    ITEM_QUAD_AMMO_BOW_TENS - ITEM_QUAD_AMMO_FIRST,       // ITEM_BOW
+    99,                                                   // (ITEM_ARROW_FIRE)
+    99,                                                   // (ITEM_DINS_FIRE)
+    ITEM_QUAD_AMMO_SLINGSHOT_TENS - ITEM_QUAD_AMMO_FIRST, // ITEM_SLINGSHOT
+    99,                                                   // (ITEM_OCARINA_FAIRY)
+    99,                                                   // (ITEM_OCARINA_OF_TIME)
+    ITEM_QUAD_AMMO_BOMBCHU_TENS - ITEM_QUAD_AMMO_FIRST,   // ITEM_BOMBCHU
+    99,                                                   // (ITEM_HOOKSHOT)
+    99,                                                   // (ITEM_LONGSHOT)
+    99,                                                   // (ITEM_ARROW_ICE)
+    99,                                                   // (ITEM_FARORES_WIND)
+    99,                                                   // (ITEM_BOOMERANG)
+    99,                                                   // (ITEM_LENS)
+    ITEM_QUAD_AMMO_BEAN_TENS - ITEM_QUAD_AMMO_FIRST,      // ITEM_MAGIC_BEAN
+};
+
+typedef void (*KaleidoScope_DrawAmmoCount)(PauseContext*, GraphicsContext*, s16);
+
+const static u8* gAmmoDigit0Tex = (u8*)0x020035c0;
+
+void KaleidoScope_CustomDrawAmmoCount(PauseContext* pauseCtx, GraphicsContext* gfxCtx, s16 item)
+{
+    s16 ammo;
+    s16 ammoTens;
+    s16 maxAmmo;
+    s16 itemQuad;
+    s32 canEquip = 0;
+
+    OPEN_DISPS(gfxCtx);
+
+    switch (item)
+    {
+    case ITEM_OOT_POWDER_KEG:
+        ammo = gOotExtraAmmo.kegAmmo;
+        maxAmmo = 1;
+        itemQuad = ITEM_BOMB;
+        canEquip = 1;
+        break;
+    case ITEM_OOT_BOMBCHU_10:
+        ammo = gSave.info.inventory.ammo[ITS_OOT_BOMBCHU];
+        maxAmmo = gMaxBombchuOot;
+        itemQuad = ITEM_BOMBCHU_10;
+        canEquip = 1;
+        break;
+    default:
+        return;
+    }
+
+    gDPPipeSync(POLY_OPA_DISP++);
+
+    if (!canEquip) {
+        gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 100, 100, 100, pauseCtx->alpha);
+    } else {
+        gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 255, pauseCtx->alpha);
+
+        if (ammo == 0) {
+            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 130, 130, 130, pauseCtx->alpha);
+        } else if (ammo == maxAmmo) {
+            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 120, 255, 0, pauseCtx->alpha);
+        }
+    }
+
+    for (ammoTens = 0; ammo >= 10; ammoTens++) {
+        ammo -= 10;
+    }
+
+    gDPPipeSync(POLY_OPA_DISP++);
+
+    if (ammoTens != 0) {
+        gSPVertex(POLY_OPA_DISP++, &pauseCtx->itemVtx[(ITEM_QUAD_AMMO_FIRST + sAmmoVtxOffset[itemQuad] + 0) * 4], 4, 0);
+
+        gDPLoadTextureBlock(POLY_OPA_DISP++, (gAmmoDigit0Tex + (8 * 8 * ammoTens)), G_IM_FMT_IA, G_IM_SIZ_8b, 8, 8,
+                            0, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK,
+                            G_TX_NOLOD, G_TX_NOLOD);
+
+        gSP1Quadrangle(POLY_OPA_DISP++, 0, 2, 3, 1, 0);
+    }
+
+    gSPVertex(POLY_OPA_DISP++, &pauseCtx->itemVtx[(ITEM_QUAD_AMMO_FIRST + sAmmoVtxOffset[itemQuad] + 1) * 4], 4, 0);
+
+    gDPLoadTextureBlock(POLY_OPA_DISP++, (gAmmoDigit0Tex + (8 * 8 * ammo)), G_IM_FMT_IA, G_IM_SIZ_8b, 8, 8, 0,
+                        G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD,
+                        G_TX_NOLOD);
+
+    gSP1Quadrangle(POLY_OPA_DISP++, 0, 2, 3, 1, 0);
+
+    CLOSE_DISPS();
+}
+
+void KaleidoScope_DrawAmmoCountWrapper(PauseContext* pauseCtx, GraphicsContext* gfxCtx, s16 item)
+{
+    switch (item)
+    {
+    case ITEM_OOT_POWDER_KEG:
+    case ITEM_OOT_BOMBCHU_10:
+        KaleidoScope_CustomDrawAmmoCount(pauseCtx, gfxCtx, item);
+        break;
+    default:
+        KaleidoScope_DrawAmmoCount KaleidoScope_DrawAmmoCount = OverlayAddr(0x80819670);
+        KaleidoScope_DrawAmmoCount(pauseCtx, gfxCtx, item);
+        break;
+    }
+}
+
+PATCH_CALL(0x8081aa1c, KaleidoScope_DrawAmmoCountWrapper)

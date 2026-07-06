@@ -44,6 +44,18 @@ void Interface_LoadItemIconCustom(u32 vrom, s32 id, void* dst, size_t size)
         case ITEM_MM_RUTO_LETTER:
             id = ITEM_OOT_RUTO_LETTER;
             break;
+        case ITEM_MM_SLINGSHOT:
+            id = ITEM_OOT_SLINGSHOT;
+            break;
+        case ITEM_MM_MASK_GERUDO:
+            id = ITEM_OOT_GERUDO_MASK;
+            break;
+        case ITEM_MM_MASK_SKULL:
+            id = ITEM_OOT_SKULL_MASK;
+            break;
+        case ITEM_MM_MASK_SPOOKY:
+            id = ITEM_OOT_SPOOKY_MASK;
+            break;
         }
 
         comboDmaLookupForeignId(&dma, 8);
@@ -75,7 +87,7 @@ u32 Interface_GetCustomIconTexture(PlayState* play, PauseContext* pauseCtx)
     return texture;
 }
 
-extern s8 gPlayerFormCustomItemRestrictions[5][ITEM_MM_CUSTOM_MAX - ITEM_MM_CUSTOM_MIN];
+extern s8 gPlayerFormCustomItemRestrictions[5][ITEM_MM_CUSTOM_USABLE_MAX - ITEM_MM_CUSTOM_MIN];
 
 /* button and item are stored in SP10 and SP14 by HOOK_SAVE */
 s8 Interface_GetItemRestriction(u8 playerForm, PlayState* play, s16* restoreHudVisibility, s32 nothing, u8 item, s16 button)
@@ -144,3 +156,94 @@ s32 Interface_ShouldStartHazardTimer(Player* player, s16 envHazard)
         || envHazard == PLAYER_ENV_HAZARD_UNDERWATER_FREE
         || (player->transformation != MM_PLAYER_FORM_ZORA && envHazard == PLAYER_ENV_HAZARD_UNDERWATER_FLOOR);
 }
+
+const static u8* gAmmoDigit0Tex = (u8*)0x02004aa0;
+
+void Interface_CustomDrawAmmoCount(PlayState* play, s16 button, s16 alpha)
+{
+    static s16 sAmmoDigitsXPositions[] = { 162, 228, 250, 272 };
+    static s16 sAmmoDigitsYPositions[] = { 35, 35, 51, 35 };
+    u8 i;
+    s16 ammo;
+    s16 maxAmmo;
+
+    OPEN_DISPS(play->state.gfxCtx);
+
+    i = GET_CUR_FORM_BTN_ITEM(button);
+
+    switch (i)
+    {
+    case ITEM_MM_BOMBCHU:
+        ammo = gSave.info.inventory.ammo[ITS_MM_BOMBCHU];
+        maxAmmo = gMaxBombchuMm;
+        break;
+    case ITEM_MM_SLINGSHOT:
+        ammo = gMmExtraAmmo.slingshotSeeds;
+        maxAmmo = kMaxSeeds[gMmSave.info.inventory.upgrades.bulletBag];
+        break;
+    default:
+        return;
+    }
+
+    gDPPipeSync(OVERLAY_DISP++);
+
+    if (button == 0 && gSaveContext.minigameState == 1) /* MINIGAME_STATUS_ACTIVE */
+    {
+        ammo = play->interfaceCtx.minigameAmmo;
+    }
+    else if (button == 0 && play->bButtonAmmoPlusOne > 1)
+    {
+        ammo = play->bButtonAmmoPlusOne - 1;
+    }
+    else if (ammo == maxAmmo)
+    {
+        gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 120, 255, 0, alpha);
+    }
+
+    if (ammo == 0)
+    {
+        gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 100, 100, 100, alpha);
+    }
+
+    i = 0;
+    while (ammo >= 10)
+    {
+        i++;
+        ammo -= 10;
+    }
+
+    if (i != 0)
+    {
+        OVERLAY_DISP = Gfx_TextureIA8(OVERLAY_DISP, ((u8*)gAmmoDigit0Tex + ((8 * 8) * i)), 8, 8,
+                                        sAmmoDigitsXPositions[button], sAmmoDigitsYPositions[button], 8, 8, 1 << 10, 1 << 10);
+    }
+
+    OVERLAY_DISP = Gfx_TextureIA8(OVERLAY_DISP, ((u8*)gAmmoDigit0Tex + ((8 * 8) * ammo)), 8, 8,
+                                    sAmmoDigitsXPositions[button] + 6, sAmmoDigitsYPositions[button], 8, 8, 1 << 10, 1 << 10);
+
+    CLOSE_DISPS();
+}
+
+void Interface_DrawAmmoCountWrapper(PlayState* play, s16 button, s16 alpha)
+{
+    u8 item = GET_CUR_FORM_BTN_ITEM(button);
+    switch (item)
+    {
+    case ITEM_MM_SLINGSHOT:
+    case ITEM_MM_BOMBCHU:
+        Interface_CustomDrawAmmoCount(play, button, alpha);
+        break;
+    case ITEM_MM_BOOMERANG:
+        /* No ammo, draw nothing */
+        break;
+    default:
+        Interface_DrawAmmoCount(play, button, alpha);
+        break;
+    }
+}
+
+PATCH_CALL(0x801181a4, Interface_DrawAmmoCountWrapper)
+PATCH_CALL(0x801183e8, Interface_DrawAmmoCountWrapper)
+PATCH_CALL(0x80118998, Interface_DrawAmmoCountWrapper)
+PATCH_CALL(0x80118a94, Interface_DrawAmmoCountWrapper)
+PATCH_CALL(0x80118b8c, Interface_DrawAmmoCountWrapper)

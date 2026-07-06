@@ -21,20 +21,25 @@ SkelAnime_DrawOpa = 0x80133b3c;
 EffectSs_Delete = 0x800b0210;
 gEffectSsTable = 0x801ae3a0;
 
+EnItem00_SetObject = 0x800a5d00;
 EnItem00_Init = 0x800a5d70;
 EnItem00_CollectedHandler = 0x800a6a40;
 EnItem00_Update = 0x800a6b98;
+EnItem00_DrawRupee = 0x800a72ac;
+EnItem00_DrawHeartContainer = 0x800a74d8;
 
 gAudioLoadStatusFontSample = 0x80204fd8;
 Player_UpdateForm = 0x8012301c;
 func_80123810 = 0x80123810;
 Player_UpdateBottleHeld = 0x80123d50;
+Player_IsBurningStickInRange = 0x80123f48;
 
 Fault_AddHungupAndCrashImpl = 0x80083df4;
 Interface_NewDay = 0x8010ee74;
 Environment_NewDay = 0x800feaf4;
 
 Play_DrawHudButtons = 0x80117100;
+Interface_DrawAmmoCount = 0x80117bd0;
 Audio_GetActiveSeqId = 0x801a8a50;
 Audio_QueueSeqCmd = 0x801a89a8;
 func_8012CF0C = 0x8012cf0c;
@@ -127,6 +132,7 @@ DrawGi_Opa1023              = 0x800ef89c;
 DrawGi_Opa10_Xlu32          = 0x800ef984;
 DrawGi_Opa10234567          = 0x800efbfc;
 DrawGi_Xlu01                = 0x800ef2ac;
+DrawGi_Table                = 0x800ee320;
 DrawGi_BombchuMask          = 0x800ee364;
 DrawGi_Compass              = 0x800ee940;
 DrawGi_DekuNut              = 0x800eed20;
@@ -146,6 +152,7 @@ Player_InCsMode = 0x801233e4;
 Gfx_SetupDL57 = 0x8012BFC4;
 Gfx_SetupDL25_Opa = 0x8012c28c;
 Gfx_SetupDL25_Xlu = 0x8012c2dc;
+Gfx_SetupDL66 = 0x8012c724;
 Gfx_SetupDL_42Opa = 0x8012c8ac;
 Matrix_Put      = 0x8018020c;
 DisplaceTexture = 0x8012cbd0;
@@ -175,6 +182,7 @@ Collider_DestroyJntSph = 0x800e0c18;
 
 Actor_SetScale = 0x800b67e0;
 Actor_SetFocus = 0x800b675c;
+Actor_SetObjectDependency = 0x800b67fc;
 Actor_HasParent  = 0x800b89f8;
 Actor_HasParentZ = 0x800b89f8;
 Actor_HasNoParent = 0x800b8bfc;
@@ -221,10 +229,12 @@ Play_IsDebugCamEnabled = 0x8016a168;
 Entrance_CreateFromSpawn = 0x80130784;
 func_80169EFC = 0x80169efc;
 Audio_PlaySfx_BigBells = 0x801a0124;
+Audio_PlaySequenceAtPos = 0x801a1fb4;
 CutsceneManager_IsNext = 0x800f1be4;
 CutsceneManager_Queue = 0x800f1ba4;
 CutsceneManager_Start = 0x800f1d84;
 CutsceneManager_Stop = 0x800f1fbc;
+Gfx_TextureIA8 = 0x8010cd98;
 Interface_SetHudVisibility = 0x8010ef68;
 Environment_PlayStormNatureAmbience = 0x800fd78c;
 Environment_StopStormNatureAmbience = 0x800fd858;
@@ -310,6 +320,7 @@ Matrix_Push = 0x8018019c;
 Matrix_Pop = 0x801801cc;
 
 _AddRupees = 0x801159ec;
+Inventory_ChangeAmmo = 0x80115a14;
 
 PlayStoreFlags = 0x80169d40;
 Play_GetCamera = 0x801696d4;
@@ -440,6 +451,8 @@ EffectSsGSplash_Spawn = 0x800b1f4c;
 EffectSsGRipple_Spawn = 0x800b1ef4;
 EffectSsKakera_Spawn = 0x800b2810;
 EffectSsBubble_Spawn = 0x800b1e94;
+EffectSsGSpk_SpawnFuse = 0x800b1c70;
+EffectSsBomb2_SpawnLayered = 0x800b1970;
 
 PlayerAnimation_Update = 0x801360e0;
 PlayerAnimation_PlayOnce = 0x8013658C;
@@ -561,6 +574,7 @@ Gfx_SetFog = 0x8012bc50;
 Play_SetFog = 0x801660b8;
 Actor_DrawDamageEffects = 0x800be680;
 Actor_SetFocus = 0x800b675c;
+func_800B8D10 = 0x800b8d10;
 func_800B8D50 = 0x800b8d50;
 CollisionCheck_SpawnShieldParticles = 0x800e85d4;
 Actor_RequestQuakeAndRumble = 0x800bc848;
@@ -630,6 +644,7 @@ CollisionCheck_SpawnShieldParticlesWood = 0x800e86e0;
 BgCheck_EntityLineTest2 = 0x800c5650;
 EffectSsBlast_SpawnWhiteShockwave = 0x800b1b10;
 
+Actor_DrawDoorLock = 0x800bc8b8;
 Matrix_MultVecY = 0x80181bc4;
 func_800B12F0 = 0x800b12f0;
 WaterBox_GetSurface1 = 0x800ca1ac;
@@ -647,7 +662,9 @@ Math_SinF = 0x801794ec;
 Flags_SetClearTemp = 0x800b5d30;
 EffectSsHahen_Spawn = 0x800b219c;
 CutsceneManager_GetCurrentSubCamId = 0x800F21B8;
+Audio_PlaySubBgm = 0x801a2bb8;
 Audio_PlayBgm_StorePrevBgm = 0x801a2e54;
+Actor_MatchFloorRotation = 0x800be3d0;
 func_800BE5CC = 0x800be5cc;
 Quake_RemoveRequest = 0x8012aac0;
 Actor_ApplyDamage = 0x800be22c;
@@ -725,3 +742,37 @@ Audio_SetSpec = 0x801a400c;
 
 LifeMeter_IsCritical = 0x80101930;
 Inventory_SaveLotteryCodeGuess = 0x8012f278;
+
+func_800F4A10 = 0x800f4a10;
+Audio_SetPauseState = 0x801a3a7c;
+GameState_SetFramerateDivisor = 0x801733a8;
+ShrinkWindow_Letterbox_GetSizeTarget = 0x80160c14;
+Audio_PlaySfx_PauseMenuOpenOrClose = 0x801a3aec;
+
+Player_InBlockingCsMode = 0x80123358;
+
+Player_SetUpperAction = 0x8082F43C;
+Player_UpdateHostileLockOn = 0x8082FB68;
+Player_IsZTargeting = 0x8082FBE8;
+Player_RequestRumble = 0x8082DF48;
+Player_CheckForIdleAnim = 0x8082ED94;
+Player_DecelerateToZero = 0x80832F24;
+Player_CheckRangedShieldDraw = 0x80830B88;
+Player_CheckRangedRestart = 0x80830F9C;
+Player_CheckRangedHoldRelease = 0x80830FD4;
+EffectSsStone1_Spawn = 0x800B25D8;
+Gfx_SetupDL25_Xlu2 = 0x8012C240;
+
+Player_MaskIdToItemId = 0x80122ED8;
+func_800B715C = 0x800B715C;
+BgCheck_AnyLineTest1 = 0x800C57F8;
+SurfaceType_GetSceneExitIndex = 0x800C99AC;
+SubS_SetOfferMode = 0x8013AED4;
+Inventory_DeleteItem = 0x801149A0;
+Inventory_UnequipItem = 0x80114A9C;
+Message_ContinueTextbox = 0x80151938;
+Message_CloseTextbox = 0x801477B4;
+func_80969DA4 = 0x80969DA4;
+func_80969898 = 0x80969898;
+
+Player_GetCurMaskItemId = 0x80122EEC;

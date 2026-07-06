@@ -390,7 +390,13 @@ typedef enum PlayerMeleeWeaponAnimation {
     /* 28 */ PLAYER_MWA_MAX
 } PlayerMeleeWeaponAnimation;
 
-int Player_IsBurningStickInRange(PlayState* play, Vec3f* pos, f32 xzRange, f32 yRange);
+typedef enum PlayerDoorType {
+    /* -1 */ PLAYER_DOORTYPE_AJAR = -1,
+    /*  0 */ PLAYER_DOORTYPE_NONE,
+    /*  1 */ PLAYER_DOORTYPE_HANDLE,
+    /*  2 */ PLAYER_DOORTYPE_SLIDING,
+    /*  3 */ PLAYER_DOORTYPE_FAKE
+} PlayerDoorType;
 
 typedef enum PlayerItemAction {
     /* 0x00 */ PLAYER_IA_NONE,
@@ -462,5 +468,13 @@ typedef enum PlayerItemAction {
     /* 0x42 */ PLAYER_IA_LENS_OF_TRUTH,
     /* 0x43 */ PLAYER_IA_MAX
 } PlayerItemAction;
+
+typedef enum PlayerSword {
+    /* 0 */ PLAYER_SWORD_NONE,
+    /* 1 */ PLAYER_SWORD_KOKIRI,
+    /* 2 */ PLAYER_SWORD_MASTER,
+    /* 3 */ PLAYER_SWORD_BIGGORON,
+    /* 4 */ PLAYER_SWORD_MAX
+} PlayerSword;
 
 #endif

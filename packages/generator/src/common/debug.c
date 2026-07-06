@@ -479,7 +479,9 @@ static void cheatAllItems(PlayState* play)
     gSave.info.itemEquips.sword = 1;
     gSave.info.itemEquips.shield = 2;
     gSharedCustomSave.mmProgressiveShields = 3;
+    gSave.info.inventory.upgrades.scale = 3;
     gSave.info.inventory.upgrades.quiver = 3;
+    gSave.info.inventory.upgrades.bulletBag = 3;
     gSave.info.inventory.upgrades.dekuStick = 3;
     gSave.info.inventory.upgrades.dekuNut = 3;
     gSave.info.inventory.upgrades.strength = 3;
@@ -487,6 +489,8 @@ static void cheatAllItems(PlayState* play)
     gSave.info.inventory.upgrades.wallet = 3;
     //gMmExtraFlags3.bottomlessWallet = 1;
     gSave.info.inventory.upgrades.bombBag = 3;
+    gSharedCustomSave.bombchuBagMm = 3;
+    Inventory_UpdateMaxBombchu();
 
     gSave.info.itemEquips.buttonItems[0][0] = ITEM_MM_SWORD_KOKIRI;
     gSave.info.inventory.items[ITS_MM_OCARINA] = ITEM_MM_OCARINA_OF_TIME;
@@ -554,7 +558,6 @@ static void cheatAllItems(PlayState* play)
     gSave.info.inventory.quest.songEmpty = 1;
     gSave.info.inventory.quest.songOrder = 1;
     gSave.info.inventory.quest.songSun = 1;
-    gSave.info.inventory.quest.songSaria = 1;
 
     //gSave.info.inventory.quest.remainsGoht = 1;
     //gSave.info.inventory.quest.remainsGyorg = 1;
@@ -573,10 +576,11 @@ static void cheatAllItems(PlayState* play)
     gSave.info.inventory.ammo[ITS_MM_BOW] = 50;
     gSave.info.inventory.ammo[ITS_MM_BOMBCHU] = 50;
     gSave.info.inventory.ammo[ITS_MM_BOMBS] = 40;
+    gMmExtraAmmo.slingshotSeeds = 50;
 
     gSave.info.playerData.healthCapacity = 0x10 * 20;
     gSave.info.playerData.health = gSave.info.playerData.healthCapacity;
-
+    gMmExtraFlags3.stoneAgony = 1;
     gMmExtraTrade.trade1 = 0x3f;
     gMmExtraTrade.trade2 = 0x1f;
     gMmExtraTrade.trade3 = 0x1f;
@@ -584,6 +588,10 @@ static void cheatAllItems(PlayState* play)
     gMmExtraItems.ocarina = 3;
     gMmExtraItems.hammerGFS = 3;
     gMmExtraItems.boomPicto = 3;
+    gCustomSave.ootSongs.value = 0xff;
+    gMmExtraItems.bowSlingshot = 3;
+    gMmExtraItems.stoneGerudoSkull = 7;
+    gMmExtraItems.gibdoSpooky = 3;
 
     // gCustomSave.halfDays = 0b111111;
 
@@ -609,6 +617,8 @@ static void cheatAllItems(PlayState* play)
     gSave.info.playerData.swordHealth = 8;
     gSave.info.isBiggoronSword = 1;
     gSharedCustomSave.extraSwordsOot = 2;
+    gSave.info.inventory.goldTokens = 100;
+    gSharedCustomSave.foundMasterSword = 1;
 
     //MM_SET_EVENT_WEEK(EV_MM_WEEK_DUNGEON_WF);
     //MM_SET_EVENT_WEEK(EV_MM_WEEK_DUNGEON_SH);
@@ -648,6 +658,7 @@ static void cheatAllItems(PlayState* play)
 
     gOotExtraItems.ocarina = 3;
     gOotExtraItems.hookshot = 3;
+    gOotExtraItems.gfsHammer = 3;
 
     gSave.info.inventory.equipment.swords = 0x7;
     gSave.info.inventory.equipment.shields = 0x7;
@@ -658,6 +669,8 @@ static void cheatAllItems(PlayState* play)
     gSave.info.inventory.upgrades.dekuNut = 3;
     gSave.info.inventory.upgrades.bulletBag = 3;
     gSave.info.inventory.upgrades.bombBag = 3;
+    gSharedCustomSave.bombchuBagOot = 3;
+    Inventory_UpdateMaxBombchu();
     gSave.info.inventory.upgrades.quiver = 3;
     gSave.info.inventory.upgrades.dive = 2;
     gSave.info.inventory.upgrades.wallet = 3;
@@ -718,6 +731,8 @@ static void cheatAllItems(PlayState* play)
     gOotExtraTrade.adult |= (1 << XITEM_OOT_ADULT_CLAIM_CHECK);
     gOotExtraItems.bottleAdultSlot = ITEM_OOT_CHATEAU;
     gOotExtraItems.bottleChildSlot = ITEM_OOT_SPRING_WATER;
+    gOotExtraAmmo.kegAmmo = 1;
+    gOotExtraItems.bombSlot = 0b11;
     gSave.info.inventory.items[ITS_OOT_TRADE_ADULT] = ITEM_OOT_POCKET_EGG;
     gSave.info.inventory.items[ITS_OOT_TRADE_CHILD] = ITEM_OOT_BUNNY_HOOD;
 
@@ -727,6 +742,14 @@ static void cheatAllItems(PlayState* play)
     // gSave.info.equips.cButtonSlots[0] = ITS_OOT_TRADE_CHILD;
 
     gCustomSave.hasElegy = 1;
+    gCustomSave.hasSongHealing = 1;
+    gCustomSave.hasSongSoaring = 1;
+
+    gCustomSave.hasSongAwakening = 1;
+    gCustomSave.hasSongGoronHalf = 1;
+    gCustomSave.hasSongGoron = 1;
+    gCustomSave.hasSongZora = 1;
+    gCustomSave.hasSongOrder = 1;
     gOotExtraFlags.spinUpgrade = 1;
 }
 #endif
@@ -768,6 +791,7 @@ static void debugApplyCheats(void)
         gSave.info.inventory.ammo[ITS_MM_BOW] = 50;
         gSave.info.inventory.ammo[ITS_MM_BOMBCHU] = 50;
         gSave.info.inventory.ammo[ITS_MM_BOMBS] = 40;
+        gMmExtraAmmo.slingshotSeeds = 50;
 #endif
     }
 }

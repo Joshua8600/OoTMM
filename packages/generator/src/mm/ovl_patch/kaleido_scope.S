@@ -13,6 +13,17 @@ PATCH_START 0x8081c674
    nop
 PATCH_END
 
+KaleidoScope_AfterSetCutsorColor_Mask_Trampoline:
+  lw      a0, 0x50(sp)
+  lw      s0, 0x18(sp)
+  j       KaleidoScope_AfterSetCutsorColor
+   addiu  sp, sp, 0x50
+
+PATCH_START 0x80820F94
+  j KaleidoScope_AfterSetCutsorColor_Mask_Trampoline
+   nop
+PATCH_END
+
 /* Relocs */
 PATCH_START 0x8082cea4
 .int 0
@@ -29,6 +40,10 @@ PATCH_START 0x8082d8f8
 PATCH_END
 
 PATCH_START 0x8082d8fc
+.int 0
+PATCH_END
+
+PATCH_START 0x8082c948
 .int 0
 PATCH_END
 
@@ -66,6 +81,14 @@ PATCH_END
 
 PATCH_START 0x8081c5e4
   jal   KaleidoScope_ShowItemMessage
+PATCH_END
+
+PATCH_START 0x80820F00
+  jal KaleidoScope_ShowItemMessage
+PATCH_END
+
+PATCH_START 0x80820F20
+  jal KaleidoScope_ShowItemMessage
 PATCH_END
 
 KaleidoScope_LoadIcons_Hook:
@@ -140,22 +163,52 @@ KaleidoScope_DrawMaskCustom_Hook:
   addiu   sp, sp, -0x20
   sw      ra, 0x001C (sp)
 
-  // Parameter 5 (inventory slot index)
-  addiu   at, s1, 0x0018
-  sw      at, 0x0010 (sp)
+  // Parameter 5: unused by KaleidoScope_DrawMaskIconCustom,
+  // since it derives the mask slot from vertIdx.
+  sw      zero, 0x0010 (sp)
 
-  // Parameter 6 (vertices index for Quadrangle)
+  // Parameter 6: vertices index for Quadrangle
   lw      at, 0x0030 (sp)
   sw      at, 0x0014 (sp)
 
-  // Parameter 7 (Vertex buffer index)
+  // Parameter 7: vertex buffer index
   sw      s4, 0x0018 (sp)
 
-  jal     KaleidoScope_DrawIconCustom
-  // Overwrite A1 with item Id in V0 (we can calculate A1 with it later)
+  jal     KaleidoScope_DrawMaskIconCustom
    or     a1, v0, zero
 
   lw      ra, 0x001C (sp)
+
+  jr      ra
+   addiu  sp, sp, 0x20
+
+/*
+==================================================================================================
+ Pause Menu (Select Mask subscreen) - Moon-given mask cursor fix
+==================================================================================================
+*/
+
+KaleidoScope_MaskCursorMoonItem_Trampoline:
+  addiu   sp, sp, -0x20
+  sw      ra, 0x001C(sp)
+  sw      t2, 0x0018(sp)
+  sw      t3, 0x0014(sp)
+  sw      t4, 0x0010(sp)
+
+  lhu     a0, 0x005E(sp)
+  or      a1, v0, zero
+
+  jal     KaleidoScope_ResolveMoonMaskCursorItem
+   nop
+
+  sh      v0, 0x0060(sp)
+
+  lw      t4, 0x0010(sp)
+  lw      t3, 0x0014(sp)
+  lw      t2, 0x0018(sp)
+  lw      ra, 0x001C(sp)
+
+  li      t5, 999
 
   jr      ra
    addiu  sp, sp, 0x20
@@ -171,7 +224,61 @@ PATCH_END
 
 /* Remove relocations. */
 PATCH_START 0x8082cc34
-.int 0x00000000 // Removes: 0x4400a3b8
+.int 0x00000000 /* Removes: 0x4400a3b8 */
+PATCH_END
+
+/*
+ * Draw path: don't skip whole slot.
+ */
+PATCH_START 0x808201ec
+  nop
+  nop
+PATCH_END
+
+/*
+ * Horizontal cursor move: don't overwrite candidate item with ITEM_NONE.
+ */
+PATCH_START 0x80820770
+  nop
+  nop
+PATCH_END
+
+/*
+ * Left-page special-position scan: don't skip whole slot.
+ */
+PATCH_START 0x808207fc
+  nop
+  nop
+PATCH_END
+
+/*
+ * Right-page special-position scan: don't skip whole slot.
+ */
+PATCH_START 0x808208ec
+  nop
+  nop
+PATCH_END
+
+/*
+ * Up/down / refresh path 1: keep branch, remove ITEM_NONE store.
+ */
+PATCH_START 0x80820a98
+  nop
+PATCH_END
+
+/*
+ * Up/down / refresh path 2: remove ITEM_NONE store.
+ */
+PATCH_START 0x80820adc
+  nop
+PATCH_END
+
+/*
+ * Resolve final cursor item.
+ */
+PATCH_START 0x80820ae0
+  jal     KaleidoScope_MaskCursorMoonItem_Trampoline
+   lhu    v0, 0x0040(sp)
 PATCH_END
 
 /* Fast magical arrow */

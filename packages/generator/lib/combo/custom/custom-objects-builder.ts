@@ -283,6 +283,18 @@ export class CustomObjectsBuilder {
     return { name: 'EQ_BOOMERANG_FLIGHT', ...editor.build() };
   }
 
+  private async makeEqGreatFairySword(): Promise<CustomObject> {
+    const editor = new ObjectEditor(0xa);
+
+    const object_link_child = await this.getFile('mm', 'objects/object_link_child');
+    editor.loadSegment(0x06, object_link_child);
+
+    const gfs = editor.processListAddr(0x06016898); /* gLinkHumanGreatFairysSwordDL */
+    editor.submitOut(gfs);
+
+    return { name: 'EQ_GREAT_FAIRY_SWORD', ...editor.build() };
+  }
+
   private async makeEqOcarinaFairy(): Promise<CustomObject> {
     const editor = new ObjectEditor(0xa);
     const obj = await this.getFile('oot', 'objects/object_link_child');
@@ -346,11 +358,37 @@ export class CustomObjectsBuilder {
     editor.submitList(editor.listData(0x060221a8)!); /* First person string */
 
     const dataTPAddr = 0x06015df0;
-    let dataTP = editor.listData(dataFPAddr)!;
-    dataTP = editor.stripList(dataTP, 0x06015F18 - dataTPAddr, 0x06015FC8 - dataTPAddr);
+    let dataTP = editor.listData(dataTPAddr)!;
     editor.submitList(dataTP);
 
     return { name: 'EQ_SLINGSHOT', ...editor.build() };
+  }
+
+  private async makeEqSlingshotRightArmStretched(): Promise<CustomObject> {
+    const editor = new ObjectEditor(0xa);
+    const obj = await this.getFile('oot', 'objects/object_link_child');
+    editor.loadSegment(0x06, obj);
+
+    const dataFPAddr = 0x06018048;
+    const dataFP = editor.listData(dataFPAddr)!;
+
+    editor.submitList(dataFP);
+
+    return { name: 'EQ_SLINGSHOT_RIGHT_ARM_STRETCHED', ...editor.build() };
+  }
+
+  private async makeEqLinkAdultRightArmOut(): Promise<CustomObject> {
+    const editor = new ObjectEditor(0xa);
+    const obj = await this.getFile('oot', 'objects/object_link_boy');
+
+    editor.loadSegment(0x06, obj);
+    const adultRightArmOut = editor.listData(0x06029918)!;
+    const adultRightHandBowPoseNoBow = editor.listData(0x0602a3d0)!;
+
+    editor.submitList(adultRightArmOut);
+    editor.submitList(adultRightHandBowPoseNoBow);
+
+    return { name: 'EQ_ADULT_RIGHT_ARM_OUT', ...editor.build() };
   }
 
   private async makeEqBow(): Promise<CustomObject> {
@@ -399,6 +437,85 @@ export class CustomObjectsBuilder {
     return { name: 'EFFECT_SHOCK', ...editor.build() };
   }
 
+  private async makeSongOfHealingEffect(): Promise<CustomObject> {
+    const editor = new ObjectEditor(0x06);
+    const ovl = await this.getFile('mm', 'actors/ovl_Oceff_Wipe7');
+    const obj = await this.getFile('mm', 'objects/gameplay_keep');
+    editor.loadSegment(0x04, obj);
+    editor.loadFile(0x80bcdcb0, ovl);
+    editor.submitListAddr(0x80bce950); /* Display List */
+    editor.submitListAddr(0xbce7f0); /* Vtx */
+    const matAnim = editor.processAnimatedMaterialAddr(0x80bce7e8, 1);
+    editor.submitOut(matAnim);
+
+    return { name: 'OCEFF_WIPE7', ...editor.build() };
+  }
+
+  private async makeSongEffect(): Promise<CustomObject> {
+    const editor = new ObjectEditor(0x06);
+    const ovl = await this.getFile('mm', 'actors/ovl_Oceff_Wipe5');
+    const obj = await this.getFile('mm', 'objects/gameplay_keep');
+    editor.loadSegment(0x04, obj);
+    editor.loadFile(0x80bc7ad0, ovl);
+    editor.submitListAddr(0x80bc9080); /* Display List */
+    editor.submitListAddr(0xbc8f20); /* Vtx */
+    const matAnim = editor.processAnimatedMaterialAddr(0x80bc7f18, 1);
+    editor.submitOut(matAnim);
+
+    return { name: 'OCEFF_WIPE5', ...editor.build() };
+  }
+
+  private async makePowderKeg(): Promise<CustomObject> {
+    const editor = new ObjectEditor(0x06);
+    const ovl = await this.getFile('mm', 'actors/ovl_En_Bom');
+    const obj = await this.getFile('mm', 'objects/gameplay_keep');
+    editor.loadSegment(0x04, obj);
+    editor.loadFile(0x80870DB0, ovl);
+    editor.submitListAddr(0x80870DB0 + 0x21e8); /* gPowderKegFuseMaterialDL */
+    editor.submitListAddr(0x80870DB0 + 0x2270); /* gPowderKegFuseModel1DL */
+    editor.submitListAddr(0x80870DB0 + 0x2290); /* gPowderKegFuseModel2DL */
+    editor.submitListAddr(0x80870DB0 + 0x2ef0); /* gPowderKegBarrelDL */
+    editor.submitListAddr(0x80870DB0 + 0x3548); /* gPowderKegGoronSkullDL */
+
+    return { name: 'POWDER_KEG', ...editor.build() }
+  }
+
+  private async makeClearTag(): Promise<CustomObject> {
+    const editor = new ObjectEditor(0x06);
+    const ovl = await this.getFile('mm', 'actors/ovl_En_Clear_Tag');
+    const obj = await this.getFile('mm', 'objects/gameplay_keep');
+    editor.loadSegment(0x04, obj);
+    editor.loadFile(0x80947F60, ovl);
+    editor.submitListAddr(0x80947F60 + 0x3130); /* gClearTagDebrisEffectMaterialDL */
+    editor.submitListAddr(0x80947F60 + 0x31b0); /* gClearTagDebrisEffectDL */
+    editor.submitListAddr(0x80947F60 + 0x37f8); /* gClearTagFireEffectMaterialDL */
+    editor.submitListAddr(0x80947F60 + 0x38a0); /* gClearTagFireEffectDL */
+    editor.submitListAddr(0x80947F60 + 0x4900); /* gClearTagFlashEffectDL */
+    editor.submitListAddr(0x80947F60 + 0x4bb0); /* gClearTagFlashEffectGroundDL */
+    editor.submitListAddr(0x80947F60 + 0x5c78); /* gClearTagLightRayEffectMaterialDL */
+    editor.submitListAddr(0x80947F60 + 0x5ce8); /* gClearTagLightRayEffectDL */
+
+    return { name: 'CLEAR_TAG', ...editor.build() }
+  }
+
+  private async makeDoorLock(): Promise<CustomObject> {
+    const editor = new ObjectEditor(0x06);
+    const obj = await this.getFile('oot', 'objects/gameplay_dangeon_keep');
+    editor.loadSegment(0x05, obj);
+
+    let b = 0x05001100;
+    let data = editor.listData(b)!;
+    data = editor.stripList(data, 0x05001170 - b, 0x05001178 - b);
+    editor.submitList(data);
+
+    b = 0x050011f0;
+    data = editor.listData(b)!;
+    data = editor.stripList(data, 0x05001260 - b, 0x05001268 - b);
+    editor.submitList(data);
+
+    return { name: 'DOOR_LOCK', ...editor.build() }
+  }
+
   async build(): Promise<CustomObject[]> {
     return [
       await this.makeEqKokiriSword(),
@@ -409,6 +526,7 @@ export class CustomObjectsBuilder {
       await this.makeEqBiggoronSwordBroken(),
       await this.makeEqHammer(),
       await this.makeEqBoomerangFlight(),
+      await this.makeEqGreatFairySword(),
       await this.makeEqShieldDeku(),
       await this.makeEqShieldMirror(),
       await this.makeEqSheathShieldHylianChild(),
@@ -424,9 +542,16 @@ export class CustomObjectsBuilder {
       await this.makeEqBoomerang(),
       await this.makeEqHookshot(),
       await this.makeEqSlingshot(),
+      await this.makeEqSlingshotRightArmStretched(),
+      await this.makeEqLinkAdultRightArmOut(),
       await this.makeEqBow(),
       await this.makeStrayFairy(),
       await this.makeEffectShock(),
+      await this.makeSongOfHealingEffect(),
+      await this.makeSongEffect(),
+      await this.makePowderKeg(),
+      await this.makeClearTag(),
+      await this.makeDoorLock(),
       //await this.simpleExtract('LIMB_OOT_CHILD_LHAND_CLOSED', 'oot', 'objects/object_link_child', [], 0x06, 0x0a),
     ];
   }

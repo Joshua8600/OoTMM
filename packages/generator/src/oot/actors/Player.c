@@ -13,6 +13,7 @@
 #include <combo/entrance.h>
 #include <actors/En_Kanban/En_Kanban.h>
 #include <combo/oot/player_action.h>
+#include <actors/Custom_En_Bom/Custom_En_Bom.h>
 
 void ArrowCycle_Handle(Player* link, PlayState* play);
 void Ocarina_HandleCustomSongs(Player* link, PlayState* play);
@@ -96,6 +97,37 @@ void Player_UseItem(PlayState* play, Player* link, s16 itemId)
 }
 
 PATCH_CALL(0x8083212c, Player_UseItem);
+
+s32 Player_CustomActionToMeleeWeapon(s32 itemAction) {
+    if (itemAction == PLAYER_CUSTOM_IA_GREAT_FAIRY_SWORD) {
+        return 3; // PLAYER_IA_SWORD_BIGGORON
+    }
+
+    s32 meleeWeapon = itemAction - PLAYER_IA_FISHING_POLE;
+
+    if ((meleeWeapon > 0) && (meleeWeapon < 6)) {
+        return meleeWeapon;
+    } else {
+        return 0;
+    }
+}
+
+PATCH_FUNC(0x80079C2C, Player_CustomActionToMeleeWeapon)
+
+s32 Player_CustomHoldsTwoHandedWeapon(Player* this) {
+    if (this->heldItemAction == PLAYER_CUSTOM_IA_GREAT_FAIRY_SWORD) {
+        return 1;
+    }
+
+    if ((this->heldItemAction >= PLAYER_IA_SWORD_BIGGORON) &&
+        (this->heldItemAction <= PLAYER_IA_HAMMER)) {
+        return 1;
+        }
+
+    return 0;
+}
+
+PATCH_FUNC(0x80079C78, Player_CustomHoldsTwoHandedWeapon)
 
 static int prepareMask(PlayState* play, u16 objectId, int needsMatrix)
 {
@@ -286,6 +318,106 @@ static void updateKokiriSwordLength(void)
     }
 }
 
+typedef int (*Player_HoldsBrokenKnifeFunc)(Player* player);
+
+static int Player_HoldsBrokenKnifeWrapper(Player* player)
+{
+    Player_HoldsBrokenKnifeFunc Player_HoldsBrokenKnifeImpl;
+
+    if (player->heldItemId == ITEM_OOT_GREAT_FAIRY_SWORD)
+        return 0;
+
+    Player_HoldsBrokenKnifeImpl = (Player_HoldsBrokenKnifeFunc)0x80079ca4;
+    return Player_HoldsBrokenKnifeImpl(player);
+}
+
+PATCH_CALL(0x8007b8f4, Player_HoldsBrokenKnifeWrapper);
+PATCH_CALL(0x80835b34, Player_HoldsBrokenKnifeWrapper);
+
+s32 Player_CanSpinAttackWrapper(Player* this) {
+    typedef s32 (*Player_HoldsBrokenKnifeFunc)(Player* player);
+    Player_HoldsBrokenKnifeFunc Player_HoldsBrokenKnife =
+        (Player_HoldsBrokenKnifeFunc)0x80079ca4;
+
+    s8 sp3C[4];
+    s8* iter;
+    s8* iter2;
+    s8 temp1;
+    s8 temp2;
+    s32 i;
+
+    if (this->heldItemAction == PLAYER_IA_DEKU_STICK) {
+        return false;
+    }
+
+    if (this->heldItemId != ITEM_OOT_GREAT_FAIRY_SWORD && Player_HoldsBrokenKnife(this)) {
+        return false;
+    }
+
+    iter = &this->controlStickSpinAngles[0];
+    iter2 = &sp3C[0];
+
+    for (i = 0; i < 4; i++, iter++, iter2++) {
+        if ((*iter2 = *iter) < 0) {
+            return false;
+        }
+
+        *iter2 *= 2;
+    }
+
+    temp1 = sp3C[0] - sp3C[1];
+
+    if (ABS(temp1) < 10) {
+        return false;
+    }
+
+    iter2 = &sp3C[1];
+
+    for (i = 1; i < 3; i++, iter2++) {
+        temp2 = *iter2 - *(iter2 + 1);
+
+        if ((ABS(temp2) < 10) || (temp2 * temp1 < 0)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+PATCH_FUNC(0x808356bc, Player_CanSpinAttackWrapper);
+
+s32 Player_BiggoronSwordHealthWrapper(PlayState* play, Player* this)
+{
+    typedef void (*func_800849EC_t)(PlayState*);
+    func_800849EC_t func_800849EC_addr;
+
+    func_800849EC_addr = (func_800849EC_t)0x8006fad0;
+
+    if (this->heldItemAction == PLAYER_IA_SWORD_BIGGORON)
+    {
+        if (this->heldItemId != ITEM_OOT_GREAT_FAIRY_SWORD)
+        {
+            if (!gSaveContext.save.info.isBiggoronSword &&
+                (gSaveContext.save.info.playerData.swordHealth > 0.0f))
+            {
+                if ((gSaveContext.save.info.playerData.swordHealth -= 1.0f) <= 0.0f)
+                {
+                    EffectSsStick_Spawn(play, &this->bodyPartsPos[PLAYER_BODYPART_R_HAND],
+                                        this->actor.shape.rot.y + 0x8000);
+                    func_800849EC_addr(play);
+                    Player_PlaySfx(this, NA_SE_IT_MAJIN_SWORD_BROKEN);
+                }
+            }
+        }
+
+        return 1;
+    }
+
+    return 0;
+}
+
+PATCH_FUNC(0x80840c3c, Player_BiggoronSwordHealthWrapper);
+
 void Player_UpdateWrapper(Player* this, PlayState* play)
 {
     Input* input;
@@ -304,7 +436,10 @@ void Player_UpdateWrapper(Player* this, PlayState* play)
     Player_Update(this, play);
     input = *(Input**)(OverlayAddr(0x80856734));
     kamaroInput = sKamaroInputValid ? &sKamaroInput : input;
-    Player_UpdateKamaroMaskOoT(play, this, kamaroInput);
+    if (!(this->stateFlags1 & (PLAYER_ACTOR_STATE_HOLD_ITEM | PLAYER_ACTOR_STATE_CUTSCENE_FROZEN)) && !Player_UsingItem(this) && GET_PLAYER(play)->rideActor == NULL)
+    {
+        Player_UpdateKamaroMaskOoT(play, this, kamaroInput);
+    }
     Player_HandleBronzeScale(this, play);
     Ocarina_HandleCustomSongs(this, play);
     Dpad_Update(play);
@@ -402,16 +537,14 @@ static u16 blastMaskDelay(void)
 
 static void Player_BlastMask(PlayState* play, Player* link)
 {
-    Actor* bomb;
-    s16* bombTimer;
+    EnBomMM* bomb;
 
     if (gBlastMaskDelayAcc)
         return;
-    bomb = Actor_Spawn(&play->actorCtx, play, ACTOR_EN_BOM, link->actor.focus.pos.x, link->actor.focus.pos.y, link->actor.focus.pos.z, 0, 0, 0, 0);
+    bomb = (EnBomMM*)Actor_Spawn(&play->actorCtx, play, ACTOR_CUSTOM_EN_BOM, link->actor.focus.pos.x, link->actor.focus.pos.y, link->actor.focus.pos.z, BOMB_EXPLOSIVE_TYPE_BLAST, 0, 0, 0);
     if (!bomb)
         return;
-    bombTimer = (void*)((char*)bomb + 0x1e8);
-    *bombTimer = 2;
+    bomb->timer = 0;
     gBlastMaskDelayAcc = blastMaskDelay();
     Interface_LoadItemIconImpl(play, 0);
 }
@@ -427,7 +560,7 @@ void Player_ProcessItemButtonsWrapper(Player* link, PlayState* play)
     bPress = !!(input->press.button & B_BUTTON);
 
     /* Handle masks that have B actions */
-    if (bPress && !(link->stateFlags1 & (PLAYER_ACTOR_STATE_HOLD_ITEM | PLAYER_ACTOR_STATE_CUTSCENE_FROZEN)) && !Player_UsingItem(link))
+    if (bPress && !(link->stateFlags1 & (PLAYER_ACTOR_STATE_HOLD_ITEM | PLAYER_ACTOR_STATE_CUTSCENE_FROZEN)) && !Player_UsingItem(link) && GET_PLAYER(play)->rideActor == NULL)
     {
         switch (link->mask)
         {
@@ -475,10 +608,17 @@ static u8 sCustomActionModelGroups[] = {
     0xe, /* PLAYER_MODELGROUP_BOTTLE, PLAYER_CUSTOM_IA_SPRING_WATER */
     0xe, /* PLAYER_MODELGROUP_BOTTLE, PLAYER_CUSTOM_IA_SPRING_WATER_HOT */
     0xe, /* PLAYER_MODELGROUP_BOTTLE, PLAYER_CUSTOM_IA_ZORA_EGG */
+    0x7, /* PLAYER_MODELGROUP_EXPLOSIVES, PLAYER_CUSTOM_IA_POWDER_KEG */
 };
 
 s32 Player_ActionToModelGroup(Player* this, s32 itemAction) {
     s32 modelGroup;
+
+    if (itemAction == PLAYER_CUSTOM_IA_GREAT_FAIRY_SWORD)
+    {
+        return 5; /* Two-handed/BGS-ish model group */
+    }
+
     s8 customItemAction = itemAction - PLAYER_CUSTOM_IA_MIN;
     if (customItemAction >= 0 && customItemAction < ARRAY_COUNT(sCustomActionModelGroups))
     {
@@ -680,6 +820,8 @@ static void Player_OverrideAdult(PlayState* play, Player* this, int limb, Gfx** 
 
     if (limb == PLAYER_LIMB_L_HAND)
     {
+        if (this->heldItemAction == PLAYER_CUSTOM_IA_GREAT_FAIRY_SWORD)
+            *dlist = Player_CustomHandEq(DLIST_ADULT_LHAND_CLOSED, comboGetObject(CUSTOM_OBJECT_ID_EQ_GREAT_FAIRY_SWORD), CUSTOM_OBJECT_EQ_GREAT_FAIRY_SWORD_0);
         if ((this->leftHandType == PLAYER_MODELTYPE_LH_SWORD || isPause) && gSave.info.equips.equipment.swords == 1)
         {
             if (gSharedCustomSave.extraSwordsOot == 0)
@@ -736,7 +878,9 @@ static void Player_OverrideChild(PlayState* play, Player* this, int limb, Gfx** 
                 *dlist = Player_CustomHandEq(DLIST_CHILD_LHAND_CLOSED, comboGetObject(CUSTOM_OBJECT_ID_EQ_MASTER_SWORD), CUSTOM_OBJECT_EQ_MASTER_SWORD_0);
             }
         }
-        else if ((this->leftHandType == PLAYER_MODELTYPE_LH_BGS || isPause) && gSave.info.equips.equipment.swords == 3)
+        if (this->heldItemAction == PLAYER_CUSTOM_IA_GREAT_FAIRY_SWORD)
+            *dlist = Player_CustomHandEq(DLIST_CHILD_LHAND_CLOSED, comboGetObject(CUSTOM_OBJECT_ID_EQ_GREAT_FAIRY_SWORD), CUSTOM_OBJECT_EQ_GREAT_FAIRY_SWORD_0);
+        else if (this->heldItemId != ITEM_OOT_GREAT_FAIRY_SWORD &&(this->leftHandType == PLAYER_MODELTYPE_LH_BGS || isPause) && gSave.info.equips.equipment.swords == 3)
         {
             if (gSave.info.playerData.swordHealth)
                 *dlist = Player_CustomHandEq(DLIST_CHILD_LHAND_CLOSED, comboGetObject(CUSTOM_OBJECT_ID_EQ_BIGGORON_SWORD), CUSTOM_OBJECT_EQ_BIGGORON_SWORD_0);
@@ -1073,6 +1217,8 @@ static s32 sCustomItemActions[] =
     PLAYER_CUSTOM_IA_SPRING_WATER,      /* ITEM_OOT_SPRING_WATER */
     PLAYER_CUSTOM_IA_SPRING_WATER_HOT,  /* ITEM_OOT_SPRING_WATER_HOT */
     PLAYER_CUSTOM_IA_ZORA_EGG,          /* ITEM_OOT_ZORA_EGG */
+    PLAYER_CUSTOM_IA_POWDER_KEG,        /* ITEM_OOT_POWDER_KEG */
+    PLAYER_CUSTOM_IA_GREAT_FAIRY_SWORD, /* ITEM_GFS_MM */
 };
 
 s32 Player_CustomItemToItemAction(s32 item, s32 itemAction)
@@ -1124,7 +1270,7 @@ Color_RGB8* Player_ActionToBottleColor(Player* this, s32 itemAction, Color_RGB8*
 s32 Player_CustomActionToBottleExchange(Player* this, s32 itemAction)
 {
     s32 customBottle = itemAction - PLAYER_CUSTOM_IA_MIN;
-    if (customBottle >= 0 && customBottle <= 8)
+    if (customBottle >= 0 && customBottle < 8)
     {
         return customBottle + 6;
     }
@@ -1488,3 +1634,224 @@ void Player_AfterInit(PlayState* play)
 }
 
 PATCH_CALL(0x808452cc, Player_AfterInit);
+
+void Player_CapSpeedXZ(Player* this, f32* speedTarget, s16* yawTarget)
+{
+    s16 yawDiff = this->yaw - *yawTarget;
+
+    f32 step = 1.0f;
+    f32 stepInverse = 0.1f;
+
+    if (Config_Flag(CFG_OOT_AIR_PHYSICS_MM))
+    {
+        if ((this->unk_880 * 1.5f) < fabsf(this->speedXZ)) {
+            step *= 4.0f;
+            stepInverse *= 4.0f;
+        }
+    }
+    else if (this->meleeWeaponState == 0)
+    {
+        this->speedXZ = CLAMP(this->speedXZ, -(R_RUN_SPEED_LIMIT / 100.0f), (R_RUN_SPEED_LIMIT / 100.0f));
+    }
+
+    if (ABS(yawDiff) > 0x6000)
+    {
+        if (Math_StepToF(&this->speedXZ, 0.0f, step))
+        {
+            this->yaw = *yawTarget;
+        }
+    }
+    else
+    {
+        Math_AsymStepToF(&this->speedXZ, *speedTarget, 0.05f, stepInverse);
+        Math_ScaledStepToS(&this->yaw, *yawTarget, 200);
+    }
+}
+
+PATCH_FUNC(0x8083c0a4, Player_CapSpeedXZ)
+
+Actor* Player_SpawnExplosive(ActorContext* actorCtx, Player* player, PlayState* play, s16 actorId, f32 posX, f32 posY, f32 posZ, s16 rotX, s16 rotY, s16 rotZ, s32 params)
+{
+    switch (player->itemAction)
+    {
+    case 0x12: /* PLAYER_IA_BOMB */
+        actorId = ACTOR_EN_BOM; /* ACTOR_CUSTOM_EN_BOM ACTOR_EN_BOM */
+        break;
+    case 0x13: /* PLAYER_IA_BOMBCHU */
+        actorId = ACTOR_EN_BOM_CHU;
+        break;
+    case PLAYER_CUSTOM_IA_POWDER_KEG:
+        actorId = ACTOR_CUSTOM_EN_BOM;
+        if (gCustomSave.powderKegTimer == 0)
+        {
+            gCustomSave.powderKegTimer = 200;
+        }
+        rotX = BOMB_EXPLOSIVE_TYPE_POWDER_KEG;
+        break;
+    }
+    Actor* result = Actor_SpawnAsChild(actorCtx, &player->actor, play, actorId, posX, posY, posZ, rotX, rotY, rotZ, params);
+    if (result == NULL && player->itemAction == PLAYER_CUSTOM_IA_POWDER_KEG)
+    {
+        gCustomSave.powderKegTimer = 0;
+    }
+    return result;
+}
+
+PATCH_CALL(0x808318cc, Player_SpawnExplosive)
+
+s32 Player_ShouldExplosiveError(Player* this, s32 itemAction)
+{
+    s32 ammo;
+    switch (itemAction)
+    {
+    case 0x12: /* PLAYER_IA_BOMB */
+        ammo = gSaveContext.save.info.inventory.ammo[ITS_OOT_BOMBS];
+        break;
+    case 0x13: /* PLAYER_IA_BOMBCHU */
+        ammo = gSaveContext.save.info.inventory.ammo[ITS_OOT_BOMBCHU];
+        break;
+    case PLAYER_CUSTOM_IA_POWDER_KEG:
+        if (Player_GetStrength() < 3)
+            return 1;
+        ammo = gOotExtraAmmo.kegAmmo;
+        break;
+    default:
+        return 0;
+    }
+    return ammo == 0 || gPlay->actorCtx.actors[ACTORCAT_EXPLOSIVE].count >= 3;
+}
+
+/* Original is no longer uses the return value the same way. */
+s32 Player_ActionToExplosive(Player* this, s32 itemAction)
+{
+    switch (itemAction)
+    {
+    case 0x12: /* PLAYER_IA_BOMB */
+    case PLAYER_CUSTOM_IA_POWDER_KEG:
+        return 0;
+    case 0x13: /* PLAYER_IA_BOMBCHU */
+        return 1;
+    default:
+        return -1;
+    }
+}
+
+PATCH_FUNC(0x80079d48, Player_ActionToExplosive)
+
+void Player_DeductExplosiveAmmo(Player* player)
+{
+    switch (player->itemAction)
+    {
+    case 0x12: /* PLAYER_IA_BOMB */
+        Inventory_ChangeAmmo(ITEM_BOMB, -1);
+        break;
+    case 0x13: /* PLAYER_IA_BOMBCHU */
+        Inventory_ChangeAmmo(ITEM_BOMBCHU_10, -1);
+        break;
+    case PLAYER_CUSTOM_IA_POWDER_KEG:
+        DECR(gOotExtraAmmo.kegAmmo);
+        break;
+    }
+}
+
+s32 Player_IsActionCutsceneItem(s8 itemAction)
+{
+    if (itemAction >= 0x1c && itemAction <= 0x1d) /* PLAYER_IA_OCARINA_FAIRY PLAYER_IA_OCARINA_OF_TIME*/
+    {
+        return 1;
+    }
+    if (itemAction >= 0x1f && itemAction <= 0x39) /* PLAYER_IA_BOTTLE_FISH PLAYER_IA_CLAIM_CHECK */
+    {
+        return 1;
+    }
+    if (itemAction >= PLAYER_CUSTOM_IA_MAGIC_MUSHROOM && itemAction <= PLAYER_CUSTOM_IA_ZORA_EGG)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+typedef void (*ItemActionInitFunc)(PlayState*, Player*);
+
+void Player_InvokeItemActionInitFunc(PlayState* play, Player* this, ItemActionInitFunc func)
+{
+    switch (this->itemAction)
+    {
+        case PLAYER_CUSTOM_IA_POWDER_KEG:
+            ItemActionInitFunc Player_InitExplosiveIA = OverlayAddr(0x80831838);
+            Player_InitExplosiveIA(play, this);
+            break;
+        case PLAYER_CUSTOM_IA_GREAT_FAIRY_SWORD:
+            ItemActionInitFunc Player_InitDefaultIA = OverlayAddr(0x808317a4);
+            Player_InitDefaultIA(play, this);
+            break;
+        default:
+            func(play, this);
+            break;
+    }
+}
+
+typedef s32 (*Player_ActionToSwordFunc)(Player* player, s32 itemAction);
+
+s32 Player_CustomActionToSword(Player* player, s32 itemAction)
+{
+    Player_ActionToSwordFunc Player_ActionToSwordImpl;
+
+    if (itemAction == PLAYER_CUSTOM_IA_GREAT_FAIRY_SWORD)
+        return 2; /* PLAYER_IA_SWORD_BIGGORON - PLAYER_IA_SWORD_MASTER */
+
+    Player_ActionToSwordImpl = (Player_ActionToSwordFunc)0x80079d94;
+    return Player_ActionToSwordImpl(player, itemAction);
+}
+
+PATCH_CALL(0x80832614, Player_CustomActionToSword);
+PATCH_CALL(0x80832654, Player_CustomActionToSword);
+
+typedef void (*UpperActionFunc)(Player*, PlayState*);
+typedef void (*Player_SetUpperActionFunc)(Player*, UpperActionFunc);
+
+void Player_SetUpperActionFuncToHeldItemAction(Player* this, UpperActionFunc upperActionFunc)
+{
+    Player_SetUpperActionFunc Player_SetUpperActionFunc = OverlayAddr(0x8083164c);
+    switch (this->itemAction)
+    {
+    case PLAYER_CUSTOM_IA_POWDER_KEG:
+        upperActionFunc = OverlayAddr(0x80833770); /* Player_UpperAction_CarryActor */
+        break;
+    case PLAYER_CUSTOM_IA_GREAT_FAIRY_SWORD:
+        upperActionFunc = OverlayAddr(0x80832a40); /* Player_UpperAction_Sword */
+        break;
+    default:
+        break;
+    }
+    Player_SetUpperActionFunc(this, upperActionFunc);
+}
+
+PATCH_CALL(0x808326e4, Player_SetUpperActionFuncToHeldItemAction)
+PATCH_CALL(0x80832b28, Player_SetUpperActionFuncToHeldItemAction)
+PATCH_CALL(0x80832d3c, Player_SetUpperActionFuncToHeldItemAction)
+
+s32 Player_ShouldDamageRecoil(Player* this, s32* shieldHit)
+{
+    *shieldHit = 0;
+    if (this->shieldQuad.base.acFlags & AC_BOUNCED)
+    {
+        *shieldHit = 1;
+        return 1;
+    }
+
+    if (this->invincibilityTimer < 0 && this->cylinder.base.acFlags & AC_HIT)
+    {
+        if (this->cylinder.elem.atHit != NULL && this->cylinder.elem.atHit->atFlags & 0x20000000)
+        {
+            return 1;
+        }
+        if (this->cylinder.base.ac != NULL && this->cylinder.base.ac->id == ACTOR_CUSTOM_EN_BOM
+            && this->cylinder.elem.acHitElem != NULL && this->cylinder.elem.acHitElem->atDmgInfo.dmgFlags != DMG_UNBLOCKABLE)
+        {
+            return 1;
+        }
+    }
+
+    return 0;
+}

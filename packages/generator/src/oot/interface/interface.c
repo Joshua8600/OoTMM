@@ -68,6 +68,9 @@ void comboItemIcon(void* dst, int itemId)
     case ITEM_OOT_MASK_KAMARO:
         LoadMmItemIcon(dst, ITEM_MM_MASK_KAMARO);
         break;
+    case ITEM_OOT_GREAT_FAIRY_SWORD:
+         LoadMmItemIcon(dst, ITEM_MM_GREAT_FAIRY_SWORD);
+         break;
     case ITEM_OOT_MAGIC_MUSHROOM:
         LoadMmItemIcon(dst, ITEM_MM_MAGIC_MUSHROOM);
         break;
@@ -92,6 +95,9 @@ void comboItemIcon(void* dst, int itemId)
     case ITEM_OOT_ZORA_EGG:
         LoadMmItemIcon(dst, ITEM_MM_ZORA_EGG);
         break;
+    case ITEM_OOT_POWDER_KEG:
+        LoadMmItemIcon(dst, ITEM_MM_POWDER_KEG);
+        break;
     default:
         LoadFile(dst, 0x7bd000 + itemId * 0x1000, 0x1000);
         break;
@@ -107,7 +113,7 @@ static void LoadCustomItemIconSlot(PlayState* play, int slot, int isInit)
     dst = (*(char**)((char*)&play->interfaceCtx + 0x138)) + 0x1000 * slot;
     itemId = gSave.info.equips.buttonItems[slot];
 
-    if (slot == 0 && !isInit)
+    if (slot == 0 && !isInit && GET_PLAYER(play)->rideActor == NULL)
     {
         /* Masks can overwrite the B icon */
         link = GET_PLAYER(play);

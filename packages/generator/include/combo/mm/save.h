@@ -43,7 +43,7 @@ typedef struct
     u32     unused:9;
     u32     dekuNut:3;
     u32     dekuStick:3;
-    u32     unused2:3; /* bullet bag */
+    u32     bulletBag:3;
     u32     wallet:2;
     u32     scale:3;
     u32     strength:3;
@@ -463,9 +463,21 @@ typedef struct
     u32 goldDust:1;
     u32 hammerGFS:2;
     u32 boomPicto:2;
-    u32 unused:23;
+    u32 bowSlingshot:2;
+    u32 stoneGerudoSkull:3;
+    u32 gibdoSpooky:2;
+    u32 unused:16;
 }
 MmExtraItems;
+
+typedef struct
+{
+    s8 slingshotSeeds;
+    s8 unused1;
+    s8 unused2;
+    s8 unused3;
+}
+MmExtraAmmo;
 
 typedef struct
 {
@@ -573,9 +585,38 @@ typedef struct ALIGNED(16)
     RespawnData fw[2];
     RespawnData fwRespawnTop[2];
     RespawnData fwRespawnDungeonEntrance[2];
+    union
+    {
+        struct {
+            u8 songSaria:1;
+            u8 songZelda:1;
+            u8 songTpLight:1;
+            u8 songTpShadow:1;
+            u8 songTpSpirit:1;
+            u8 songTpWater:1;
+            u8 songTpFire:1;
+            u8 songTpForest:1;
+        };
+        u8 value;
+    } ootSongs;
+    u8 customMask;
 }
 MmCustomSave;
 
+#define MM_SONG_OOT_TP_FOREST    0
+#define MM_SONG_OOT_TP_FIRE      1
+#define MM_SONG_OOT_TP_WATER     2
+#define MM_SONG_OOT_TP_SPIRIT    3
+#define MM_SONG_OOT_TP_SHADOW    4
+#define MM_SONG_OOT_TP_LIGHT     5
+#define MM_SONG_OOT_ZELDA        6
+#define MM_SONG_OOT_SARIA        7
+
 #define CURRENT_DAY (((void)0, gSaveContext.save.day) % 5)
+#define CUR_FORM ((gSaveContext.save.playerForm == MM_PLAYER_FORM_HUMAN) ? 0 : gSaveContext.save.playerForm)
+#define BUTTON_ITEM_EQUIP(form, button) (gSaveContext.save.info.itemEquips.buttonItems[form][button])
+#define C_SLOT_EQUIP(form, button) (gSaveContext.save.info.itemEquips.cButtonSlots[form][button])
+#define GET_CUR_FORM_BTN_ITEM(btn) ((u8)((btn) == EQUIP_SLOT_B ? BUTTON_ITEM_EQUIP(CUR_FORM, btn) : BUTTON_ITEM_EQUIP(0, btn)))
+#define GET_CUR_FORM_BTN_SLOT(btn) ((u8)((btn) == EQUIP_SLOT_B ? C_SLOT_EQUIP(CUR_FORM, btn) : C_SLOT_EQUIP(0, btn)))
 
 #endif /* MM_SAVE_H */

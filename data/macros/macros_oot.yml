@@ -11,6 +11,8 @@
 "can_use_farore": "can_use_farore_raw"
 "can_use_nayru": "can_use_nayru_raw"
 
+"rusty_key(x)": "cond(setting(rustyKeysOot), has(x), true)"
+
 # Ocarina
 "ocarina_button(x, y)": "cond(setting(ocarinaButtonsShuffleOot), cond(setting(sharedOcarinaButtons), has(y), has(x)), true)"
 "ocarina_button_a": "ocarina_button(BUTTON_A, SHARED_BUTTON_A)"
@@ -28,20 +30,9 @@
 "has_ocarina": "glitch_ocarina_items || has(OCARINA) || has(SHARED_OCARINA)"
 "has_ocarina_of_time": "has(OCARINA, 2) || has(SHARED_OCARINA, 2)"
 
-"has_song_zelda": "has(SONG_ZELDA) || has(SONG_NOTE_ZELDA, 6)"
-"has_song_saria": "has(SONG_SARIA) || has(SONG_NOTE_SARIA, 6)"
-
-"can_play_zelda": "has_song_zelda && has_ocarina && ocarina_button_up && ocarina_button_right && ocarina_button_left"
-"can_play_saria": "has_song_saria && has_ocarina && ocarina_button_down && ocarina_button_right && ocarina_button_left"
-"can_play_tp_light": "can_play_tp_light_raw"
-"can_play_tp_forest": "can_play_tp_forest_raw"
-"can_play_tp_fire": "can_play_tp_fire_raw"
-"can_play_tp_water": "can_play_tp_water_raw"
-"can_play_tp_shadow": "can_play_tp_shadow_raw"
-"can_play_tp_spirit": "can_play_tp_spirit_raw"
-"can_play_elegy": "setting(elegyOot) && can_play_emptiness_raw"
-"can_play_soaring": "(setting(crossWarpMm, full) || (setting(crossWarpMm, childOnly) && is_child)) && can_play_soaring_raw"
+"can_play_soaring": "(setting(agelessSoaring) || is_child) && can_play_soaring_raw"
 "can_play_double_time": "setting(songOfDoubleTimeOot) && can_play_time"
+"can_play_goron_half": "can_play_goron || (can_play_goron_half_raw && setting(progressiveGoronLullabyOot, progressive))"
 
 "can_play_minigame": "has_ocarina && ocarina_button_a && ocarina_button_right && ocarina_button_down && ocarina_button_left && ocarina_button_up"
 "can_play_scarecrow": "has_ocarina && ocarina_button_any2"
@@ -49,13 +40,27 @@
 "soil_fairies(x)": "is_child && (can_play_storms || has_water) && (setting(ootPreplantedBeans) || event(x))"
 
 # Song events
-"song_event_zelda(x)": "_song_event(x, 0) && can_play_zelda"
-"song_event_epona(x)": "_song_event(x, 1) && can_play_epona"
-"song_event_saria(x)": "_song_event(x, 2) && can_play_saria"
-"song_event_storms(x)": "_song_event(x, 3) && can_play_storms"
-"song_event_sun(x)": "_song_event(x, 4) && can_play_sun"
-"song_event_time(x)": "_song_event(x, 5) && can_play_time"
-"song_event(x)": "song_event_zelda(x) || song_event_epona(x) || song_event_saria(x) || song_event_storms(x) || song_event_sun(x) || song_event_time(x)"
+"song_event_zelda(x)": "_song_event_oot(x, 0) && can_play_zelda"
+"song_event_epona(x)": "_song_event_oot(x, 1) && can_play_epona"
+"song_event_saria(x)": "_song_event_oot(x, 2) && can_play_saria"
+"song_event_storms(x)": "_song_event_oot(x, 3) && can_play_storms"
+"song_event_sun(x)": "_song_event_oot(x, 4) && can_play_sun"
+"song_event_time(x)": "_song_event_oot(x, 5) && can_play_time"
+"song_event_tp_forest(x)": "_song_event_oot(x, 6) && can_play_tp_forest"
+"song_event_tp_fire(x)": "_song_event_oot(x, 7) && can_play_tp_fire"
+"song_event_tp_water(x)": "_song_event_oot(x, 8) && can_play_tp_water"
+"song_event_tp_spirit(x)": "_song_event_oot(x, 9) && can_play_tp_spirit"
+"song_event_tp_shadow(x)": "_song_event_oot(x, 10) && can_play_tp_shadow"
+"song_event_tp_light(x)": "_song_event_oot(x, 11) && can_play_tp_light"
+"song_event_healing(x)": "_song_event_oot(x, 12) && can_play_healing"
+"song_event_soaring(x)": "_song_event_oot(x, 13) && can_play_soaring"
+"song_event_awakening(x)": "_song_event_oot(x, 14) && can_play_awakening"
+"song_event_goron(x)": "_song_event_oot(x, 15) && can_play_goron"
+"song_event_goron_half(x)": "_song_event_oot(x, 16) && can_play_goron_half"
+"song_event_zora(x)": "_song_event_oot(x, 17) && can_play_zora"
+"song_event_elegy(x)": "_song_event_oot(x, 18) && can_play_emptiness"
+"song_event_order(x)": "_song_event_oot(x, 19) && can_play_order"
+"song_event(x)": "song_event_zelda(x) || song_event_epona(x) || song_event_saria(x) || song_event_storms(x) || song_event_sun(x) || song_event_time(x) || song_event_healing(x) || song_event_soaring(x) || song_event_awakening(x) || song_event_goron(x) || song_event_goron_half(x) || song_event_zora(x) || song_event_elegy(x) || song_event_order(x) || song_event_tp_forest(x) || song_event_tp_fire(x) || song_event_tp_water(x) || song_event_tp_spirit(x) || song_event_tp_shadow(x) || song_event_tp_light(x)"
 
 # Bombchu
 "bombchu_license_bag_first": "license(BOMBCHU_5) || license(BOMBCHU_10) || license(BOMBCHU_20) || license(SHARED_BOMBCHU) || license(SHARED_BOMBCHU_5) || license(SHARED_BOMBCHU_10) || license(SHARED_BOMBCHU_20)"
@@ -66,13 +71,19 @@
 "bombchu_source": "event(BOMBCHU) || bombchu_drops || renewable(BOMBCHU_5) || renewable(BOMBCHU_10) || renewable(BOMBCHU_20) || (setting(sharedBombchu) && (event(MM_BOMBCHU) || renewable(SHARED_BOMBCHU) || renewable(SHARED_BOMBCHU_5) || renewable(SHARED_BOMBCHU_10) || renewable(SHARED_BOMBCHU_20)))"
 "has_bombchu": "bombchu_source && bombchu_license"
 
+# Items
+
+## Slingshot
+"has_slingshot": "has(SLINGSHOT) || has(SHARED_SLINGSHOT)"
+"has_slingshot_ammo": "event(SEEDS) || (setting(sharedSlingshot) && event(MM_SEEDS)) || renewable(DEKU_SEEDS_5) || renewable(DEKU_SEEDS_30) || renewable(SHARED_DEKU_SEEDS_5) || renewable(SHARED_DEKU_SEEDS_30)"
+"can_use_slingshot": "age_slingshot && has_slingshot && has_slingshot_ammo"
+
 #Standard Single Item Use Macros
 "has_sticks": "event(STICKS) || renewable(STICK) || renewable(STICKS_5) || renewable(STICKS_10) || renewable(SHARED_STICK) || renewable(SHARED_STICKS_5) || renewable(SHARED_STICKS_10) || (setting(sharedNutsSticks) && event(MM_STICKS))"
 "has_nuts": "event(NUTS) || renewable(NUTS_5) || renewable(NUTS_10) || renewable(SHARED_NUT) || renewable(SHARED_NUTS_5) || renewable(SHARED_NUTS_10) || (setting(sharedNutsSticks) && event(MM_NUTS))"
 "can_use_sticks": "age_sticks && has_sticks"
 "has_bomb_bag": "has(BOMB_BAG) || has(SHARED_BOMB_BAG)"
 "has_bombs": "has_bomb_bag && (event(BOMBS) || event(BOMBS_OR_BOMBCHU) || (setting(sharedBombBags) && (event(MM_BOMBS) || event(MM_BOMBS_OR_BOMBCHU))) || renewable(BOMBS_5) || renewable(BOMBS_10) || renewable(BOMBS_20) || renewable(BOMBS_30) || renewable(SHARED_BOMBS_5) || renewable(SHARED_BOMBS_10) || renewable(SHARED_BOMBS_20) || renewable(SHARED_BOMBS_30))"
-"can_use_slingshot": "has(SLINGSHOT) && age_slingshot && (event(SEEDS) || renewable(DEKU_SEEDS_30))"
 "has_bow": "has(BOW) || has(SHARED_BOW)"
 "has_arrows": "has_bow && (event(ARROWS) || renewable(ARROWS_5) || renewable(ARROWS_10) || renewable(ARROWS_30) || renewable(SHARED_ARROWS_5) || renewable(SHARED_ARROWS_10) || renewable(SHARED_ARROWS_30) || renewable(SHARED_ARROWS_40) || (setting(sharedBows) && event(MM_ARROWS)))"
 "can_use_bow": "age_bow && has_arrows"
@@ -83,6 +94,7 @@
 "can_boomerang": "age_boomerang && (has(BOOMERANG) || has(SHARED_BOOMERANG))"
 "can_hammer": "age_hammer && has_hammer_raw"
 "can_use_beans": "is_child && has(MAGIC_BEAN)"
+"has_keg": "has(POWDER_KEG) || has(SHARED_POWDER_KEG)"
 
 # Age macros
 "age_sticks": "glitch_equip_swap || is_child || setting(agelessSticks)"
@@ -110,13 +122,15 @@
 "has_sword_master": "starts_with_master_sword || cond(setting(progressiveSwordsOot, progressive), has(SWORD, 2), has(SWORD_MASTER))"
 "has_sword_goron": "cond(setting(progressiveSwordsOot, progressive), cond(starts_with_master_sword, has(SWORD, 2), has(SWORD, 3)), cond(setting(progressiveSwordsOot, goron), has(SWORD_GORON), has(SWORD_KNIFE) || has(SWORD_BIGGORON)))"
 "has_sword_biggoron": "cond(setting(progressiveSwordsOot, progressive), cond(starts_with_master_sword, has(SWORD, 3), has(SWORD, 4)), cond(setting(progressiveSwordsOot, goron), has(SWORD_GORON, 2), has(SWORD_BIGGORON)))"
+"has_great_fairy_sword": "setting(gfsOot) && cond(setting(sharedGFS), has(SHARED_GREAT_FAIRY_SWORD), has(GREAT_FAIRY_SWORD))"
 "can_use_sword_kokiri": "age_sword_child && has_sword_kokiri"
 "can_use_sword_razor": "age_sword_child && has_sword_razor"
 "can_use_sword_gilded": "age_sword_child && has_sword_gilded"
 "can_use_sword_master": "age_sword_adult && has_sword_master"
 "can_use_sword_goron": "age_sword_adult && has_sword_goron"
 "can_use_sword_biggoron": "age_sword_adult && has_sword_biggoron"
-"can_use_sword": "can_use_sword_kokiri || can_use_sword_master || can_use_sword_goron"
+"can_use_great_fairy_sword": "(is_child || setting(agelessGFS)) && has_great_fairy_sword"
+"can_use_sword": "can_use_sword_kokiri || can_use_sword_master || can_use_sword_goron || can_use_great_fairy_sword"
 "can_use_sword_or_sticks": "can_use_sword || can_use_sticks"
 
 # Shields
@@ -179,6 +193,7 @@
 "hidden_grotto_storms": "stone_of_agony && can_play_storms"
 "has_spiritual_stones": "has(STONE_EMERALD) && has(STONE_RUBY) && has(STONE_SAPPHIRE)"
 "can_jump_slash": "can_use_sword || can_use_sticks || can_hammer"
+"can_hammer_or_keg": "can_hammer || can_use_keg"
 
 # Scales
 "has_scale_bronze": "cond(setting(bronzeScale), has_scale_raw(1), true)"
@@ -214,6 +229,8 @@
 "get_past_skultullas": "has_nuts || can_use_sword_or_sticks || has_ranged_weapon || can_use_din || has_explosives || can_hammer || can_use_mask_blast || can_use_mask_stone"
 "get_past_skultullas_no_stone": "has_nuts || can_use_sword_or_sticks || has_ranged_weapon || can_use_din || has_explosives || can_hammer || can_use_mask_blast"
 "collect_gs_on_walls": "gs && (can_collect_distance || (has_ranged_weapon && climb_anywhere))" #TODO: Low/high macros like beehives; Din's, Blast mask, bomchus, bombs (if within throwing distance) and maybe even jump slashes if space permits (and damage?)
+"can_carry_keg": "can_lift_gold"
+"can_use_keg": "can_carry_keg && cond(setting(sharedPowderKeg), event(MM_BUY_KEG) || event(BUY_KEG), setting(powderKegOot) && event(BUY_KEG))"
 "can_hit_crystal_switch_close": "has_weapon || has_bombs || can_use_mask_blast || has_bombchu || can_use_bow || can_use_slingshot || can_hookshot || can_use_sticks || can_hammer || can_boomerang"
 
 
@@ -392,8 +409,9 @@
 "hookshot_anywhere": "can_hookshot && setting(hookshotAnywhereOot, logical)"
 "longshot_anywhere": "can_longshot && setting(hookshotAnywhereOot, logical)"
 "evade_gerudo": "can_use_bow || can_hookshot || has(GERUDO_CARD) || can_use_mask_stone"
-"break_hive_low": "can_collect_distance || has_bombs || (has_bombchu && trick(OOT_HIVE_BOMBCHU))"
-"break_hive_high": "can_collect_distance || (has_bombchu && trick(OOT_HIVE_BOMBCHU))"
+"break_hive_with_slingbow": "setting(bowSlingshotBreakHives) && (can_use_bow || can_use_slingshot)"
+"break_hive_low": "can_collect_distance || has_bombs || (has_bombchu && trick(OOT_HIVE_BOMBCHU)) || break_hive_with_slingbow"
+"break_hive_high": "can_collect_distance || (has_bombchu && trick(OOT_HIVE_BOMBCHU)) || break_hive_with_slingbow"
 
 # Events
 "ganon_trial_light": "!setting(ganonTrials, Light) || event(GANON_TRIAL_LIGHT)"

@@ -48,6 +48,7 @@ function asmPatchGroups(world: LogicResultWorld, settings: Settings) {
     OOT_AGELESS_STICKS: settings.agelessSticks,
     OOT_AGELESS_BOOMERANG: settings.agelessBoomerang,
     OOT_AGELESS_HAMMER: settings.agelessHammer,
+    OOT_AGELESS_GREAT_FAIRY_SWORD: settings.agelessGFS,
     OOT_AGELESS_HOOKSHOT: settings.agelessHookshot,
     OOT_AGELESS_SLINGSHOT: settings.agelessSlingshot,
     OOT_AGELESS_BOW: settings.agelessBow,
@@ -80,6 +81,7 @@ function asmPatchGroups(world: LogicResultWorld, settings: Settings) {
     MM_JP_LAYOUT_STONE_TOWER_TEMPLE: world.resolvedFlags.jpLayouts.has('ST'),
     MM_JP_LAYOUT_GREAT_BAY_COAST: world.resolvedFlags.jpLayouts.has('GreatBayCoast'),
     MM_KEG_STRENGTH_3: settings.kegStrength3,
+    ER_TELESCOPES: settings.erIndoorsTelescopes,
   };
   const keys = Object.keys(groups) as PatchGroup[];
   return keys.filter((k) => groups[k]);
@@ -119,11 +121,11 @@ export async function buildPatchfiles(args: BuildPatchfileIn): Promise<Patchfile
       }
       /* Pack the payload */
       const payload = await fileResolver.fetch(`${game}_payload.bin`);
-      if (payload.length > (game === 'mm' ? 0x50000 : 0x80000)) {
+      if (payload.length > (game === 'mm' ? 0x60000 : 0x80000)) {
         throw new Error(`Payload too large ${game}`);
       }
       const payloadVrom = game === 'oot' ? 0xf0000000 : 0xf0100000;
-      const payloadVram = game === 'oot' ? 0x80400000 : 0x80730000; /* TODO: Codegen this */
+      const payloadVram = game === 'oot' ? 0x80400000 : 0x80720000; /* TODO: Codegen this */
       const payloadVramEnd = payloadVram + payload.length;
       p.addNewFile({ name: `${game}/payload`, vrom: payloadVrom, vram: { [game]: [payloadVram, payloadVramEnd] }, data: payload, compressed: false });
 

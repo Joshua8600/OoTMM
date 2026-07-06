@@ -189,6 +189,17 @@ static int isItemAmbiguous(s16 gi)
     case GI_MM_ARROWS_30:
     case GI_MM_ARROWS_40:
         return !Config_Flag(CFG_SHARED_BOWS);
+    case GI_OOT_SLINGSHOT:
+    case GI_OOT_BULLET_BAG:
+    case GI_OOT_BULLET_BAG2:
+    case GI_MM_SLINGSHOT:
+    case GI_MM_BULLET_BAG2:
+    case GI_MM_BULLET_BAG3:
+    case GI_OOT_DEKU_SEEDS_5:
+    case GI_OOT_DEKU_SEEDS_30:
+    case GI_MM_DEKU_SEEDS_5:
+    case GI_MM_DEKU_SEEDS_30:
+        return !Config_Flag(CFG_SHARED_SLINGSHOT) && Config_Flag(CFG_MM_SLINGSHOT);
     case GI_OOT_BOMB_BAG:
     case GI_OOT_BOMB_BAG2:
     case GI_OOT_BOMB_BAG3:
@@ -206,6 +217,9 @@ static int isItemAmbiguous(s16 gi)
     case GI_MM_BOMBS_20:
     case GI_MM_BOMBS_30:
         return !Config_Flag(CFG_SHARED_BOMB_BAGS);
+    case GI_MM_POWDER_KEG:
+    case GI_OOT_POWDER_KEG:
+        return !Config_Flag(CFG_SHARED_POWDER_KEG);
     case GI_OOT_MAGIC_UPGRADE:
     case GI_OOT_MAGIC_UPGRADE2:
     case GI_OOT_MAGIC_JAR_SMALL:
@@ -239,16 +253,88 @@ static int isItemAmbiguous(s16 gi)
     case GI_MM_SONG_TIME:
     case GI_MM_SONG_NOTE_TIME:
         return !Config_Flag(CFG_SHARED_SONG_TIME);
+    case GI_OOT_SONG_ZELDA:
+    case GI_OOT_SONG_NOTE_ZELDA:
+    case GI_MM_SONG_ZELDA:
+    case GI_MM_SONG_NOTE_ZELDA:
+        return !Config_Flag(CFG_SHARED_SONG_ZELDA) && Config_Flag(CFG_MM_SONG_ZELDA);
+    case GI_OOT_SONG_SARIA:
+    case GI_OOT_SONG_NOTE_SARIA:
+    case GI_MM_SONG_SARIA:
+    case GI_MM_SONG_NOTE_SARIA:
+        return !Config_Flag(CFG_SHARED_SONG_SARIA) && Config_Flag(CFG_MM_SONG_SARIA);
     case GI_OOT_SONG_SUN:
     case GI_OOT_SONG_NOTE_SUN:
     case GI_MM_SONG_SUN:
     case GI_MM_SONG_NOTE_SUN:
         return !Config_Flag(CFG_SHARED_SONG_SUN) && Config_Flag(CFG_MM_SONG_SUN);
+    case GI_OOT_SONG_TP_FIRE:
+    case GI_OOT_SONG_NOTE_TP_FIRE:
+    case GI_MM_SONG_TP_FIRE:
+    case GI_MM_SONG_NOTE_TP_FIRE:
+        return !Config_Flag(CFG_SHARED_SONG_TP_FIRE) && Config_Flag(CFG_MM_SONG_TP_FIRE);
+    case GI_OOT_SONG_TP_FOREST:
+    case GI_OOT_SONG_NOTE_TP_FOREST:
+    case GI_MM_SONG_TP_FOREST:
+    case GI_MM_SONG_NOTE_TP_FOREST:
+        return !Config_Flag(CFG_SHARED_SONG_TP_FOREST) && Config_Flag(CFG_MM_SONG_TP_FOREST);
+    case GI_OOT_SONG_TP_LIGHT:
+    case GI_OOT_SONG_NOTE_TP_LIGHT:
+    case GI_MM_SONG_TP_LIGHT:
+    case GI_MM_SONG_NOTE_TP_LIGHT:
+        return !Config_Flag(CFG_SHARED_SONG_TP_LIGHT) && Config_Flag(CFG_MM_SONG_TP_LIGHT);
+    case GI_OOT_SONG_TP_SHADOW:
+    case GI_OOT_SONG_NOTE_TP_SHADOW:
+    case GI_MM_SONG_TP_SHADOW:
+    case GI_MM_SONG_NOTE_TP_SHADOW:
+        return !Config_Flag(CFG_SHARED_SONG_TP_SHADOW) && Config_Flag(CFG_MM_SONG_TP_SHADOW);
+    case GI_OOT_SONG_TP_SPIRIT:
+    case GI_OOT_SONG_NOTE_TP_SPIRIT:
+    case GI_MM_SONG_TP_SPIRIT:
+    case GI_MM_SONG_NOTE_TP_SPIRIT:
+        return !Config_Flag(CFG_SHARED_SONG_TP_SPIRIT) && Config_Flag(CFG_MM_SONG_TP_SPIRIT);
+    case GI_OOT_SONG_TP_WATER:
+    case GI_OOT_SONG_NOTE_TP_WATER:
+    case GI_MM_SONG_TP_WATER:
+    case GI_MM_SONG_NOTE_TP_WATER:
+        return !Config_Flag(CFG_SHARED_SONG_TP_WATER) && Config_Flag(CFG_MM_SONG_TP_WATER);
     case GI_OOT_SONG_EMPTINESS:
     case GI_OOT_SONG_NOTE_EMPTINESS:
     case GI_MM_SONG_EMPTINESS:
     case GI_MM_SONG_NOTE_EMPTINESS:
         return !Config_Flag(CFG_SHARED_SONG_EMPTINESS) && Config_Flag(CFG_OOT_SONG_EMPTINESS);
+    case GI_OOT_SONG_HEALING:
+    case GI_OOT_SONG_NOTE_HEALING:
+    case GI_MM_SONG_HEALING:
+    case GI_MM_SONG_NOTE_HEALING:
+        return !Config_Flag(CFG_SHARED_SONG_HEALING) && Config_Flag(CFG_OOT_SONG_HEALING);
+    case GI_OOT_SONG_SOARING:
+    case GI_OOT_SONG_NOTE_SOARING:
+    case GI_MM_SONG_SOARING:
+    case GI_MM_SONG_NOTE_SOARING:
+        return !Config_Flag(CFG_SHARED_SONG_SOARING) && Config_Flag(CFG_OOT_SONG_SOARING);
+    case GI_OOT_SONG_AWAKENING:
+    case GI_OOT_SONG_NOTE_AWAKENING:
+    case GI_MM_SONG_AWAKENING:
+    case GI_MM_SONG_NOTE_AWAKENING:
+        return !Config_Flag(CFG_SHARED_SONG_AWAKENING) && Config_Flag(CFG_OOT_SONG_AWAKENING);
+    case GI_OOT_SONG_GORON:
+    case GI_OOT_SONG_GORON_HALF:
+    case GI_OOT_SONG_NOTE_GORON:
+    case GI_MM_SONG_GORON:
+    case GI_MM_SONG_GORON_HALF:
+    case GI_MM_SONG_NOTE_GORON:
+        return !Config_Flag(CFG_SHARED_SONG_GORON) && Config_Flag(CFG_OOT_SONG_GORON);
+    case GI_OOT_SONG_ZORA:
+    case GI_OOT_SONG_NOTE_ZORA:
+    case GI_MM_SONG_ZORA:
+    case GI_MM_SONG_NOTE_ZORA:
+        return !Config_Flag(CFG_SHARED_SONG_ZORA) && Config_Flag(CFG_OOT_SONG_ZORA);
+    case GI_OOT_SONG_ORDER:
+    case GI_OOT_SONG_NOTE_ORDER:
+    case GI_MM_SONG_ORDER:
+    case GI_MM_SONG_NOTE_ORDER:
+        return !Config_Flag(CFG_SHARED_SONG_ORDER) && Config_Flag(CFG_OOT_SONG_ORDER);
     case GI_OOT_STICK_UPGRADE:
     case GI_OOT_STICK_UPGRADE2:
     case GI_MM_STICK_UPGRADE:
@@ -312,6 +398,15 @@ static int isItemAmbiguous(s16 gi)
     case GI_OOT_MASK_KAMARO:
     case GI_MM_MASK_KAMARO:
         return (Config_Flag(CFG_OOT_MASK_KAMARO) && !Config_Flag(CFG_SHARED_MASK_KAMARO));
+    case GI_OOT_MASK_GERUDO:
+    case GI_MM_MASK_GERUDO:
+        return (Config_Flag(CFG_MM_MASK_GERUDO) && !Config_Flag(CFG_SHARED_MASK_GERUDO));
+    case GI_OOT_MASK_SKULL:
+    case GI_MM_MASK_SKULL:
+        return (Config_Flag(CFG_MM_MASK_SKULL) && !Config_Flag(CFG_SHARED_MASK_SKULL));
+    case GI_OOT_MASK_SPOOKY:
+    case GI_MM_MASK_SPOOKY:
+        return (Config_Flag(CFG_MM_MASK_SPOOKY) && !Config_Flag(CFG_SHARED_MASK_SPOOKY));
     case GI_OOT_WALLET:
     case GI_OOT_WALLET2:
     case GI_OOT_WALLET3:
@@ -581,6 +676,9 @@ static int isItemAmbiguous(s16 gi)
     case GI_OOT_BOOMERANG:
     case GI_MM_BOOMERANG:
         return Config_Flag(CFG_MM_BOOMERANG) && !Config_Flag(CFG_SHARED_BOOMERANG);
+    case GI_OOT_GREAT_FAIRY_SWORD:
+    case GI_MM_GREAT_FAIRY_SWORD:
+        return Config_Flag(CFG_OOT_GREAT_FAIRY_SWORD) && !Config_Flag(CFG_SHARED_GREAT_FAIRY_SWORD);
     case GI_OOT_BOTTLE_EMPTY:
     case GI_OOT_BOTTLE_MILK:
     case GI_OOT_MILK:

@@ -13,6 +13,7 @@
 #include <combo/effect.h>
 #include "../actors.h"
 #include <combo/mm/boomerang.h>
+
 void ArrowCycle_Handle(Player* link, PlayState* play);
 
 static void Player_TryBurnDekuShield(Player* this, PlayState* play)
@@ -48,11 +49,79 @@ static void Player_HandleBurningDekuShield(Player* this, PlayState* play)
         Player_TryBurnDekuShield(this, play);
 }
 
+static s32 Player_IsNightTime(void)
+{
+    u16 time = gSaveContext.save.time;
+    return (time >= CLOCK_TIME(18, 0)) || (time < CLOCK_TIME(6, 0));
+}
+
+static s32 sCustomMaskEffectiveMask = 0;
+
+static s32 Player_GetCustomEffectiveMask(void)
+{
+    switch (gCustomSave.customMask)
+    {
+        case PLAYER_CUSTOM_MASK_SPOOKY:
+            return Player_IsNightTime() ? MASK_GIBDO : 0;
+
+        case PLAYER_CUSTOM_MASK_GERUDO:
+        case PLAYER_CUSTOM_MASK_SKULL:
+        default:
+            return 0;
+    }
+}
+
+static void Player_ClearCustomMaskSpoofBeforeUpdate(Player* player)
+{
+    if (sCustomMaskEffectiveMask > 0 &&
+        gSaveContext.save.equippedMask == 0 &&
+        player->currentMask == sCustomMaskEffectiveMask)
+    {
+        player->currentMask = 0;
+    }
+}
+
+static void Player_UpdateCustomMaskBehavior(Player* player)
+{
+    s32 prevEffectiveMask = sCustomMaskEffectiveMask;
+    s32 effectiveMask = 0;
+
+    if (gCustomSave.customMask == PLAYER_CUSTOM_MASK_NONE)
+    {
+        if (prevEffectiveMask > 0 && player->currentMask == prevEffectiveMask)
+            player->currentMask = 0;
+
+        sCustomMaskEffectiveMask = 0;
+        return;
+    }
+
+    if (player->transformation != MM_PLAYER_FORM_HUMAN)
+    {
+        gCustomSave.customMask = PLAYER_CUSTOM_MASK_NONE;
+
+        if (prevEffectiveMask > 0 && player->currentMask == prevEffectiveMask)
+            player->currentMask = 0;
+
+        sCustomMaskEffectiveMask = 0;
+        return;
+    }
+
+    effectiveMask = Player_GetCustomEffectiveMask();
+    if (prevEffectiveMask > 0 && player->currentMask == prevEffectiveMask)
+        player->currentMask = 0;
+
+    sCustomMaskEffectiveMask = effectiveMask;
+    if (effectiveMask > 0)
+        player->currentMask = effectiveMask;
+}
+
 void Player_UpdateWrapper(Player* this, PlayState* play)
 {
     ArrowCycle_Handle(this, play);
     Player_HandleBurningDekuShield(this, play);
+    Player_ClearCustomMaskSpoofBeforeUpdate(this);
     Player_Update(this, play);
+    Player_UpdateCustomMaskBehavior(this);
     Player_HandleBronzeScale(this, play);
     Dpad_Update(play);
     Ocarina_HandleWarp(this, play);
@@ -101,7 +170,11 @@ static s32 sCustomItemActions[] =
     PLAYER_CUSTOM_IA_TUNIC_ZORA,
     PLAYER_CUSTOM_IA_HAMMER,
     PLAYER_CUSTOM_IA_BOOMERANG,
+    PLAYER_CUSTOM_IA_SLINGSHOT,
     PLAYER_CUSTOM_IA_BOTTLE_RUTO_LETTER,
+    PLAYER_CUSTOM_IA_MASK_GERUDO,
+    PLAYER_CUSTOM_IA_MASK_SKULL,
+    PLAYER_CUSTOM_IA_MASK_SPOOKY,
 };
 
 static u8 sMagicSpellCosts[] =
@@ -242,6 +315,21 @@ static s32 Player_ActionToTunic(Player* this, s32 itemAction)
     else
     {
         return -1;
+    }
+}
+
+static s32 Player_ActionToCustomMask(Player* this, s32 itemAction)
+{
+    switch (itemAction)
+    {
+        case PLAYER_CUSTOM_IA_MASK_GERUDO:
+            return PLAYER_CUSTOM_MASK_GERUDO;
+        case PLAYER_CUSTOM_IA_MASK_SKULL:
+            return PLAYER_CUSTOM_MASK_SKULL;
+        case PLAYER_CUSTOM_IA_MASK_SPOOKY:
+            return PLAYER_CUSTOM_MASK_SPOOKY;
+        default:
+            return PLAYER_CUSTOM_MASK_NONE;
     }
 }
 
@@ -660,8 +748,51 @@ s32 Player_CustomUseItem(Player* this, PlayState* play, s32 itemAction)
         /* Handled */
         return 1;
     }
+    s32 customMask = Player_ActionToCustomMask(this, itemAction);
+    if (customMask != PLAYER_CUSTOM_MASK_NONE)
+    {
+        if (this->transformation == MM_PLAYER_FORM_HUMAN)
+        {
+            if (gCustomSave.customMask == customMask)
+            {
+                customMask = PLAYER_CUSTOM_MASK_NONE;
+            }
+
+            gCustomSave.customMask = customMask;
+            gSaveContext.save.equippedMask = 0;
+
+            if (customMask == PLAYER_CUSTOM_MASK_NONE)
+            {
+                if (this->currentMask == MASK_GIBDO)
+                    this->currentMask = 0;
+            }
+            else
+            {
+                this->currentMask = 0;
+            }
+
+            Player_PlaySfx(this, 0x835);
+        }
+        else
+        {
+            PlaySound(0x4806);
+        }
+
+        return 1;
+    }
 
     if (itemAction == PLAYER_CUSTOM_IA_BOOMERANG)
+    {
+        if (this->transformation == MM_PLAYER_FORM_HUMAN)
+        {
+            return 0;
+        }
+
+        PlaySound(0x4806); /* NA_SE_SY_ERROR */
+        return 1;
+    }
+
+    if (itemAction == PLAYER_CUSTOM_IA_SLINGSHOT)
     {
         if (this->transformation == MM_PLAYER_FORM_HUMAN)
         {
@@ -1117,6 +1248,8 @@ static Color_RGB8 sTunicColors[4] = {
     { 0, 60, 100 },  /* PLAYER_TUNIC_ZORA */
 };
 
+static Color_RGB8 sGerudoMaskTunicColor = { 120, 0, 180 };
+
 EXPORT_SYMBOL(MM_COLOR_TUNIC_KOKIRI, sTunicColors[0]);
 EXPORT_SYMBOL(MM_COLOR_TUNIC_GORON, sTunicColors[2]);
 EXPORT_SYMBOL(MM_COLOR_TUNIC_ZORA, sTunicColors[3]);
@@ -1168,12 +1301,172 @@ void Player_DrawShield(PlayState* play, Player* player)
     CLOSE_DISPS();
 }
 
+static Vec3f sZeroVec = { 0.0f, 0.0f, 0.0f };
+
+static void DrawSlingshotString(PlayState* play, Player* player)
+{
+    void* obj;
+    Vec3f stringOrigin;
+    f32 distXYZ;
+    f32 stringMaxScale;
+    f32 stringPullScale;
+
+    obj = comboGetObject(CUSTOM_OBJECT_ID_EQ_SLINGSHOT);
+    if (!obj) {
+        return;
+    }
+
+    OPEN_DISPS(play->state.gfxCtx);
+
+    gSPSegment(POLY_XLU_DISP++, 0x0a, obj);
+
+    Matrix_Push();
+
+    Matrix_Translate(606.0f, 236.0f, 0.0f, MTXMODE_APPLY);
+
+    if ((player->stateFlags3 & PLAYER_STATE3_MM_40) &&
+        (player->unk_B28 >= 0) &&
+        (player->unk_ACC < 0xB)) {
+        Matrix_MultVec3f(&sZeroVec, &stringOrigin);
+        distXYZ = Math_Vec3f_DistXYZ(&player->leftHandWorld.pos, &stringOrigin);
+
+        if (comboIsLinkAdult()) {
+            stringMaxScale = 1.65f;
+            stringPullScale = 1.6f;
+        } else {
+            stringMaxScale = 1.0f;
+            stringPullScale = 1.6f;
+        }
+
+        player->unk_B08 = distXYZ - 3.0f;
+
+        if (distXYZ < 3.0f) {
+            player->unk_B08 = 0.0f;
+        } else {
+            player->unk_B08 *= stringPullScale;
+
+            if (player->unk_B08 > stringMaxScale) {
+                player->unk_B08 = stringMaxScale;
+            }
+        }
+
+        player->unk_B0C = -0.5f;
+        }
+
+    Matrix_Scale(1.0f, player->unk_B08, 1.0f, MTXMODE_APPLY);
+
+    if (!comboIsLinkAdult()) {
+        Matrix_RotateZ(player->unk_B08 * -0.2f, MTXMODE_APPLY);
+    }
+
+    gSPMatrix(
+        POLY_XLU_DISP++,
+        Matrix_Finalize(play->state.gfxCtx),
+        G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW
+    );
+
+    gSPDisplayList(POLY_XLU_DISP++, CUSTOM_OBJECT_EQ_SLINGSHOT_1);
+
+    Matrix_Pop();
+
+    CLOSE_DISPS();
+}
+
 void Player_PostLimbDrawGameplayWrapper(PlayState* play, s32 limbIndex, Gfx** dList1, Gfx** dList2, Vec3s* rot, Actor* actor)
 {
     Player* player = (Player*)actor;
     Player_PostLimbDrawGameplay(play, limbIndex, dList1, dList2, rot, actor);
-    if (player->transformation == MM_PLAYER_FORM_HUMAN && limbIndex == PLAYER_LIMB_SHEATH && (player->sheathType == PLAYER_MODELTYPE_SHEATH_14 || player->sheathType == PLAYER_MODELTYPE_SHEATH_15))
-        Player_DrawShield(play, player);
+    if (sPlayerOverrideLimb != Player_OverrideLimbDrawGameplayFirstPerson)
+    {
+        if (player->transformation == MM_PLAYER_FORM_HUMAN && limbIndex == PLAYER_LIMB_SHEATH && (player->sheathType == PLAYER_MODELTYPE_SHEATH_14 || player->sheathType == PLAYER_MODELTYPE_SHEATH_15))
+        {
+            Player_DrawShield(play, player);
+        }
+    }
+
+    if (player->transformation == MM_PLAYER_FORM_HUMAN && player->itemAction == PLAYER_CUSTOM_IA_SLINGSHOT && limbIndex == PLAYER_LIMB_RIGHT_HAND)
+    {
+        DrawSlingshotString(play, player);
+    }
+}
+
+static int Player_IsUsingCustomSlingshot(Player* player)
+{
+    return player->transformation == MM_PLAYER_FORM_HUMAN && (player->itemAction == PLAYER_CUSTOM_IA_SLINGSHOT || player->heldItemAction == PLAYER_CUSTOM_IA_SLINGSHOT);
+}
+
+static void* Player_CustomSlingshotFirstPerson(s32 limbIndex)
+{
+    void* slingshotObj;
+    void* armObj;
+    Gfx* dlist;
+    Gfx* d;
+
+    if (comboIsLinkAdult())
+    {
+        armObj = comboGetObject(CUSTOM_OBJECT_ID_EQ_ADULT_RIGHT_ARM_OUT);
+        if (!armObj)
+            return (void*)kDListEmpty;
+
+        /* Adult arm limb: draw only the arm DL here */
+        if (limbIndex == PLAYER_LIMB_RIGHT_FOREARM) /* or PLAYER_LIMB_RIGHT_ARM */
+        {
+            d = dlist = GRAPH_ALLOC(gPlay->state.gfxCtx, sizeof(Gfx) * 4);
+
+            gSPSegment(d++, 0x0a, armObj);
+            gSPDisplayList(d++, CUSTOM_OBJECT_EQ_ADULT_RIGHT_ARM_OUT_0); /* gLinkAdultRightArmOutNearDL */
+
+            gSPEndDisplayList(d++);
+
+            return dlist;
+        }
+
+        /* Adult hand limb: draw hand + slingshot here */
+        if (limbIndex == PLAYER_LIMB_RIGHT_HAND)
+        {
+            slingshotObj = comboGetObject(CUSTOM_OBJECT_ID_EQ_SLINGSHOT);
+            if (!slingshotObj)
+                return (void*)kDListEmpty;
+
+            d = dlist = GRAPH_ALLOC(gPlay->state.gfxCtx, sizeof(Gfx) * 6);
+
+            gSPSegment(d++, 0x0a, armObj);
+            gSPDisplayList(d++, CUSTOM_OBJECT_EQ_ADULT_RIGHT_ARM_OUT_1); /* gLinkAdultRightHandOutNearDL */
+
+            gSPSegment(d++, 0x0a, slingshotObj);
+            gSPDisplayList(d++, CUSTOM_OBJECT_EQ_SLINGSHOT_0);
+
+            gSPEndDisplayList(d++);
+
+            return dlist;
+        }
+
+        return NULL;
+    }
+
+    /* Child: keep the old combined stretched arm on the hand limb */
+    if (limbIndex == PLAYER_LIMB_RIGHT_HAND)
+    {
+        slingshotObj = comboGetObject(CUSTOM_OBJECT_ID_EQ_SLINGSHOT);
+        armObj = comboGetObject(CUSTOM_OBJECT_ID_EQ_SLINGSHOT_RIGHT_ARM_STRETCHED);
+
+        if (!slingshotObj || !armObj)
+            return (void*)kDListEmpty;
+
+        d = dlist = GRAPH_ALLOC(gPlay->state.gfxCtx, sizeof(Gfx) * 6);
+
+        gSPSegment(d++, 0x0a, armObj);
+        gSPDisplayList(d++, CUSTOM_OBJECT_EQ_SLINGSHOT_RIGHT_ARM_STRETCHED_0);
+
+        gSPSegment(d++, 0x0a, slingshotObj);
+        gSPDisplayList(d++, CUSTOM_OBJECT_EQ_SLINGSHOT_0);
+
+        gSPEndDisplayList(d++);
+
+        return dlist;
+    }
+
+    return NULL;
 }
 
 static int Player_IsCustomBoomerangThrown(Player* player)
@@ -1181,15 +1474,38 @@ static int Player_IsCustomBoomerangThrown(Player* player)
     return !!(player->stateFlags1 & PLAYER_STATE1_MM_2000000);
 }
 
+#define MM_PLAYER_IS_Z_TARGETING                 0x8082FBE8
+typedef s32 (*MmPlayerIsZTargetingFunc)(Player* player, PlayState* play);
+#define Player_IsZTargeting                 ((MmPlayerIsZTargetingFunc)OverlayAddr(MM_PLAYER_IS_Z_TARGETING))
+
+static int Player_IsCustomSlingshotZTargetAiming(PlayState* play, Player* player)
+{
+    return player->transformation == MM_PLAYER_FORM_HUMAN &&
+           player->itemAction == PLAYER_CUSTOM_IA_SLINGSHOT &&
+           (
+               Player_IsZTargeting(player, play) ||
+               player->lockOnActor != NULL
+           );
+}
+
 int Player_OverrideLimbWrapper(PlayState* play, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, void* unk)
 {
     Player* player = GET_PLAYER(play);
-
-    if (player->transformation == MM_PLAYER_FORM_HUMAN && sPlayerOverrideLimb != Player_OverrideLimbDrawGameplayFirstPerson)
+    if (Player_IsUsingCustomSlingshot(player) &&
+            sPlayerOverrideLimb == Player_OverrideLimbDrawGameplayFirstPerson)
     {
-        if (player->itemAction == PLAYER_CUSTOM_IA_BOOMERANG)
+        if (limbIndex == PLAYER_LIMB_RIGHT_HAND || limbIndex == PLAYER_LIMB_RIGHT_FOREARM)
         {
-            if (limbIndex == PLAYER_LIMB_LEFT_HAND)
+            *dList = Player_CustomSlingshotFirstPerson(limbIndex);
+            return FALSE;
+        }
+    }
+    if (player->transformation == MM_PLAYER_FORM_HUMAN &&
+        sPlayerOverrideLimb != Player_OverrideLimbDrawGameplayFirstPerson)
+    {
+        if (limbIndex == PLAYER_LIMB_LEFT_HAND)
+        {
+            if (player->itemAction == PLAYER_CUSTOM_IA_BOOMERANG)
             {
                 if (Player_IsCustomBoomerangThrown(player))
                 {
@@ -1202,7 +1518,14 @@ int Player_OverrideLimbWrapper(PlayState* play, s32 limbIndex, Gfx** dList, Vec3
 
                 return FALSE;
             }
+
+            if (Player_IsCustomSlingshotZTargetAiming(play, player))
+            {
+                *dList = (Gfx*)DLIST_LHAND_CLOSED;
+                return FALSE;
+            }
         }
+
         if (limbIndex == PLAYER_LIMB_RIGHT_HAND)
         {
             if ((player->rightHandType == PLAYER_MODELTYPE_RH_SHIELD) && gSharedCustomSave.mmShieldIsDeku && player->currentShield)
@@ -1215,11 +1538,70 @@ int Player_OverrideLimbWrapper(PlayState* play, s32 limbIndex, Gfx** dList, Vec3
                 *dList = Player_CustomHandEq(DLIST_RHAND_OPEN, comboGetObject(CUSTOM_OBJECT_ID_EQ_OCARINA_FAIRY), CUSTOM_OBJECT_EQ_OCARINA_FAIRY_0);
                 return FALSE;
             }
+            else if (player->itemAction == PLAYER_CUSTOM_IA_SLINGSHOT)
+            {
+                *dList = Player_CustomHandEq(
+                    DLIST_RHAND_CLOSED,
+                    comboGetObject(CUSTOM_OBJECT_ID_EQ_SLINGSHOT),
+                    CUSTOM_OBJECT_EQ_SLINGSHOT_2
+                );
+                return FALSE;
+            }
         }
     }
 
     return sPlayerOverrideLimb(play, limbIndex, dList, pos, rot, unk);
 }
+
+static int prepareMask(PlayState* play, u16 objectId, int needsMatrix)
+{
+    void* obj;
+
+    obj = comboGetObject(objectId);
+    if (!obj)
+        return 0;
+
+    OPEN_DISPS(play->state.gfxCtx);
+    if (needsMatrix)
+        gSPMatrix(POLY_OPA_DISP++, 0x0d0001c0, G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+    gSPSegment(POLY_OPA_DISP++, 0x0a, obj);
+    CLOSE_DISPS();
+
+    return 1;
+}
+
+static void DrawExtendedMaskGerudo(PlayState* play, Player* link)
+{
+    if (!prepareMask(play, CUSTOM_OBJECT_ID_MASK_OOT_GERUDO | MASK_FOREIGN_OBJECT, 1))
+        return;
+
+    OPEN_DISPS(play->state.gfxCtx);
+    gSPDisplayList(POLY_OPA_DISP++, CUSTOM_OBJECT_MASK_OOT_GERUDO_0);
+    CLOSE_DISPS();
+}
+
+static void DrawExtendedMaskSkull(PlayState* play, Player* link)
+{
+    if (!prepareMask(play, CUSTOM_OBJECT_ID_MASK_OOT_SKULL | MASK_FOREIGN_OBJECT, 1))
+        return;
+
+    OPEN_DISPS(play->state.gfxCtx);
+    gSPDisplayList(POLY_OPA_DISP++, CUSTOM_OBJECT_MASK_OOT_SKULL_0);
+    CLOSE_DISPS();
+}
+
+static void DrawExtendedMaskSpooky(PlayState* play, Player* link)
+{
+    if (!prepareMask(play, CUSTOM_OBJECT_ID_MASK_OOT_SPOOKY | MASK_FOREIGN_OBJECT, 1))
+        return;
+
+    OPEN_DISPS(play->state.gfxCtx);
+    gSPDisplayList(POLY_OPA_DISP++, CUSTOM_OBJECT_MASK_OOT_SPOOKY_0);
+    CLOSE_DISPS();
+}
+
+u8 gGerudoTunic;
+EXPORT_SYMBOL(GERUDO_TUNIC, gGerudoTunic);
 
 void Player_SkelAnime_DrawFlexLod(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dListCount, OverrideLimbDrawOpa overrideLimbDraw, PostLimbDrawFlex postLimbDraw, Player* player, s32 lod)
 {
@@ -1231,11 +1613,22 @@ void Player_SkelAnime_DrawFlexLod(PlayState* play, void** skeleton, Vec3s* joint
         u16 tunic;
 
         tunic = CLAMP(gSaveContext.save.info.itemEquips.tunic, 0, 3);
-        tunicColor = &sTunicColors[tunic];
+
+        if (tunic == 0 &&
+            gCustomSave.customMask == PLAYER_CUSTOM_MASK_GERUDO &&
+            gGerudoTunic != 0)
+        {
+            tunicColor = &sGerudoMaskTunicColor;
+        }
+        else
+        {
+            tunicColor = &sTunicColors[tunic];
+        }
+
         gDPSetEnvColor(POLY_OPA_DISP++, tunicColor->r, tunicColor->g, tunicColor->b, 0xFF);
     }
 
-    if (postLimbDraw == (void*)Player_PostLimbDrawGameplay && overrideLimbDraw != Player_OverrideLimbDrawGameplayFirstPerson)
+    if (postLimbDraw == (void*)Player_PostLimbDrawGameplay)
         postLimbDraw = Player_PostLimbDrawGameplayWrapper;
 
     sPlayerOverrideLimb = overrideLimbDraw;
@@ -1251,6 +1644,22 @@ void Player_SkelAnime_DrawFlexLod(PlayState* play, void** skeleton, Vec3s* joint
         case PLAYER_BOOTS_HOVER:
             DrawBootsHover(play, player);
             break;
+        }
+
+        if (player->transformation == MM_PLAYER_FORM_HUMAN)
+        {
+            switch (gCustomSave.customMask)
+            {
+                case PLAYER_CUSTOM_MASK_GERUDO:
+                    DrawExtendedMaskGerudo(play, player);
+                    break;
+                case PLAYER_CUSTOM_MASK_SKULL:
+                    DrawExtendedMaskSkull(play, player);
+                    break;
+                case PLAYER_CUSTOM_MASK_SPOOKY:
+                    DrawExtendedMaskSpooky(play, player);
+                    break;
+            }
         }
 
         if (player->transformation == MM_PLAYER_FORM_HUMAN && player->itemAction == PLAYER_CUSTOM_IA_HAMMER) {
@@ -1324,9 +1733,23 @@ void Player_SkelAnime_DrawFlexLod(PlayState* play, void** skeleton, Vec3s* joint
     CLOSE_DISPS();
 }
 
-void Player_ColorAfterMask(GraphicsContext* gfxCtx, s32 maskIDMinusOne, PlayerMaskDList* maskDList, Player* player) {
-    u32 dl = maskDList->maskDListEntry[maskIDMinusOne];
-    gSPDisplayList(gfxCtx->polyOpa.append++, dl);
+static s32 Player_ShouldSuppressVanillaMaskDraw(s32 maskIDMinusOne, Player* player)
+{
+    s32 maskId = maskIDMinusOne + 1;
+
+    return player->transformation == MM_PLAYER_FORM_HUMAN &&
+           gCustomSave.customMask == PLAYER_CUSTOM_MASK_SPOOKY &&
+           Player_IsNightTime() &&
+           maskId == MASK_GIBDO;
+}
+
+void Player_ColorAfterMask(GraphicsContext* gfxCtx, s32 maskIDMinusOne, PlayerMaskDList* maskDList, Player* player)
+{
+    if (!Player_ShouldSuppressVanillaMaskDraw(maskIDMinusOne, player))
+    {
+        u32 dl = maskDList->maskDListEntry[maskIDMinusOne];
+        gSPDisplayList(gfxCtx->polyOpa.append++, dl);
+    }
 
     if (player->transformation == MM_PLAYER_FORM_HUMAN)
     {
@@ -1334,7 +1757,20 @@ void Player_ColorAfterMask(GraphicsContext* gfxCtx, s32 maskIDMinusOne, PlayerMa
         u16 tunic;
 
         tunic = CLAMP(gSaveContext.save.info.itemEquips.tunic, 0, 3);
-        tunicColor = sTunicColors[tunic];
+
+        if (tunic == 0 &&
+            gCustomSave.customMask == PLAYER_CUSTOM_MASK_GERUDO &&
+            gGerudoTunic)
+        {
+            tunicColor.r = 120;
+            tunicColor.g = 0;
+            tunicColor.b = 180;
+        }
+        else
+        {
+            tunicColor = sTunicColors[tunic];
+        }
+
         gDPSetEnvColor(gfxCtx->polyOpa.append++, tunicColor.r, tunicColor.g, tunicColor.b, 0xFF);
     }
 }
@@ -1807,12 +2243,32 @@ static void Player_ToggleFormDelayed(int form)
     Player_FormChangeDeleteEffects();
 }
 
+static s32 Player_ShouldNativeMaskClearCustomMask(s16 itemId)
+{
+    if (itemId < ITEM_MM_MASK_DEKU || itemId > ITEM_MM_MASK_GIANT)
+        return 0;
+    if (gCustomSave.customMask == PLAYER_CUSTOM_MASK_SPOOKY &&
+        Player_IsNightTime() &&
+        itemId == ITEM_MM_MASK_GIBDO)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
 void Player_UseItem(PlayState* play, Player* this, s16 itemId)
 {
     void (*Player_UseItemImpl)(PlayState* play, Player* this, s16 itemId);
     u8 useDefault;
 
     useDefault = 1;
+
+    if (Player_ShouldNativeMaskClearCustomMask(itemId))
+    {
+        gCustomSave.customMask = PLAYER_CUSTOM_MASK_NONE;
+        sCustomMaskEffectiveMask = -1;
+    }
 
     if (Config_Flag(CFG_MM_FAST_MASKS))
     {
@@ -1847,8 +2303,18 @@ void Player_UseItem(PlayState* play, Player* this, s16 itemId)
 /* Hammer & Boomerang Stuff */
 
 s32 Player_CustomActionToModelGroup(Player* player, s32 itemAction) {
-    if (itemAction == PLAYER_CUSTOM_IA_HAMMER) return 10; /* uses deku stick model group but does not draw deku stick because of the way the original draw code for it works */
-    if (itemAction == PLAYER_CUSTOM_IA_BOOMERANG) return 3; /* PLAYER_MODELGROUP_DEFAULT */
+    switch (itemAction)
+    {
+    case PLAYER_CUSTOM_IA_HAMMER:
+        return 10; /* uses deku stick model group but does not draw deku stick because of the way the original draw code for it works */
+    case PLAYER_CUSTOM_IA_BOOMERANG:
+    case PLAYER_CUSTOM_IA_SLINGSHOT:
+    case PLAYER_CUSTOM_IA_MASK_GERUDO:
+    case PLAYER_CUSTOM_IA_MASK_SKULL:
+    case PLAYER_CUSTOM_IA_MASK_SPOOKY:
+        return 3;  /* PLAYER_MODELGROUP_DEFAULT */
+    }
+
     u8* sActionModelGroups = (u8*)0x801BFF3C; /* using original table also means original glitches, if that matters */
     s32 modelGroup = sActionModelGroups[itemAction];
     /* if ((modelGroup == PLAYER_MODELGROUP_ONE_HAND_SWORD) && Player_IsGoronOrDeku(player)) { */
@@ -1867,16 +2333,28 @@ PATCH_FUNC(0x80123960, Player_CustomActionToModelGroup)
 extern s32 Player_InitItemAction_CustomBoomerang_Upper(Player* player, PlayState* play);
 extern s32 Player_InitItemAction_CustomBoomerang(Player* player, PlayState* play);
 
+extern s32 Player_InitItemAction_CustomSlingshot(PlayState* play, Player* player);
+extern s32 Player_CheckSlingshotReadyOrStart(Player* player, PlayState* play);
+
 void Player_SetCustomItemActionUpperFunc(PlayState* play, Player* player) {
     PlayerUpperActionFunc* sPlayerUpperActionUpdateFuncs = (PlayerUpperActionFunc*)OverlayAddr(0x8085c9f0);
     void (*Player_SetUpperAction)(PlayState* play, Player* this, PlayerUpperActionFunc upperActionFunc) = OverlayAddr(0x8082f43c);
     s8 upperItemAction = player->heldItemAction;
 
-    if (upperItemAction == PLAYER_CUSTOM_IA_HAMMER) {
+    switch (upperItemAction)
+    {
+    case PLAYER_CUSTOM_IA_HAMMER:
         upperItemAction = PLAYER_IA_SWORD_TWO_HANDED;
-    }
-    if (upperItemAction == PLAYER_CUSTOM_IA_BOOMERANG) {
+        break;
+    case PLAYER_CUSTOM_IA_BOOMERANG:
         Player_SetUpperAction(play, player, Player_InitItemAction_CustomBoomerang);
+        return;
+    case PLAYER_CUSTOM_IA_SLINGSHOT:
+        Player_SetUpperAction(play, player, Player_CheckSlingshotReadyOrStart);
+        return;
+    case PLAYER_CUSTOM_IA_MASK_GERUDO:
+    case PLAYER_CUSTOM_IA_MASK_SKULL:
+    case PLAYER_CUSTOM_IA_MASK_SPOOKY:
         return;
     }
     /* If more custom items were to be added that go to this extent I would suggest a sPlayerCustomUpperActionUpdateFuncs array */
@@ -1886,11 +2364,20 @@ void Player_SetCustomItemActionUpperFunc(PlayState* play, Player* player) {
 void Player_RunCustomItemActionInitFunc(PlayState* play, Player* player, s32 itemAction) {
     PlayerInitItemActionFunc* sPlayerItemActionInitFuncs = (PlayerInitItemActionFunc*)OverlayAddr(0x8085cb3c);
 
-    if (itemAction == PLAYER_CUSTOM_IA_HAMMER) {
+    switch (itemAction)
+    {
+    case PLAYER_CUSTOM_IA_HAMMER:
         itemAction = PLAYER_IA_SWORD_TWO_HANDED;
-    }
-    if (itemAction == PLAYER_CUSTOM_IA_BOOMERANG) {
+        break;
+    case PLAYER_CUSTOM_IA_BOOMERANG:
         Player_InitItemAction_CustomBoomerang_Upper(player, play);
+        return;
+    case PLAYER_CUSTOM_IA_SLINGSHOT:
+        Player_InitItemAction_CustomSlingshot(play, player);
+        return;
+    case PLAYER_CUSTOM_IA_MASK_GERUDO:
+    case PLAYER_CUSTOM_IA_MASK_SKULL:
+    case PLAYER_CUSTOM_IA_MASK_SPOOKY:
         return;
     }
     /* If more custom items were to be added that go to this extent I would suggest a sPlayerItemActionInitFuncs array */
@@ -2421,3 +2908,10 @@ s32 Player_ItemExchangeAnimate(PlayState* play, SkelAnime* skelAnime)
 }
 
 PATCH_CALL(0x80853a9c, Player_ItemExchangeAnimate)
+
+void Player_ExitTelescopeER(void)
+{
+    gPlay->nextEntrance = gSaveContext.respawn[RESPAWN_MODE_DOWN].entrance;
+    gPlay->transitionTrigger = TRANS_TRIGGER_START;
+    gIsEntranceOverride = 1;
+}

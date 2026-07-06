@@ -7,6 +7,7 @@
 #include <combo/util.h>
 #include <combo/math/vec.h>
 #include <combo/misc.h>
+#include <combo/common/actor_init.h>
 
 #define NBITS_TO_MASK(n)        ((1 << (n)) - 1)
 #define PARAMS_GET_U(p, s, n)   (((p) >> (s)) & NBITS_TO_MASK(n))
@@ -447,6 +448,7 @@ s32 DynaPolyActor_IsPlayerOnTop(struct DynaPolyActor* dynaActor);
 s32 DynaPolyActor_IsPlayerAbove(struct DynaPolyActor* dynaActor);
 s32 DynaPolyActor_IsSwitchPressed(struct DynaPolyActor* dynaActor);
 
+void Actor_GetSlopeDirection(CollisionPoly* floorPoly, Vec3f* slopeNormal, s16* downwardSlopeYaw);
 void Actor_UpdatePos(Actor *actor);
 
 #if defined(GAME_MM)
@@ -612,6 +614,7 @@ typedef struct NpcInteractInfo {
 #if defined(GAME_OOT)
 void func_80033480(struct PlayState* play, Vec3f* posBase, f32 randRangeDiameter, s32 amountMinusOne, s16 scaleBase,
                    s16 scaleStep, u8 arg6);
+void Actor_RequestQuakeAndRumble(Actor* actor, struct PlayState* play, s16 quakeY, s16 quakeDuration);
 void Actor_SetObjectDependency(struct PlayState* play, Actor* actor);
 #else
 extern Gfx D_801AEFA0[];

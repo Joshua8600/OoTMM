@@ -22,8 +22,8 @@
 #define IA_MM_ARROWS            0x0c
 #define IA_OOT_BOW              0x0d
 #define IA_MM_BOW               0x0e
-#define IA_SEEDS                0x0f
-#define IA_SLINGSHOT            0x10
+#define IA_OOT_SEEDS            0x0f
+#define IA_OOT_SLINGSHOT        0x10
 #define IA_OOT_NORMAL           0x11
 #define IA_MM_NORMAL            0x12
 #define IA_OOT_STICKS           0x13
@@ -87,7 +87,7 @@
 #define IA_COIN                 0x4d
 #define IA_OOT_BUTTON           0x4e
 #define IA_MM_BUTTON            0x4f
-#define IA_KEG                  0x50
+#define IA_MM_KEG               0x50
 #define IA_MM_SPIN_UPGRADE      0x51
 #define IA_OOT_SOUL             0x52
 #define IA_MM_SOUL              0x53
@@ -115,8 +115,25 @@
 #define IA_TRAP                 0x69
 #define IA_SONG_NOTE            0x6a
 #define IA_TRANSCENDENT_FAIRY   0x6b
-#define IA_OOT_PLATINUM_TOKEN   0x6c
-#define IA_MM_PLATINUM_TOKEN    0x6d
+#define IA_OOT_SONG_HEALING     0x6c
+#define IA_OOT_SONG_SOARING     0x6d
+#define IA_OOT_SONG_AWAKENING   0x6e
+#define IA_OOT_SONG_GORON_HALF  0x6f
+#define IA_OOT_SONG_GORON       0x70
+#define IA_OOT_SONG_ZORA        0x71
+#define IA_OOT_SONG_ORDER       0x72
+#define IA_MM_SONG_OOT          0x73
+#define IA_OOT_PLATINUM_TOKEN   0x74
+#define IA_MM_PLATINUM_TOKEN    0x75
+#define IA_OOT_KEG              0x76
+#define IA_OOT_HAMMER_GFS       0x77
+#define IA_OOT_RUSTY_KEY        0x78
+#define IA_MM_RUSTY_KEY         0x79
+#define IA_MM_SLINGSHOT         0x7a
+#define IA_MM_SEEDS             0x7b
+#define IA_MM_STONEGERUDOSKULL  0x7c
+#define IA_MM_GIBDOSPOOKY       0x7d
+#define IA_MAX                  0x7e
 #define IA_NONE                 0xff
 
 #define ITT_NONE        0x00
@@ -211,6 +228,11 @@ extern const u8 kMmTrade2[];
 extern const u8 kMmTrade3[];
 extern const u8 kMmGFSHammer[];
 extern const u8 kMmPictoBoom[];
+extern const u8 kOotHammerGFS[];
+extern const u8 kMmBowSlingshot[];
+extern const u8 kMmStoneGerudoSkull[];
+extern const u8 kMmGibdoSpooky[];
+
 void comboSyncItems(void);
 
 int isSlotEquippedOot(OotItemEquips* equips, int slot);

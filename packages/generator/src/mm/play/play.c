@@ -16,6 +16,8 @@
 #include <combo/inventory.h>
 #include <combo/draw.h>
 #include <actors/Obj_Grass/Obj_Grass.h>
+#include <combo/mm/ocarina.h>
+#include <combo/mark.h>
 
 /* Grass hooks */
 ObjGrass* gObjGrass;
@@ -469,6 +471,7 @@ static void Play_AfterInit(PlayState* play)
         gLastScene = play->sceneId;
     }
     comboSpawnCustomWarps(play);
+    comboSpawnCustomSongTags(play);
 
     spawnSirloin(play);
     spawnCustomBgLonepeak(play);
@@ -568,10 +571,10 @@ void hookPlay_Init(PlayState* play)
     g.bronzeScaleSolidGround = 0;
     g.bronzeScaleTimer = 0;
     isEndOfGame = 0;
-    gMultiMarkChests = 0;
-    gMultiMarkCollectibles = 0;
-    gMultiMarkSwitch0 = 0;
-    gMultiMarkSwitch1 = 0;
+    gMarkChests = 0;
+    gMarkCollectibles = 0;
+    gMarkSwitch0 = 0;
+    gMarkSwitch1 = 0;
     Multi_ResetWisps();
     Inventory_ReobtainProgressiveShields();
 
