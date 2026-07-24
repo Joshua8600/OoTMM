@@ -1520,6 +1520,11 @@ class LogicPassWorldTransform {
     this.filterLocationsBool(this.state.settings.shuffleButterfliesMm, 'butterfly', 'mm');
   }
 
+  private filterChecksBoulders() {
+    this.filterLocations(this.state.settings.shuffleBouldersOot, 'boulder', 'oot');
+    this.filterLocations(this.state.settings.shuffleBouldersMm, 'boulder', 'mm');
+  }
+
   private filterChecksRedBoulders() {
     this.filterLocationsBool(this.state.settings.shuffleRedBouldersOot, 'boulder-red', 'oot');
     this.filterLocationsBool(this.state.settings.shuffleRedBouldersMm, 'boulder-red', 'mm');
@@ -1589,6 +1594,7 @@ class LogicPassWorldTransform {
     this.filterChecksBushes();
     this.filterChecksWonder();
     this.filterChecksButterflies();
+    this.filterChecksBoulders();
     this.filterChecksRedBoulders();
     this.filterChecksSilverBoulders()
     this.filterChecksSnowballs();

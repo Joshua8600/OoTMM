@@ -55,7 +55,8 @@ Magic_Refill = 0x80072500;
 ActorRemove = 0x80025648;
 
 Play_InitEnvironment = 0x8009cda0;
-gFogState = 0x800f1640;
+gWeatherMode = 0x800f1640;
+gInterruptSongOfStorms = 0x800f1648;
 
 __osPiTable = 0x8000638c;
 gCartHandle = 0x80006260;
@@ -144,6 +145,7 @@ CollisionCheck_SetAT = 0x8004bd50;
 CollisionCheck_SetAC = 0x8004bf40;
 
 func_80038A28           = 0x8002b668;
+func_80033684           = 0x8002650c;
 BgCheck_EntityRaycastDown1 = 0x8002f3a4;
 BgCheck_EntityRaycastDown2 = 0x8002f400;
 BgCheck_EntityRaycastDown3 = 0x8002f454;
