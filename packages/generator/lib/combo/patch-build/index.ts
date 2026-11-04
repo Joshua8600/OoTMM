@@ -4,7 +4,8 @@ import type { GameAddresses } from '../addresses';
 import type { DecompressedRoms } from '../decompress';
 import type { PatchGroup } from './group';
 
-import { Monitor, GAMES } from '@ootmm/core';
+import { GAMES } from '@ootmm/data';
+import { Monitor } from '@ootmm/core';
 import { isEntranceShuffle } from '@ootmm/logic';
 import { CONFIG } from '../config';
 import { Patcher } from './patcher';
@@ -72,7 +73,6 @@ function asmPatchGroups(world: LogicResultWorld, settings: Settings) {
     CRIT_WIGGLE_DISABLE: settings.critWiggleDisable,
     OOT_LOST_WOODS_EXITS: settings.alterLostWoodsExits,
     MM_VOID_WARP: settings.voidWarpMm,
-    OOT_SWORDLESS_ADULT: settings.swordlessAdult,
     MM_FAST_MASKS: settings.fastMasks,
     OOT_FAST_BOAT: settings.shadowFastBoat,
     MM_WELL_OPEN_OR_REMORSELESS: settings.beneathWell !== 'vanilla',
@@ -82,6 +82,14 @@ function asmPatchGroups(world: LogicResultWorld, settings: Settings) {
     MM_JP_LAYOUT_GREAT_BAY_COAST: world.resolvedFlags.jpLayouts.has('GreatBayCoast'),
     MM_KEG_STRENGTH_3: settings.kegStrength3,
     ER_TELESCOPES: settings.erIndoorsTelescopes,
+    OOT_SKIP_CUTSCENES: settings.cutsceneSkipOoT,
+    MM_CS_GOHT: settings.cutsceneIntroGoht,
+    MM_CS_WART: settings.cutsceneIntroWart,
+    MM_CS_GYORG: settings.cutsceneIntroGyorg,
+    MM_CS_IGOS: settings.cutsceneIntroIgos,
+    MM_CS_GOMESS: settings.cutsceneIntroGomess,
+    MM_CS_TWINMOLD: settings.cutsceneIntroTwinmold,
+    MM_CS_MAJORA: settings.cutsceneIntroMajora
   };
   const keys = Object.keys(groups) as PatchGroup[];
   return keys.filter((k) => groups[k]);

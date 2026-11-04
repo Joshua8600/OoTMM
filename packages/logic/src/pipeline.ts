@@ -1,13 +1,14 @@
-import type { Item, Options, PlayerItem, PlayerItems } from '@ootmm/core';
+import type { Options } from '@ootmm/core';
+import type { Item, PlayerItem, PlayerItems } from './items';
 import type { ItemPlacement } from './types';
 import type { Hints } from './hints';
 import type { Analysis } from './analysis';
-import type { DungeonEntrance, ResolvedWorldFlags, WorldCheck } from './world';
+import type { DungeonEntrance, ResolvedWorldFlags } from './world';
 import type { Location } from './types';
 
 import { Monitor, Random } from '@ootmm/core';
 import { logicPassConfig, logicPassFixer, logicPassHash, logicPassSongEvents } from './misc';
-import { logicPassItemProperties } from './item-properties';
+import { logicPassItemProperties } from './items/properties';
 import { logicPassWorld, logicPassWorldTransform } from './world';
 import { logicPassCloak, logicPassEntrances, logicPassMinimize, logicPassSolver } from './solver';
 import { logicPassAnalysis, logicPassAnalysisFoolish, logicPassAnalysisPaths } from './analysis';
@@ -32,7 +33,6 @@ class LogicPipeline<State> {
 
 export type LogicResultWorld = {
   resolvedFlags: ResolvedWorldFlags;
-  checks: { [k: string]: WorldCheck };
   prices: number[];
   entranceOverrides: Map<string, string>;
   bossIds: number[];
@@ -100,7 +100,6 @@ export async function logic(monitor: Monitor, opts: Options): Promise<LogicResul
 
     const worlds: LogicResultWorld[] = data.worlds.map(w => ({
       resolvedFlags: w.resolvedFlags,
-      checks: w.checks,
       prices: w.prices,
       entranceOverrides: w.entranceOverrides,
       bossIds: w.bossIds,

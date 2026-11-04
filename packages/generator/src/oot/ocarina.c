@@ -1,4 +1,5 @@
 #include <combo.h>
+#include <combo/age.h>
 #include <combo/entrance.h>
 #include <combo/player.h>
 #include <combo/config.h>
@@ -919,15 +920,12 @@ static void HandleSoaring(PlayState* play)
 void ageSwap(PlayState* play)
 {
     /* Age swap */
-    play->linkAgeOnLoad = !gSaveContext.save.age;
+    Age_SwapOot(play);
     Play_SetupRespawnPoint(play, 1, 0xdff);
     gSaveContext.respawnFlag = 2;
     play->transitionTrigger = TRANS_TRIGGER_START;
-    play->nextEntranceIndex = gSaveContext.save.entrance;
+    play->nextEntrance = gSaveContext.save.entrance;
     play->transitionType = TRANS_GFX_SHORTCUT;
-
-    /* Set the correct farore */
-    swapFarore();
 }
 
 static void HandleSongOfTime(PlayState* play)
@@ -1026,7 +1024,7 @@ static void HandleSongOfDoubleTime(PlayState* play)
                     break;
                 }
 
-                play->nextEntranceIndex = gSaveContext.save.entrance;
+                play->nextEntrance = gSaveContext.save.entrance;
                 play->transitionTrigger = TRANS_TRIGGER_START;
                 gSaveContext.sunSongState = 0; /* SUNSSONG_INACTIVE */
                 gSaveContext.seqId = (u8)NA_BGM_DISABLED;

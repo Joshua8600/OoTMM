@@ -1,13 +1,12 @@
-import type { Settings, PlayerItems, Region, PlayerItem } from '@ootmm/core';
+import type { Settings, Region } from '@ootmm/core';
 import type { Location } from '../types';
 import type { World, WorldArea } from '../world';
-import type { ItemProperties } from '../item-properties'
-import type { Age } from '../age';
+import type { PlayerItem, PlayerItems, ItemProperties } from '../items';
 import type { Expr } from '../expr';
 
-import { Monitor, Random, sample, ENTRANCES } from '@ootmm/core';
-import { AGE_ADULT, AGE_CHILD } from '../age';
-import { exprAge, exprAnd, exprEvent, exprFalse, exprOr, exprTrue } from '../expr';
+import { ENTRANCES } from '@ootmm/data';
+import { Monitor, Random, sample } from '@ootmm/core';
+import { exprAnd, exprEvent, exprOr, exprTrue } from '../expr';
 import { BOSS_INDEX_BY_DUNGEON, cloneWorld, DUNGEONS_REGIONS } from '../world';
 import { BOSS_METADATA_BY_ENTRANCE } from '../data';
 import { Pathfinder } from '../pathfind';
@@ -67,6 +66,7 @@ const POLARITY_IN = new Set<string>([
   'indoors-pf',
   'indoors-extra',
   'indoors-special',
+  'indoors-telescope',
   'grotto',
   'grave',
 ]);
@@ -207,9 +207,20 @@ class WorldShuffler {
 
     /* Change the world */
     let expr = this.getExpr(original);
+
     if (entranceReplacement.game === 'mm' && !(entranceReplacement.flags.includes('no-sot'))) {
+      /* Add MM Access rule */
+      let mmAccessExpr = expr;
+      const existing = areaFrom.exits['MM ACCESS'];
+      if (existing) {
+        mmAccessExpr = exprOr([expr, existing]);
+      }
+      areaFrom.exits['MM ACCESS'] = mmAccessExpr;
+
+      /* Account for song of time */
       expr = this.songOfTime(expr);
     }
+
     if (areaFrom.exits[entranceReplacement.to]) {
       expr = exprOr([expr, areaFrom.exits[entranceReplacement.to]]);
     }
@@ -260,30 +271,6 @@ class WorldShuffler {
         }
       }
     }
-  }
-
-  private validateAgeTemple(world: World) {
-    const newWorld = cloneWorld(world);
-    const a = newWorld.areas['OOT SPAWN'];
-    let otherAge: Age;
-
-    if (this.settings.startingAge === 'child') {
-      a.exits['OOT SPAWN ADULT'] = exprAge(AGE_ADULT);
-      a.exits['OOT SPAWN CHILD'] = exprFalse();
-      otherAge = AGE_ADULT;
-    } else {
-      a.exits['OOT SPAWN ADULT'] = exprFalse();
-      a.exits['OOT SPAWN CHILD'] = exprAge(AGE_CHILD);
-      otherAge = AGE_CHILD;
-    }
-
-    const worlds = [...this.worlds];
-    worlds[this.worldId] = newWorld;
-    const agePathfinder = new Pathfinder(worlds, this.settings, this.startingItems);
-    const pathfinderState = agePathfinder.run(null, { recursive: true, singleWorld: this.worldId });
-    const target = 'OOT Temple of Time';
-    const ws = pathfinderState.ws[this.worldId];
-    return (ws.ages[otherAge].areas.has(target));
   }
 
   private changeWorldAssumePools(world: World, pools: EntrancePools) {
@@ -407,11 +394,6 @@ class WorldShuffler {
       return false;
     }
 
-    /* Check ToT access */
-    if (['ootmm', 'oot'].includes(this.settings.games) && !this.validateAgeTemple(newWorld)) {
-      return false;
-    }
-
     return true;
   }
 
@@ -435,25 +417,6 @@ class WorldShuffler {
 
   private unbalancedPool(name: string) {
     throw new LogicEntranceError(`Unbalanced pool: ${name}`);
-  }
-
-  private assumedFromPools(pools: EntrancePools, ignore: Set<Entrance>): Set<Entrance> {
-    const assumed = new Set<Entrance>();
-
-    for (const pool of Object.values(pools)) {
-      for (const dst of pool.dst) {
-        if (ignore.has(dst)) {
-          ignore.delete(dst);
-          continue;
-        }
-        const e = ENTRANCES[dst];
-        if (!(['dungeon-exit', 'grotto-exit', 'grave-exit'].includes(e.type)) || dst === 'OOT_DESERT_COLOSSUS_FROM_TEMPLE_SPIRIT' || this.settings.erNoPolarity) {
-          assumed.add(dst);
-        }
-      }
-    }
-
-    return assumed;
   }
 
   private isSelfLoop(src: Entrance, dst: Entrance) {
@@ -639,6 +602,7 @@ class WorldShuffler {
     /* Compute types */
     const types = new Set(this.poolsTypesDst());
     types.delete('boss');
+    types.delete('indoors-telescope');
     types.add('spawn');
     types.add('indoors');
     types.add('one-way-song');
@@ -660,6 +624,7 @@ class WorldShuffler {
     types.add('dungeon');
     types.add('dungeon-minor');
     types.add('dungeon-sh');
+    types.delete('indoors-telescope');
 
     if (this.settings.erBoss !== 'none') {
       types.add('boss');
@@ -1087,22 +1052,11 @@ class LogicPassEntrances {
     this.worlds = [];
     let changed = false;
 
-    if (this.input.settings.distinctWorlds) {
-      /* Distinct worlds */
-      for (let i = 0; i < this.input.worlds.length; ++i) {
-        const shuffler = new WorldShuffler(this.input.random, i, this.input.worlds, this.input.settings, this.input.startingItems, this.input.allItems);
-        const result = shuffler.run();
-        this.worlds.push(result.world);
-        changed = changed || result.changed;
-      }
-    } else {
-      /* Shared world */
-      const shuffler = new WorldShuffler(this.input.random, 0, this.input.worlds, this.input.settings, this.input.startingItems, this.input.allItems);
+    for (let i = 0; i < this.input.worlds.length; ++i) {
+      const shuffler = new WorldShuffler(this.input.random, i, this.input.worlds, this.input.settings, this.input.startingItems, this.input.allItems);
       const result = shuffler.run();
-      changed = result.changed;
-      for (let i = 0; i < this.input.worlds.length; ++i) {
-        this.worlds.push(cloneWorld(result.world));
-      }
+      this.worlds.push(result.world);
+      changed = changed || result.changed;
     }
 
     /* Validate */

@@ -186,65 +186,65 @@ static const char* kSongNames[] = {
 };
 
 static const char* kRustyKeysNamesOot[] = {
-    "Treasure Chest Game",
+    "Market Treasure Chest Game",
     "Guard House",
-    "Hyrule Castle",
+    "Hyrule Castle Gatehouse",
     "Dog Lady House",
     "Back Alley House",
     "Bombchu Shop",
     "Mask Shop",
-    "Child Bazaar",
-    "Child Potion Shop",
-    "Child Shooting Gallery",
+    "Market Bazaar",
+    "Market Potion Shop",
+    "Market Shooting Gallery",
     "Bombchu Bowling",
-    "Laboratory",
+    "Lakeside Laboratory",
     "Fishing Pond",
-    "Silo",
-    "Ranch Stable",
-    "Ranch House",
+    "Lon Lon Ranch Silo",
+    "Lon Lon Ranch Stables",
+    "Lon Lon Ranch House",
     "Malon's Room",
     "Kakariko Graveyard Hut",
     "Windmill",
     "Impa's House",
-    "Carpenter House",
+    "Carpenter's House",
     "Granny Potion Shop",
-    "Adult Shooting Gallery",
-    "Skulltula House",
-    "Adult Bazaar",
-    "Adult Potion Shop",
-    "Adult Potion Shop Back",
+    "Kakariko Shooting Gallery",
+    "House of Skulltula",
+    "Kakariko Bazaar",
+    "Kakariko Potion Shop",
+    "Kakariko Potion Shop Back",
 };
 
 static const char* kRustyKeysNamesMm[] = {
     "Tourist Information",
-    "Potion Shop",
+    "Kotake's Potion Shop",
     "Post Office",
-    "Swordsman School",
+    "Swordsman's School",
     "Lottery",
     "Bomb Shop",
     "Trading Post",
     "Curiosity Shop",
     "Kafei's Hideout",
-    "Town Archery",
-    "Swamp Archery",
-    "Observatory",
-    "Blacksmith",
-    "Music House",
-    "Oceanic Laboratory",
+    "Clock Town Shooting Gallery",
+    "Swamp Shooting Gallery",
+    "Astral Observatory",
+    "Mountain Smithy",
+    "Music Box House",
+    "Marine Research Lab",
     "Beneath the Graveyard",
     "Dampe's House",
     "Mayor's Residence",
     "Mayor's Residence Office",
     "Mayor's Residence Salon",
-    "Kafei's Room",
-    "Treasure Game",
+    "Mayor's Residence Bedroom",
+    "Clock Town Chest Game",
     "Honey & Darling",
     "Milk Bar",
     "Doggy Racetrack",
     "Cucco Shack",
     "Romani Ranch House",
     "Romani Ranch Barn",
-    "Romani's Room",
+    "Romani Ranch Bedroom",
     "Zora Shop",
     "Japas' Room",
     "Tijo's Room",
@@ -933,7 +933,7 @@ static void printDungeonSilverRupees(PlayState* play, float x, float y, int srBa
         if (data->count == 0)
             continue;
         digits = digitCount(data->count);
-        count = comboSilverRupeesGetCount(sr);
+        count = SilverRupees_GetCount(sr);
         printNumColored(play, count, data->count, digits, x, y, 0);
         x += 8.f * digits + 3.f;
     }
@@ -1155,7 +1155,7 @@ static void printDungeonData(PlayState* play, int base, int index)
             /* Triforce */
             gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 255, 255);
             drawTexRGBA16_12x12(play, CK_PTR(CUSTOM_KEEP_SMALL_ICON_TRIFORCE), x + 104.f, y);
-            printNumColored(play, gTriforceCount, triforceMax, triforceDigits, x + 116.f, y, 1);
+            printNumColored(play, gSharedCustomSave.triforcePieces, triforceMax, triforceDigits, x + 116.f, y, 1);
             break;
         case 3:
             /* Red Coins */

@@ -41,4 +41,9 @@ typedef enum SfxPauseMenu
 } SfxPauseMenu;
 #endif
 
+void Sfx_PlaySfxAtPos(Vec3f* projectedPos, u16 sfxId);
+
+// Custom
+void Sfx_PlaySuccessChime(void);
+
 #endif

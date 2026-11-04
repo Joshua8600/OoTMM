@@ -3,10 +3,10 @@
   exits:
     "GLOBAL": "true"
     "Death Mountain Summit": "true"
-    "Death Mountain Crater Bottom": "(is_adult && event(RED_BOULDER_BROKEN)) || (has_hover_boots && can_jump_slash) || climb_anywhere || hookshot_anywhere"
+    "Death Mountain Crater Bottom": "(is_adult && event(RED_BOULDER_BROKEN)) || (has_hover_boots && can_jump_slash) || climb_anywhere || hookshot_anywhere || glitch_megaflip"
     "Death Mountain Crater Warp": "has_tunic_goron_strict && ((is_adult && scarecrow_longshot) || longshot_anywhere || glitch_megaflip)"
-    "Death Mountain Crater Generic Grotto": "has_explosives_or_hammer"
-    "Fairy Fountain Double Magic": "glitch_megaflip"
+    "Death Mountain Crater Generic Grotto": "has_shovel && has_explosives_or_hammer"
+    "Death Mountain Crater Near Great Fairy": "glitch_megaflip"
     "Death Mountain Crater Bottom Adult Rupees": "is_adult"
   events:
     #Having to farm these rocks for drops without heat resistance isn't fair without access to the grotto
@@ -32,6 +32,8 @@
     "Death Mountain Crater Boulder 1": "has_explosives_or_hammer"
     "Death Mountain Crater Boulder 2": "has_explosives_or_hammer"
     "Death Mountain Crater Boulder 3": "has_explosives_or_hammer"
+    "Death Mountain Crater Gossip Fairy": "has_explosives && gossip_fairy"
+    "Death Mountain Crater Gossip Big Fairy": "has_explosives && gossip_fairy_big"
   gossip:
     "Death Mountain Crater Gossip Wall": "has_explosives"
 
@@ -42,8 +44,8 @@
     "Darunia Chamber": "true"
     "Death Mountain Crater Warp": "(can_hookshot || has_hover_boots) && (is_adult || has_tunic_goron_strict || can_hammer_or_keg || hookshot_anywhere || climb_anywhere)" #child cannot do anything at the warp from the top within 24 seconds
     "Death Mountain Crater Top": "is_adult || has_tunic_goron_strict"
-    "Death Mountain Crater Scrub Grotto": "can_hammer_or_keg"
-    "Fairy Fountain Double Magic": "can_hammer_or_keg || climb_anywhere || hookshot_anywhere"
+    "Death Mountain Crater Scrub Grotto": "has_shovel && can_hammer_or_keg"
+    "Death Mountain Crater Near Great Fairy": "can_hammer_or_keg || climb_anywhere || hookshot_anywhere"
     "Death Mountain Crater Red Boulders": "can_hammer_or_keg"
   events:
     RED_BOULDER_BROKEN: "is_adult && can_hammer_or_keg"
@@ -53,6 +55,12 @@
     "Death Mountain Crater Pot 2": "true"
     "Death Mountain Crater Pot 3": "true"
     "Death Mountain Crater Pot 4": "true"
+
+"Death Mountain Crater Near Great Fairy":
+  region: DEATH_MOUNTAIN_CRATER
+  exits:
+    "GLOBAL": "true"
+    "Fairy Fountain Double Magic": "true"
 
 "Death Mountain Crater Red Boulders":
   region: DEATH_MOUNTAIN_CRATER
@@ -149,6 +157,8 @@
     "Death Mountain Crater Grotto Butterfly 1": "butterfly"
     "Death Mountain Crater Grotto Butterfly 2": "butterfly"
     "Death Mountain Crater Grotto Butterfly 3": "butterfly"
+    "Death Mountain Crater Generic Grotto Gossip Fairy": "gossip_fairy_sun"
+    "Death Mountain Crater Generic Grotto Gossip Big Fairy": "gossip_fairy_big"
   gossip:
     "Death Mountain Crater Gossip Grotto": "true"
 

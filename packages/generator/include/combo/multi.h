@@ -3,10 +3,21 @@
 
 #include <combo/types.h>
 
+#define MULTI_EVENT_TYPE_BOSS   0x01
+#define MULTI_EVENT_BOSS(id)    ((MULTI_EVENT_TYPE_BOSS << 24) | (id))
+
 typedef struct PlayState PlayState;
 
 void    Multi_DrawWisps(PlayState* play);
 void    Multi_ResetWisps(void);
 void    Multi_Update(PlayState* play);
+void    Multi_Disconnect(void);
+
+u8      Multi_WorldID(void);
+void    Multi_SendItem(u8 to, s16 gi, s16 flags, u32 key);
+void    Multi_SendSelfItem(s16 gi, s16 flags, u32 key);
+void    Multi_SendEvent(u32 eventId);
+void    Multi_InfoItem(u32 ovKey, s16 gi, u8 flags);
+void    Multi_InfoEntrance(u32 original, u32 entrance, u8 age);
 
 #endif

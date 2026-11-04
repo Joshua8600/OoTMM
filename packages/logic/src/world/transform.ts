@@ -1,11 +1,13 @@
-import type { Settings, ItemID, Item, PlayerItem, PlayerItems } from '@ootmm/core';
+import type { CheckType } from '@ootmm/data';
+import type { Settings } from '@ootmm/core';
+import type { ItemID, Item, PlayerItem, PlayerItems, ItemSharedDef, ItemProperties } from '../items';
 import type { Location } from '../types';
-import type { ItemProperties } from '../item-properties';
-import type { ItemSharedDef } from '../data';
-import type { World, WorldCheckType } from './types';
+import type { World } from './types';
 
-import { POOL, Monitor, sample, Random, randomInt, ItemGroups, ItemHelpers, Items, itemByID, makePlayerItem, countMapAdd, gameId } from '@ootmm/core';
-import { TRAP_AMOUNTS, SharedItemGroups } from '../data';
+import { CHECKS, CHECKS_BY_LOCATION } from '@ootmm/data';
+import { Monitor, sample, Random, randomInt, countMapAdd } from '@ootmm/core';
+import { TRAP_AMOUNTS } from '../data';
+import { SharedItemGroups, ItemGroups, ItemHelpers, Items, itemByID, makePlayerItem } from '../items';
 import { optimizeWorldStartingAndPool } from './optimizer';
 import { mustStartWithMasterSword } from '../helpers';
 import { exprTrue } from '../expr';
@@ -146,7 +148,12 @@ const ITEM_POOL_PLENTIFUL = new Set([
   ...ItemGroups.SONG_NOTES,
   ...ItemGroups.OOT_RUSTY_KEYS,
   ...ItemGroups.MM_RUSTY_KEYS,
+  ...ItemGroups.MASKS_TRANSFORM,
+  Items.OOT_SHOVEL,
+  Items.MM_SHOVEL,
+  Items.SHARED_SHOVEL,
   Items.MM_CLOCK,
+  Items.OOT_CLOCK,
   Items.OOT_BOTTLE_RUTO_LETTER,
   Items.OOT_WEIRD_EGG,
   Items.OOT_POCKET_EGG,
@@ -213,9 +220,6 @@ const ITEM_POOL_PLENTIFUL = new Set([
   Items.MM_PLATINUM_TOKEN,
   Items.SHARED_PLATINUM_TOKEN,
   Items.MM_BOTTLED_GOLD_DUST,
-  Items.MM_MASK_DEKU,
-  Items.MM_MASK_GORON,
-  Items.MM_MASK_ZORA,
   Items.MM_MASK_CAPTAIN,
   Items.MM_MASK_GIANT,
   Items.MM_MASK_ALL_NIGHT,
@@ -242,7 +246,6 @@ const ITEM_POOL_PLENTIFUL = new Set([
   Items.SHARED_MASK_KAMARO,
   Items.MM_MASK_SCENTS,
   Items.MM_MASK_KAFEI,
-  Items.MM_MASK_FIERCE_DEITY,
   Items.MM_MAGIC_UPGRADE,
   Items.MM_BOMBER_NOTEBOOK,
   Items.MM_BOW,
@@ -295,8 +298,6 @@ const ITEM_POOL_PLENTIFUL = new Set([
   Items.SHARED_HOOKSHOT,
   Items.SHARED_LENS,
   Items.SHARED_OCARINA,
-  Items.SHARED_MASK_GORON,
-  Items.SHARED_MASK_ZORA,
   Items.SHARED_MASK_TRUTH,
   Items.SHARED_MASK_BUNNY,
   Items.SHARED_MASK_KEATON,
@@ -417,9 +418,9 @@ class LogicPassWorldTransform {
     for (let i = 0; i < worlds.length; ++i) {
       const world = worlds[i];
       for (const locId of world.locations) {
-        const check = world.checks[locId];
+        const check = CHECKS_BY_LOCATION[locId];
+        const item = world.checkItems.get(locId)!;
         const location = makeLocation(locId, i);
-        const item = check.item;
         const playerItem = makePlayerItem(item, i);
         countMapAdd(this.pool, playerItem);
         const set = this.locsByItem.get(playerItem) || new Set();
@@ -445,8 +446,8 @@ class LogicPassWorldTransform {
     const newSet = this.locsByItem.get(to) || new Set();
     for (const loc of oldSet) {
       const locData = locationData(loc);
-      const check = this.state.worlds[locData.world!].checks[locData.id];
-      check.item = to.item;
+      const world = this.state.worlds[locData.world!];
+      world.checkItems.set(locData.id, to.item);
       newSet.add(loc);
     }
     this.locsByItem.set(to, newSet);
@@ -600,9 +601,12 @@ class LogicPassWorldTransform {
       items.push(Items.OOT_SWORD_MASTER);
     }
 
-    if (settings.zoraKing === 'open') {
-      items.push(Items.OOT_BOTTLE_EMPTY);
-    }
+    if (settings.zoraKing === 'open')
+      items.push(settings.sharedBottles ? Items.SHARED_BOTTLE_EMPTY : Items.OOT_BOTTLE_EMPTY);
+    else if (settings.sharedBottles)
+      items.push(Items.SHARED_BOTTLE_RUTO_LETTER);
+    if (settings.sharedBottles)
+      items.push(Items.SHARED_BOTTLED_GOLD_DUST);
 
     if (settings.smallKeyShuffleOot === 'anywhere') {
       items = [...items, ...ItemGroups.SMALL_KEYS_OOT, ...ItemGroups.KEY_RINGS_OOT];
@@ -833,6 +837,11 @@ class LogicPassWorldTransform {
       this.replaceItem(Items.OOT_SONG_SUN, Items.SHARED_SONG_SUN);
     }
 
+    if (settings.sticksNutsUpgradesInitial && settings.games !== 'mm') {
+      this.addItem(Items.OOT_STICK_UPGRADE, 1);
+      this.addItem(Items.OOT_NUT_UPGRADE, 1);
+    }
+
     if (settings.sharedNutsSticks) {
       /* Nuts */
       this.replaceItem(Items.OOT_NUTS_5,      Items.SHARED_NUTS_5);
@@ -854,6 +863,10 @@ class LogicPassWorldTransform {
     } else if (settings.sticksNutsUpgradesMm) {
       this.addItem(Items.MM_STICK_UPGRADE, 2);
       this.addItem(Items.MM_NUT_UPGRADE, 2);
+      if (settings.sticksNutsUpgradesInitial) {
+        this.addItem(Items.MM_STICK_UPGRADE, 1);
+        this.addItem(Items.MM_NUT_UPGRADE, 1);
+      }
     }
 
     if (settings.sharedHookshot) {
@@ -958,6 +971,10 @@ class LogicPassWorldTransform {
       this.replaceItem(Items.OOT_MASK_SPOOKY, Items.SHARED_MASK_SPOOKY);
     } else if (settings.spookyMaskMm) {
       this.addItem(Items.MM_MASK_SPOOKY);
+    }
+
+    if (settings.adultMaskMm) {
+      this.addItem(Items.MM_MASK_ADULT);
     }
 
     if (settings.sharedSongElegy) {
@@ -1206,6 +1223,10 @@ class LogicPassWorldTransform {
       this.shareItems(SharedItemGroups.PLATINUM_TOKEN, 'max');
     }
 
+    if (settings.sharedShovel) {
+      this.shareItems(SharedItemGroups.SHOVEL, 'max');
+    }
+
     if (settings.sharedOcarinaButtons) {
       this.shareItems(SharedItemGroups.OCARINA_BUTTONS, 'max');
     }
@@ -1324,7 +1345,7 @@ class LogicPassWorldTransform {
   private removeWorldLocations(worldId: number, locs: string[]) {
     const world = this.state.worlds[worldId];
     for (const loc of locs) {
-      delete world.checks[loc];
+      world.checkItems.delete(loc);
       delete world.regions[loc];
       world.locations.delete(loc);
       this.fixedLocations.delete(makeLocation(loc, worldId));
@@ -1350,23 +1371,23 @@ class LogicPassWorldTransform {
     }
   }
 
-  private filterLocations(value: 'none' | 'all' | 'overworld' | 'dungeons', type: WorldCheckType, game: 'oot' | 'mm') {
+  private filterLocations(value: 'none' | 'all' | 'overworld' | 'dungeons', type: CheckType, game: 'oot' | 'mm') {
     if (value === 'all') {
       return;
     }
 
     let locationsToRemove: string[];
     if (value === 'overworld') {
-      locationsToRemove = POOL[game].filter((x: any) => x.type === type && isLocationInDungeon(x.scene)).map((x: any) => gameId(game, x.location, ' ')) as string[];
+      locationsToRemove = CHECKS.filter(x => x.game === game && x.type === type && isLocationInDungeon(x.scene)).map(x => x.location);
     } else if (value === 'dungeons') {
-      locationsToRemove = POOL[game].filter((x: any) => x.type === type && !isLocationInDungeon(x.scene)).map((x: any) => gameId(game, x.location, ' ')) as string[];
+      locationsToRemove = CHECKS.filter(x => x.game === game && x.type === type && !isLocationInDungeon(x.scene)).map(x => x.location);
     } else {
-      locationsToRemove = POOL[game].filter((x: any) => x.type === type).map((x: any) => gameId(game, x.location, ' ')) as string[];
+      locationsToRemove = CHECKS.filter(x => x.game === game && x.type === type).map(x => x.location);
     }
     this.removeLocations(locationsToRemove);
   }
 
-  private filterLocationsBool(value: boolean, type: WorldCheckType, game: 'oot' | 'mm') {
+  private filterLocationsBool(value: boolean, type: CheckType, game: 'oot' | 'mm') {
     this.filterLocations(value ? 'all' : 'none', type, game);
   }
 
@@ -1429,8 +1450,8 @@ class LogicPassWorldTransform {
     this.filterLocations(this.state.settings.shufflePotsMm, 'pot', 'mm');
 
     if (settings.goal === 'triforce' || settings.goal === 'triforce3') {
-      const potsGanonTower = POOL.oot.filter((x: any) => x.type === 'pot' && x.scene === 'GANON_TOWER').map((x: any) => gameId('oot', x.location, ' ')) as string[];
-      const potsMajora = POOL.mm.filter((x: any) => x.type === 'pot' && x.scene === 'LAIR_MAJORA').map((x: any) => gameId('mm', x.location, ' ')) as string[];
+      const potsGanonTower = CHECKS.filter(x => x.type === 'pot' && x.scene === 'OOT_GANON_TOWER').map(x => x.location);
+      const potsMajora = CHECKS.filter(x => x.type === 'pot' && x.scene === 'MM_LAIR_MAJORA').map(x => x.location);
       this.removeLocations(potsGanonTower);
       this.removeLocations(potsMajora);
     }
@@ -1469,7 +1490,7 @@ class LogicPassWorldTransform {
     this.filterLocations(this.state.settings.shuffleGrassMm, 'grass', 'mm');
 
     if(!this.state.settings.shuffleTFGrassMm) {
-      const grassTerminaField = POOL.mm.filter((x: any) => x.type === 'grass' && x.scene === 'TERMINA_FIELD').map((x: any) => gameId('mm', x.location, ' ')) as string[];
+      const grassTerminaField = CHECKS.filter(x => x.type === 'grass' && x.scene === 'MM_TERMINA_FIELD').map(x => x.location);
       this.removeLocations(grassTerminaField);
     }
   }
@@ -1478,8 +1499,21 @@ class LogicPassWorldTransform {
     this.filterLocationsBool(this.state.settings.shuffleRocksOot, 'rock', 'oot');
     this.filterLocations(this.state.settings.shuffleRocksMm, 'rock', 'mm');
 
-    if (!this.state.settings.bootsIronMm) {
-      /* Remove water rocks if iron boots are not available */
+    const blastMaskChild = this.state.settings.mmAgeReqChildMaskBlast;
+    const blastMaskAdult = this.state.settings.mmAgeReqAdultMaskBlast;
+
+    const ironBootsChild = this.state.settings.mmAgeReqChildBootsIron;
+    const ironBootsAdult = this.state.settings.mmAgeReqAdultBootsIron;
+
+    const blastMaskAndIronBootsDifferentAges =
+        (blastMaskChild && ironBootsAdult) ||
+        (blastMaskAdult && ironBootsChild);
+
+    if (
+        !this.state.settings.bootsIronMm ||
+        blastMaskAndIronBootsDifferentAges
+    ) {
+      /* Remove water rocks if iron boots are not available, or if Blast Mask and Iron Boots require different ages */
       this.removeLocations(MM_WATER_ROCKS);
     }
   }
@@ -1495,7 +1529,7 @@ class LogicPassWorldTransform {
 
     if (this.state.settings.logic === 'allLocations' && !this.state.settings.tricks.includes('MM_GORON_BOMB_JUMP') && this.state.settings.hookshotAnywhereMm !== 'logical') {
       /* Can't reach Gorman track trees */
-      const locs = POOL.mm.filter((x: any) => x.type === 'tree' && x.scene === 'GORMAN_TRACK').map((x: any) => gameId('mm', x.location, ' ')) as string[];
+      const locs = CHECKS.filter(x => x.type === 'tree' && x.scene === 'MM_GORMAN_TRACK').map(x => x.location);
       this.removeLocations(locs);
     }
   }
@@ -1508,6 +1542,13 @@ class LogicPassWorldTransform {
   private filterChecksSoil() {
     this.filterLocationsBool(this.state.settings.shuffleSoilOot, 'soil', 'oot');
     this.filterLocations(this.state.settings.shuffleSoilMm, 'soil', 'mm');
+  }
+
+  private filterChecksGossipFairies() {
+    this.filterLocations(this.state.settings.shuffleGossipFairiesOot, 'gossip', 'oot');
+    this.filterLocations(this.state.settings.shuffleGossipBigFairiesOot, 'gossip-big', 'oot');
+    this.filterLocations(this.state.settings.shuffleGossipFairiesMm, 'gossip', 'mm');
+    this.filterLocations(this.state.settings.shuffleGossipBigFairiesMm, 'gossip-big', 'mm');
   }
 
   private filterChecksWonder() {
@@ -1564,7 +1605,7 @@ class LogicPassWorldTransform {
   }
 
   private filterChecksFairySpots() {
-    this.filterLocationsBool(this.state.settings.fairySpotShuffleOot, 'fairy_spot', 'oot');
+    this.filterLocationsBool(this.state.settings.fairySpotShuffleOot, 'fairy-spot', 'oot');
   }
 
   run() {
@@ -1592,6 +1633,7 @@ class LogicPassWorldTransform {
     this.filterChecksRocks();
     this.filterChecksTrees();
     this.filterChecksBushes();
+    this.filterChecksGossipFairies();
     this.filterChecksWonder();
     this.filterChecksButterflies();
     this.filterChecksBoulders();
@@ -1696,6 +1738,14 @@ class LogicPassWorldTransform {
       this.addItem(Items.MM_TRANSCENDENT_FAIRY);
     }
 
+    /* Add shovel(s) */
+    if (settings.shovelOot) {
+      this.addItem(Items.OOT_SHOVEL);
+    }
+    if (settings.shovelMm) {
+      this.addItem(Items.MM_SHOVEL);
+    }
+
     /* Add ocarina buttons */
     if (settings.ocarinaButtonsShuffleOot) {
       this.addItem(Items.OOT_BUTTON_A);
@@ -1714,12 +1764,16 @@ class LogicPassWorldTransform {
     }
 
     /* Add clocks */
-    if (this.state.settings.clocks) {
+    if (this.state.settings.clocksMm) {
       if (this.state.settings.progressiveClocks === 'separate') {
         this.addItems(ItemGroups.CLOCKS);
       } else {
         this.addItem(Items.MM_CLOCK, 5);
       }
+    }
+
+    if (this.state.settings.clocksOot !== 'none') {
+      this.addItem(Items.OOT_CLOCK);
     }
 
     /* Handle extra wallets */
@@ -1874,7 +1928,7 @@ class LogicPassWorldTransform {
       if (srp.has('Ganon_Spirit')) this.keyRing(worldId, Items.OOT_RUPEE_SILVER_GANON_SPIRIT, Items.OOT_POUCH_SILVER_GANON_SPIRIT);
     }
 
-    if (settings.zoraKing === 'open' && !settings.sharedBottles) {
+    if (settings.zoraKing === 'open') {
       this.replaceItem(Items.OOT_BOTTLE_RUTO_LETTER, Items.OOT_BOTTLE_EMPTY);
       this.replaceItem(Items.MM_BOTTLE_RUTO_LETTER, Items.MM_BOTTLE_EMPTY);
       this.replaceItem(Items.SHARED_BOTTLE_RUTO_LETTER, Items.SHARED_BOTTLE_EMPTY);
@@ -1968,6 +2022,11 @@ class LogicPassWorldTransform {
     case 'plentiful':
       this.plentifulPool();
       break;
+    }
+
+    /* Add extra OoT bottles */
+    if (settings.extraBottlesOot && !settings.sharedBottles) {
+      this.addItem(Items.OOT_BOTTLE_EMPTY, 2);
     }
 
     /* handle random bottle contents */
@@ -2069,8 +2128,7 @@ class LogicPassWorldTransform {
     for (const pi of this.pool.keys()) {
       if (this.state.itemProperties.junk.has(pi.item) && ItemHelpers.isItemConsumable(pi.item)) {
         for (const loc of this.locsByItem.get(pi) || []) {
-          const world = this.state.worlds[locationData(loc).world as number];
-          if (isLocationRenewable(world, loc) && !this.fixedLocations.has(loc)) {
+          if (isLocationRenewable(loc) && !this.fixedLocations.has(loc)) {
             countMapAdd(renewableJunks, pi);
           }
         }
@@ -2085,10 +2143,10 @@ class LogicPassWorldTransform {
 
     /* Handle fixed locations */
     for (const loc of this.fixedLocations) {
-      const worldId = locationData(loc).world as number;
+      const locD = locationData(loc);
+      const worldId = locD.world as number;
       const world = this.state.worlds[worldId];
-      const check = world.checks[locationData(loc).id];
-      const { item } = check;
+      const item = world.checkItems.get(locD.id)!;
       const pi = makePlayerItem(item, worldId);
       this.removePlayerItem(pi, 1);
       countMapAdd(allItems, pi);

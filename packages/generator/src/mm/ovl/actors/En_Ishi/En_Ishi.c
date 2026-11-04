@@ -316,9 +316,9 @@ void EnIshi_SpawnDustBoulder(Actor* thisx, PlayState* play) {
 
 int EnIshi_DropCustom(EnIshi* this, PlayState* play)
 {
-    if (Xflag_IsShuffled(&this->xflag))
+    if (this->xflag != XFLAGID_NONE)
     {
-        EnItem00_DropCustom(play, &this->actor.world.pos, &this->xflag);
+        EnItem00_DropCustomEx(play, &this->actor.world.pos, this->xflag);
         return true;
     }
 
@@ -326,8 +326,13 @@ int EnIshi_DropCustom(EnIshi* this, PlayState* play)
 }
 
 void EnIshi_DropItem(EnIshi* this, PlayState* play) {
-    if (EnIshi_DropCustom(this, play))
+    Vec3f pos = GET_PLAYER(play)->actor.world.pos;
+    pos.y += 20.0f;
+
+    if (this->xflag != XFLAGID_NONE) {
+        EnItem00_DropCustomNoInertiaEx(play, &pos, this->xflag);
         return;
+    }
 
     if ((ENISHI_GET_SIZE_FLAG(&this->actor) == ISHI_SIZE_SMALL_ROCK) &&
         !ENISHI_GET_IGNORE_DROP_TABLE_FLAG(&this->actor)) {
@@ -417,70 +422,6 @@ s32 EnIshi_IsUnderwater(EnIshi* this, PlayState* play) {
     }
 }
 
-static void EnIshi_Alias(Xflag* xf)
-{
-    switch (xf->sceneId)
-    {
-    case SCE_MM_GORON_SHRINE:
-        if (xf->setupId == 1)
-        {
-            xf->setupId = 0;
-            xf->id -= 5;
-        }
-        break;
-    case SCE_MM_ZORA_CAPE:
-        xf->setupId = 0;
-        break;
-    case SCE_MM_GREAT_BAY_COAST:
-        if (xf->setupId == 1)
-        {
-            xf->setupId = 0;
-            switch (xf->id)
-            {
-            case 73: xf->id = 77; break;
-            case 74: xf->id = 70; break;
-            case 75: xf->id = 86; break;
-            case 76: xf->id = 78; break;
-            case 77: xf->id = 71; break;
-            case 78: xf->id = 74; break;
-            case 79: xf->id = 72; break;
-            case 80: xf->id = 94; break;
-            case 81: xf->id = 72; break;
-            case 82: xf->id = 76; break;
-            case 83: xf->id = 79; break;
-            case 84: xf->id = 75; break;
-            case 85: xf->id = 89; break;
-            case 86: xf->id = 69; break;
-            case 87: xf->id = 91; break;
-            case 88: xf->id = 90; break;
-            case 89: xf->id = 66; break;
-            case 90: xf->id = 80; break;
-            case 91: xf->id = 88; break;
-            case 92: xf->id = 92; break;
-            case 93: xf->id = 68; break;
-            case 94: xf->id = 93; break;
-            case 95: xf->id = 67; break;
-            case 96: xf->id = 81; break;
-            case 97: xf->id = 84; break;
-            case 98: xf->id = 85; break;
-            case 99: xf->id = 83; break;
-            case 100: xf->id = 87; break;
-            case 101: xf->id = 103; break;
-            case 102: xf->id = 82; break;
-            case 103: xf->id = 99; break;
-            case 104: xf->id = 97; break;
-            case 105: xf->id = 95; break;
-            case 106: xf->id = 98; break;
-            case 107: xf->id = 96; break;
-            case 108: xf->id = 102; break;
-            case 109: xf->id = 101; break;
-            case 110: xf->id = 100; break;
-            }
-        }
-        break;
-    }
-}
-
 void EnIshi_Init(Actor* thisx, PlayState* play) {
     EnIshi* this = (EnIshi*)thisx;
     s32 rockSize = ENISHI_GET_SIZE_FLAG(&this->actor);
@@ -490,9 +431,10 @@ void EnIshi_Init(Actor* thisx, PlayState* play) {
         this->flags |= ISHI_FLAG_CUTSCENE_ROCK;
     }
 
-    if (comboXflagInit(&this->xflag, &this->actor, play)) {
-        EnIshi_Alias(&this->xflag);
-    }
+    this->xflag = Xflag_InitEx(&this->actor, play);
+    if (!Xflag_IsShuffledEx(this->xflag))
+        this->xflag = XFLAGID_NONE;
+
     Actor_ProcessInitChain(&this->actor, sInitChain[rockSize]);
 
     if (play->csCtx.state != CS_STATE_IDLE) {
@@ -694,6 +636,14 @@ void EnIshi_Thrown(EnIshi* this, PlayState* play) {
     Vec3f pos;
     s32 colliderATHit = (this->collider.base.atFlags & AT_HIT) != 0;
 
+    /* Preserve items from throwable silver boulders that fall out of bounds. */
+    if (rockSize == ISHI_SIZE_SILVER_BOULDER &&
+        this->actor.world.pos.y < this->actor.home.pos.y - 1000.0f) {
+        EnIshi_DropItem(this, play);
+        Actor_Kill(&this->actor);
+        return;
+    }
+
     if (colliderATHit) {
         this->collider.base.atFlags &= ~AT_HIT;
     }
@@ -814,19 +764,22 @@ void EnIshi_Kill(EnIshi* this, PlayState* play) {
 void EnIshi_Update(Actor* thisx, PlayState* play) {
     EnIshi* this = (EnIshi*)thisx;
 
+    if (Xflag_Get(this->xflag))
+        this->xflag = XFLAGID_NONE;
+
     this->actionFunc(this, play);
 }
 
 static int EnIshi_CAMC(EnIshi* this, PlayState* play) {
     ComboItemOverride o;
 
-    if (!Xflag_IsShuffled(&this->xflag))
+    if (this->xflag == XFLAGID_NONE)
         return CSMC_NORMAL;
 
     if (!csmcEnabled())
         return CSMC_MAJOR;
 
-    comboXflagItemOverride(&o, &this->xflag, 0);
+    Xflag_ItemOverride(&o, this->xflag, GI_NONE);
     return csmcFromItemCloaked(o.gi, o.cloakGi);
 }
 

@@ -1,16 +1,20 @@
 #include <combo.h>
-#include <combo/item.h>
-#include <combo/net.h>
-#include <combo/dma.h>
-#include <combo/entrance.h>
-#include <combo/io.h>
-#include <combo/config.h>
-#include <combo/shop.h>
-#include <combo/global.h>
-#include <combo/multi.h>
 #include <combo/actor.h>
+#include <combo/config.h>
+#include <combo/dma.h>
+#include <combo/dungeon.h>
+#include <combo/entrance.h>
+#include <combo/global.h>
 #include <combo/inventory.h>
+#include <combo/io.h>
+#include <combo/item.h>
 #include <combo/mark.h>
+#include <combo/multi.h>
+#include <combo/play.h>
+#include <combo/shop.h>
+#include <combo/checks.h>
+#include <combo/xflags.h>
+#include <combo/age.h>
 
 #if defined(GAME_OOT)
 u16 gMmMaxRupees[] = { 0, 200, 500, 999 };
@@ -32,24 +36,28 @@ int Item_SafeToReceive(PlayState* play)
     /* Used to track shop interactions, interferes with the message system */
     if (YREG(31) != 0)
         return 0;
+    if (play->shootingGalleryStatus)
+        return 0;
 #endif
-    if (play->transitionTrigger)
+
+    if (play->transitionTrigger || gSaveContext.gameMode || (gSaveContext.minigameState == 1) || Player_InCsMode(play) || Message_GetState(&play->msgCtx))
         return 0;
 
-    if (gSaveContext.gameMode || (gSaveContext.minigameState == 1))
-        return 0;
-    if (Message_GetState(&play->msgCtx) != 0)
-        return 0;
     link = GET_PLAYER(play);
     if (link->stateFlags1 & (PLAYER_ACTOR_STATE_GET_ITEM | PLAYER_ACTOR_STATE_FROZEN | PLAYER_ACTOR_STATE_CUTSCENE_FROZEN | PLAYER_ACTOR_STATE_EPONA | PLAYER_ACTOR_STATE_GROTTO))
         return 0;
+
+#if defined(GAME_OOT)
+    if (link->stateFlags2 & PLAYER_STATE2_CRAWLING)
+        return 0;
+#endif
 
     return 1;
 }
 
 int Item_IsPlayerSelf(u8 playerId)
 {
-    if (playerId == PLAYER_SELF || playerId == PLAYER_ALL || playerId == gComboConfig.playerId)
+    if (playerId == PLAYER_SELF || playerId == PLAYER_ALL || playerId == Multi_WorldID())
         return 1;
     return 0;
 }
@@ -150,6 +158,34 @@ static u8 getForeignBottle(u8 itemId)
     }
 }
 
+static void syncBottleSlotEquips(u8* buttonItems, u8* cButtonSlots, int slot, u8 oldItem, u8 newItem)
+{
+    for (int i = 0; i < 3; ++i)
+    {
+        if (cButtonSlots[i] == slot && buttonItems[i] == oldItem)
+            buttonItems[i] = newItem;
+    }
+}
+
+static void syncBottleSlot(int slot, u8 newItem)
+{
+    u8 oldItem;
+
+    oldItem = gForeignSave.info.inventory.items[slot];
+    if (oldItem == newItem)
+        return;
+
+    gForeignSave.info.inventory.items[slot] = newItem;
+
+#if defined(GAME_OOT)
+    syncBottleSlotEquips(&gMmSave.info.itemEquips.buttonItems[0][1], &gMmSave.info.itemEquips.cButtonSlots[0][1], slot, oldItem, newItem);
+#else
+    syncBottleSlotEquips(&gOotSave.info.equips.buttonItems[1], &gOotSave.info.equips.cButtonSlots[0], slot, oldItem, newItem);
+    syncBottleSlotEquips(&gOotSave.info.childEquips.buttonItems[1], &gOotSave.info.childEquips.cButtonSlots[0], slot, oldItem, newItem);
+    syncBottleSlotEquips(&gOotSave.info.adultEquips.buttonItems[1], &gOotSave.info.adultEquips.cButtonSlots[0], slot, oldItem, newItem);
+#endif
+}
+
 void comboSyncItems(void)
 {
     if (Config_Flag(CFG_SHARED_BOWS))
@@ -221,10 +257,10 @@ void comboSyncItems(void)
 
     if (Config_Flag(CFG_SHARED_BOTTLES))
     {
-        gForeignSave.info.inventory.items[ITS_FOREIGN_BOTTLE] = getForeignBottle(gSave.info.inventory.items[ITS_NATIVE_BOTTLE]);
-        gForeignSave.info.inventory.items[ITS_FOREIGN_BOTTLE2] = getForeignBottle(gSave.info.inventory.items[ITS_NATIVE_BOTTLE2]);
-        gForeignSave.info.inventory.items[ITS_FOREIGN_BOTTLE3] = getForeignBottle(gSave.info.inventory.items[ITS_NATIVE_BOTTLE3]);
-        gForeignSave.info.inventory.items[ITS_FOREIGN_BOTTLE4] = getForeignBottle(gSave.info.inventory.items[ITS_NATIVE_BOTTLE4]);
+        syncBottleSlot(ITS_FOREIGN_BOTTLE, getForeignBottle(gSave.info.inventory.items[ITS_NATIVE_BOTTLE]));
+        syncBottleSlot(ITS_FOREIGN_BOTTLE2, getForeignBottle(gSave.info.inventory.items[ITS_NATIVE_BOTTLE2]));
+        syncBottleSlot(ITS_FOREIGN_BOTTLE3, getForeignBottle(gSave.info.inventory.items[ITS_NATIVE_BOTTLE3]));
+        syncBottleSlot(ITS_FOREIGN_BOTTLE4, getForeignBottle(gSave.info.inventory.items[ITS_NATIVE_BOTTLE4]));
 #if defined (GAME_OOT)
         if (gOotExtraTrade.adult & (1 << XITEM_OOT_ADULT_BOTTLE))
         {
@@ -232,7 +268,7 @@ void comboSyncItems(void)
             {
                 gOotExtraItems.bottleAdultSlot = gSave.info.inventory.items[ITS_OOT_TRADE_ADULT];
             }
-            gForeignSave.info.inventory.items[ITS_MM_BOTTLE5] = getForeignBottle(gOotExtraItems.bottleAdultSlot);
+            syncBottleSlot(ITS_MM_BOTTLE5, getForeignBottle(gOotExtraItems.bottleAdultSlot));
         }
         if (gOotExtraTrade.child & (1 << XITEM_OOT_CHILD_BOTTLE))
         {
@@ -240,30 +276,18 @@ void comboSyncItems(void)
             {
                 gOotExtraItems.bottleChildSlot = gSave.info.inventory.items[ITS_OOT_TRADE_CHILD];
             }
-            gForeignSave.info.inventory.items[ITS_MM_BOTTLE6] = getForeignBottle(gOotExtraItems.bottleChildSlot);
+            syncBottleSlot(ITS_MM_BOTTLE6, getForeignBottle(gOotExtraItems.bottleChildSlot));
         }
-        reloadSlotMm(NULL, ITS_FOREIGN_BOTTLE);
-        reloadSlotMm(NULL, ITS_FOREIGN_BOTTLE2);
-        reloadSlotMm(NULL, ITS_FOREIGN_BOTTLE3);
-        reloadSlotMm(NULL, ITS_FOREIGN_BOTTLE4);
-        reloadSlotMm(NULL, ITS_MM_BOTTLE5);
-        reloadSlotMm(NULL, ITS_MM_BOTTLE6);
 #else
-        reloadSlotOot(NULL, ITS_FOREIGN_BOTTLE);
-        reloadSlotOot(NULL, ITS_FOREIGN_BOTTLE2);
-        reloadSlotOot(NULL, ITS_FOREIGN_BOTTLE3);
-        reloadSlotOot(NULL, ITS_FOREIGN_BOTTLE4);
         gOotExtraItems.bottleAdultSlot = getForeignBottle(gSave.info.inventory.items[ITS_MM_BOTTLE5]);
         gOotExtraItems.bottleChildSlot = getForeignBottle(gSave.info.inventory.items[ITS_MM_BOTTLE6]);
         if (comboIsTradeBottleOot(gOotSave.info.inventory.items[ITS_OOT_TRADE_ADULT]))
         {
-            gOotSave.info.inventory.items[ITS_OOT_TRADE_ADULT] = gOotExtraItems.bottleAdultSlot;
-            reloadSlotOot(NULL, ITS_OOT_TRADE_ADULT);
+            syncBottleSlot(ITS_OOT_TRADE_ADULT, gOotExtraItems.bottleAdultSlot);
         }
         if (comboIsTradeBottleOot(gOotSave.info.inventory.items[ITS_OOT_TRADE_CHILD]))
         {
-            gOotSave.info.inventory.items[ITS_OOT_TRADE_CHILD] = gOotExtraItems.bottleChildSlot;
-            reloadSlotOot(NULL, ITS_OOT_TRADE_CHILD);
+            syncBottleSlot(ITS_OOT_TRADE_CHILD, gOotExtraItems.bottleChildSlot);
         }
 #endif
     }
@@ -271,8 +295,9 @@ void comboSyncItems(void)
     if (Config_Flag(CFG_CROSS_GAME_FW))
     {
 #if defined(GAME_MM)
-        RespawnData* fw = &gCustomSave.fw[gOotSave.age];
-        OotFaroreWind* foreignFw = &gForeignSave.info.fw;
+        u8 fwAge = comboMmFwAge();
+        RespawnData* fw = &gCustomSave.fw[fwAge];
+        OotFaroreWind* foreignFw = Age_GetFaroreOot(fwAge);
 
         if (fw->data <= 0 || fw->entrance != ENTR_FW_CROSS)
         {
@@ -285,8 +310,9 @@ void comboSyncItems(void)
             foreignFw->entrance = ENTR_FW_CROSS;
         }
 #else
-        RespawnData* foreignFw = &gSharedCustomSave.mm.fw[gSave.age];
-        OotFaroreWind* fw = &gSave.info.fw;
+        u8 fwAge = gOotSave.age;
+        RespawnData* foreignFw = &gSharedCustomSave.mm.fw[fwAge];
+        OotFaroreWind* fw = Age_GetFaroreOot(fwAge);
 
         if (fw->set <= 0 || fw->entrance != ENTR_FW_CROSS)
         {
@@ -408,8 +434,12 @@ void comboInitOverride(void)
     sComboOverridesCacheCursor = 0;
 }
 
-u8 comboSceneKey(u8 sceneId)
+u8 Play_SceneKey(u8 sceneId)
 {
+#if defined(GAME_OOT)
+    sceneId = Play_ExpandMQ(gPlay, sceneId);
+#endif
+
 #if defined(GAME_MM)
     switch (sceneId)
     {
@@ -432,22 +462,6 @@ u8 comboSceneKey(u8 sceneId)
 #endif
 
     return sceneId;
-}
-
-static u32 makeOverrideKey(const ComboItemQuery* q)
-{
-    u32 key;
-
-    if (q->ovType == OV_NONE)
-        return 0;
-
-    key = 0;
-    key |= (((u32)(q->ovType & 0xff)) << 24);
-    key |= (((u32)(q->sceneId & 0xff)) << 16);
-    key |= (((u32)(q->roomId & 0xff)) << 8);
-    key |= (((u32)(q->id & 0xff)) << 0);
-
-    return key;
 }
 
 static int overrideData(ComboOverrideData* data, u32 key)
@@ -522,7 +536,7 @@ void comboItemOverride(ComboItemOverride* dst, const ComboItemQuery* q)
         isOverride = 0;
     else
     {
-        isOverride = overrideData(&data, makeOverrideKey(q));
+        isOverride = overrideData(&data, Checks_MakeOverrideKey(q));
     }
 
     if (isOverride)
@@ -553,12 +567,18 @@ void comboItemOverride(ComboItemOverride* dst, const ComboItemQuery* q)
 
 int comboAddItemRawEx(PlayState* play, const ComboItemQuery* q, int updateText)
 {
+    u32 key;
     ComboItemOverride o;
-    NetContext* net;
     int count;
 
     comboItemOverride(&o, q);
     count = 0;
+
+    if (q->ovType == OV_NONE)
+        key = 0;
+    else
+        key = Checks_MakeOverrideKey(q);
+    Multi_InfoItem(key, o.gi, !!Item_IsPlayerSelf(o.player));
 
     /* Add the item if it's for us */
     if (Item_IsPlayerSelf(o.player))
@@ -574,11 +594,11 @@ int comboAddItemRawEx(PlayState* play, const ComboItemQuery* q, int updateText)
         Mark_Set(play, q->ovType, q->sceneId, q->roomId, q->id);
         if (Config_Flag(CFG_MULTIPLAYER) && (q->ovFlags & OVF_RENEW))
         {
-            for (int i = 0; i < ARRAY_COUNT(gSharedCustomSave.netGiSkip); ++i)
+            for (int i = 0; i < ARRAY_COUNT(gSharedCustomSave.multi.giSkip); ++i)
             {
-                if (gSharedCustomSave.netGiSkip[i] == GI_NONE)
+                if (gSharedCustomSave.multi.giSkip[i] == GI_NONE)
                 {
-                    gSharedCustomSave.netGiSkip[i] = o.gi;
+                    gSharedCustomSave.multi.giSkip[i] = o.gi;
                     break;
                 }
             }
@@ -586,24 +606,8 @@ int comboAddItemRawEx(PlayState* play, const ComboItemQuery* q, int updateText)
     }
 
     /* Send the item on the network */
-    if (Config_Flag(CFG_MULTIPLAYER) && q->ovType != OV_NONE)
-    {
-        net = netMutexLock();
-        netWaitCmdClear();
-        bzero(&net->cmdOut, sizeof(net->cmdOut));
-        net->cmdOut.op = NET_OP_ITEM_SEND;
-        net->cmdOut.itemSend.playerFrom = gComboConfig.playerId;
-        net->cmdOut.itemSend.playerTo = o.player;
-#if defined(GAME_OOT)
-        net->cmdOut.itemSend.game = 0;
-#else
-        net->cmdOut.itemSend.game = 1;
-#endif
-        net->cmdOut.itemSend.gi = comboItemResolve(play, o.gi);
-        net->cmdOut.itemSend.key = makeOverrideKey(q);
-        net->cmdOut.itemSend.flags = (s16)q->ovFlags;
-        netMutexUnlock();
-    }
+    if (q->ovType != OV_NONE)
+        Multi_SendItem(o.player, o.gi, (s16)q->ovFlags, Checks_MakeOverrideKey(q));
 
     return count;
 }
@@ -679,6 +683,11 @@ u8 comboItemType(s16 gi)
 
 Actor_ItemDecoy* Item_AddWithDecoy(PlayState* play, const ComboItemQuery* q)
 {
+    return Item_AddWithDecoyNamed(play, q, NULL);
+}
+
+Actor_ItemDecoy* Item_AddWithDecoyNamed(PlayState* play, const ComboItemQuery* q, const char* name)
+{
     int count;
     Actor_ItemDecoy* decoy;
     ComboItemOverride o;
@@ -692,8 +701,11 @@ Actor_ItemDecoy* Item_AddWithDecoy(PlayState* play, const ComboItemQuery* q)
     decoy->gi = o.gi;
     decoy->player = o.player;
     decoy->playerFrom = o.playerFrom;
+    if (name)
+        memcpy(decoy->playerName, name, sizeof(decoy->playerName));
+    else
+        memset(decoy->playerName, 0, sizeof(decoy->playerName));
     g.decoysCount++;
 
     return decoy;
 }
-

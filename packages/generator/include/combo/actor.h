@@ -127,7 +127,7 @@ ASSERT_OFFSET(ActorShape, feetPos,          0x18);
 typedef struct Actor
 {
     u16         id;
-    u8          type;
+    u8          category;
     u8          room;
     s32         flags;
     PosRot      home;
@@ -393,7 +393,7 @@ AttentionRangeType;
 #endif
 
 ASSERT_OFFSET(Actor, id,        0x000);
-ASSERT_OFFSET(Actor, type,      0x002);
+ASSERT_OFFSET(Actor, category,  0x002);
 ASSERT_OFFSET(Actor, room,      0x003);
 ASSERT_OFFSET(Actor, home,      0x008);
 ASSERT_OFFSET(Actor, params,    0x01c);
@@ -458,6 +458,7 @@ s32 Actor_SetPlayerImpact(PlayState* play, PlayerImpactType type, s32 timer, f32
 void Actor_RequestQuakeAndRumble(Actor* actor, PlayState* play, s16 quakeY, s16 quakeDuration);
 #endif
 void Actor_SetClosestSecretDistance(Actor* actor, PlayState* play);
+void Actor_GetScreenPos(PlayState* play, Actor* actor, s16* x, s16* y);
 
 #if defined(GAME_OOT)
 typedef enum NaviEnemy {
@@ -622,5 +623,18 @@ extern Gfx D_801AEF88[];
 #endif
 
 void Actor_WorldToActorCoords(Actor* actor, Vec3f* dest, Vec3f* pos);
+void Actor_ProjectPos(PlayState* play, Vec3f* src, Vec3f* xyzDest, f32* cappedInvWDest);
+s32 Actor_OfferOcarinaInteraction(Actor* actor, PlayState* play, f32 xzRange, f32 yRange);
 
+#if defined(GAME_MM)
+typedef struct GameState GameState;
+s32 Actor_OcarinaInteractionAccepted(Actor* actor, GameState* gameState);
+typedef s32 (*PictoValidationFunc)(PlayState *, Actor *);
+
+typedef struct
+{
+    /* 0x000 */ Actor actor;
+    /* 0x144 */ PictoValidationFunc validationFunc;
+} PictoActor;
+#endif
 #endif

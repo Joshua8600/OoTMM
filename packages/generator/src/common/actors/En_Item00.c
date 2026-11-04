@@ -11,9 +11,6 @@
 # define DUMMY_MSG 0x52
 #endif
 
-void EnItem00_AliasFreestandingRupee(Xflag* xflag);
-void EnItem00_AliasFreestandingHeart(Xflag* xflag);
-
 static void EnItem00_DrawXflag(Actor_EnItem00* this, PlayState* play)
 {
     ComboItemOverride o;
@@ -28,7 +25,7 @@ static void EnItem00_DrawXflag(Actor_EnItem00* this, PlayState* play)
     }
     else
     {
-        comboXflagItemOverride(&o, &this->xflag, 0);
+        Xflag_ItemOverride(&o, this->xflag, GI_NONE);
         gi = o.gi;
         cloakGi = o.cloakGi;
         this->xflagGi = gi;
@@ -46,6 +43,85 @@ static void EnItem00_DrawXflag(Actor_EnItem00* this, PlayState* play)
     Draw_Gi(play, &this->actor, gi, 0);
 }
 
+static s32 EnItem00_IsBoomerangHeld(Actor* item, PlayState* play)
+{
+#if defined(GAME_OOT)
+    Actor* boom = play->actorCtx.actors[ACTORCAT_MISC].first;
+#else
+    Actor* boom = play->actorCtx.actors[ACTORCAT_ITEMACTION].first;
+#endif
+
+    for (; boom; boom = boom->next)
+    {
+        if (!boom->update)
+            continue;
+
+#if defined(GAME_OOT)
+        if (boom->id == ACTOR_EN_BOOM &&
+            *(Actor**)((u8*)boom + 0x1d0) == item)
+            return 1;
+#else
+        if ((boom->id == ACTOR_EN_BOOM &&
+             *(Actor**)((u8*)boom + 0x1c8) == item) ||
+            (boom->id == ACTOR_CUSTOM_BOOMERANG &&
+             *(Actor**)((u8*)boom + 0x1d0) == item))
+            return 1;
+#endif
+    }
+
+    return 0;
+}
+
+static void EnItem00_ReturnHome(Actor_EnItem00* this)
+{
+    Actor* a = &this->actor;
+    a->world.pos = a->prevPos = a->home.pos;
+    a->velocity = (Vec3f){0};
+    a->colChkInfo.displacement = a->velocity;
+    a->speed = 0.0f;
+    a->bgCheckFlags &= ~(BGCHECKFLAG_GROUND | BGCHECKFLAG_GROUND_TOUCH | BGCHECKFLAG_GROUND_LEAVE);
+    a->home.rot.x = 0;
+}
+
+
+void EnItem00_UpdateGuard(Actor_EnItem00* this, PlayState* play)
+{
+    Actor* a = &this->actor;
+    ActorFunc update = a->update;
+    ActorFunc draw = a->draw;
+    u32 attention = a->flags & ACTOR_FLAG_ATTENTION_ENABLED;
+    s32 canRecover = a->gravity != 0.0f && !a->parent && !this->isExtendedCollected;
+
+    if (EnItem00_IsBoomerangHeld(a, play))
+    {
+        f32 gravity = a->gravity;
+        a->gravity = 0.0f;
+        EnItem00_Update(this, play);
+        a->gravity = gravity;
+        return;
+    }
+
+    EnItem00_Update(this, play);
+
+    if (!canRecover || a->parent || this->isExtendedCollected)
+        return;
+
+    if (!a->update)
+    {
+        if (a->floorHeight > -32000.0f)
+            return;
+
+        a->update = update;
+        a->draw = draw;
+        a->flags |= attention;
+    }
+    else if (a->world.pos.y >= a->home.pos.y - 1000.0f)
+        return;
+
+    EnItem00_ReturnHome(this);
+}
+
+
 void EnItem00_InitWrapper(Actor_EnItem00* this, PlayState* play)
 {
     ComboItemOverride o;
@@ -60,24 +136,10 @@ void EnItem00_InitWrapper(Actor_EnItem00* this, PlayState* play)
     this->isExtendedMajor = 0;
 
     /* Init the xflag */
-    if (comboXflagInit(&this->xflag, &this->actor, play))
+    this->xflag = Xflag_InitEx(&this->actor, play);
+    if (Xflag_IsShuffledEx(this->xflag))
     {
-        switch (this->actor.params & 0xff)
-        {
-        case ITEM00_RUPEE_GREEN:
-        case ITEM00_RUPEE_BLUE:
-        case ITEM00_RUPEE_RED:
-            EnItem00_AliasFreestandingRupee(&this->xflag);
-            break;
-        case ITEM00_RECOVERY_HEART:
-            EnItem00_AliasFreestandingHeart(&this->xflag);
-            break;
-        }
-    }
-
-    if (Xflag_IsShuffled(&this->xflag))
-    {
-        comboXflagItemOverride(&o, &this->xflag, 0);
+        Xflag_ItemOverride(&o, this->xflag, 0);
         this->isExtended = 1;
         this->xflagGi = o.gi;
 
@@ -112,7 +174,7 @@ static void EnItem00_UpdateXflagDrop(Actor_EnItem00* this, PlayState* play)
         this->timer++;
 
     /* Update */
-    EnItem00_Update(this, play);
+    EnItem00_UpdateGuard(this, play);
 }
 
 void EnItem00_AddXflag(Actor_EnItem00* this)
@@ -122,11 +184,11 @@ void EnItem00_AddXflag(Actor_EnItem00* this)
 
     if (!this->isExtended)
     {
-        AddItem(gPlay, ITEM_RUPEE_GREEN);
+        Item_Give(gPlay, ITEM_RUPEE_GREEN);
         return;
     }
 
-    comboXflagItemQuery(&q, &this->xflag, 0);
+    Xflag_ItemQuery(&q, this->xflag, 0);
     comboItemOverride(&o, &q);
     if (!isItemFastBuy(o.gi))
     {
@@ -135,7 +197,7 @@ void EnItem00_AddXflag(Actor_EnItem00* this)
         this->isExtendedMajor = 1;
     }
     comboAddItemEx(gPlay, &q, this->isExtendedMajor);
-    comboXflagsSet(&this->xflag);
+    Xflag_Set(this->xflag);
 
     comboPlayItemFanfare(o.gi, 1);
     this->isExtendedCollected = 1;
@@ -178,9 +240,21 @@ void EnItem00_SetXflagCollectedHandler(Actor_EnItem00* this)
 
 Actor_EnItem00* EnItem00_DropCustom(PlayState* play, const Vec3f* pos, const Xflag* xflag)
 {
+    XflagID id;
+
+    id = Xflag_Lookup(xflag);
+    return EnItem00_DropCustomEx(play, pos, id);
+}
+
+
+Actor_EnItem00* EnItem00_DropCustomEx(PlayState* play, const Vec3f* pos, XflagID id)
+{
     Actor* actor;
     Actor_EnItem00* item;
     ComboItemOverride o;
+
+    if (id == XFLAGID_NONE)
+        return (Actor_EnItem00*)Item_DropCollectible(play, pos, 0x0000);
 
     /* Check if the xflag item is already spawned */
     for (actor = play->actorCtx.actors[0x08].first; actor != NULL; actor = actor->next)
@@ -188,21 +262,21 @@ Actor_EnItem00* EnItem00_DropCustom(PlayState* play, const Vec3f* pos, const Xfl
         if (actor->id != ACTOR_EN_ITEM00)
             continue;
         item = (Actor_EnItem00*)actor;
-        if (memcmp(&item->xflag, xflag, sizeof(Xflag)) == 0)
+        if (item->xflag == id)
             return NULL;
     }
 
     /* Check if the item to be spawned is literaly Nothing */
-    comboXflagItemOverride(&o, xflag, 0);
+    Xflag_ItemOverride(&o, id, GI_NONE);
     if (o.gi == GI_NOTHING)
     {
-        comboXflagsSet(xflag);
+        Xflag_Set(id);
         return NULL;
     }
 
     /* Spawn the item */
-    memcpy(&g.xflag, xflag, sizeof(Xflag));
     g.xflagOverride = TRUE;
+    g.xflagId = id;
     item = (Actor_EnItem00*)Item_DropCollectible(play, pos, 0x0000);
     g.xflagOverride = FALSE;
     if (!item)
@@ -219,6 +293,20 @@ Actor_EnItem00* EnItem00_DropCustomNoInertia(PlayState* play, const Vec3f* pos, 
     Actor_EnItem00* item;
 
     item = EnItem00_DropCustom(play, pos, xflag);
+    if (!item)
+        return NULL;
+    item->actor.speed = 0.f;
+    item->actor.velocity.x = 0.f;
+    item->actor.velocity.y = 0.f;
+    item->actor.velocity.z = 0.f;
+    return item;
+}
+
+Actor_EnItem00* EnItem00_DropCustomNoInertiaEx(PlayState* play, const Vec3f* pos, XflagID xflag)
+{
+    Actor_EnItem00* item;
+
+    item = EnItem00_DropCustomEx(play, pos, xflag);
     if (!item)
         return NULL;
     item->actor.speed = 0.f;

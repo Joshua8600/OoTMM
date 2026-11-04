@@ -81,6 +81,10 @@ Actor*  Actor_Spawn(ActorContext* actorCtx, PlayState* play, s16 actorId, float 
 
 #if defined(GAME_OOT)
 Actor*  _Actor_Spawn(ActorContext* actorCtx, PlayState* play, s16 actorId, float x, float y, float z, s16 rx, s16 ry, s16 rz, u16 variable);
+
+s16 OnePointCutscene_Init(PlayState* play, s16 csId, s16 timer, Actor* actor, s16 parentCamId);
+
+extern s32 D_8011D3AC;
 #endif
 
 #if defined(GAME_MM)
@@ -124,7 +128,7 @@ void    Flags_SetCollectible(PlayState* play, int flag);
 u32     Flags_GetSwitch(PlayState* play, int flag);
 u32     Flags_SetSwitch(PlayState* play, int flag);
 void    ClearSwitchFlag(PlayState* play, int flag);
-void    SetRoomClear(PlayState* play, int flag);
+void    Flags_SetClear(PlayState* play, int flag);
 s32     Flags_GetClear(PlayState* play, s32 roomNumber);
 
 
@@ -210,9 +214,9 @@ s8 Actor_GetPlayerExchangeItemId(PlayState* play);
 void AddMagic(PlayState* play, s16 amount);
 #endif
 
-u8 AddItem(PlayState* play, u8 itemId);
+u8 Item_Give(PlayState* play, u8 itemId);
 u8 AddItemWithIcon(PlayState* play, Player* link, const GetItem* giEntry);
-u8 GetItemCollectBehavior(s16 itemId);
+u8 Item_CheckObtainability(s16 itemId);
 void Inventory_ReplaceItem(PlayState* play, u16 oldItem, u16 newItem);
 void Inventory_UpdateBottleItem(PlayState* play, u8 item, u8 button);
 void Interface_SetDoAction(PlayState* play, u16 action);
@@ -344,7 +348,7 @@ void DeathWarp(PlayState* play);
 void DrawDungeonUnk2(void* unk);
 #endif
 
-void ActorRemove(ActorContext* ctx, Actor* actor, PlayState* play);
+void Actor_Delete(ActorContext* ctx, Actor* actor, PlayState* play);
 
 s16 RupeeValueOot(s16 count);
 s16 RupeeValueMm(s16 count);
@@ -551,6 +555,7 @@ s32 Play_ChangeCameraStatus(PlayState* this, s16 camId, s16 status);
 s16 Play_CreateSubCamera(PlayState* this);
 void Cutscene_StopManual(PlayState* play, CutsceneContext* csCtx);
 s32 Play_SetCameraAtEye(PlayState* this, s16 camId, Vec3f* at, Vec3f* eye);
+s32 _Play_SetCameraAtEye(PlayState* this, s16 camId, Vec3f* at, Vec3f* eye);
 
 #if defined(GAME_MM)
 extern u8 gSceneSeqState;
@@ -583,6 +588,7 @@ void Audio_PlaySequenceAtPos(u8 seqPlayerIndex, Vec3f* pos, u16 seqId, f32 maxDi
 s16 CutsceneManager_IsNext(s16 csId);
 void CutsceneManager_Queue(s16 csId);
 s16 CutsceneManager_Start(s16 csId, Actor* actor);
+s16 _CutsceneManager_Start(s16 csId, Actor* actor);
 s16 CutsceneManager_Stop(s16 csId);
 s16 CutsceneManager_GetCutsceneScriptIndex(s16 csId);
 s16 CutsceneManager_GetCutsceneCustomValue(s16 csId);
@@ -822,6 +828,13 @@ void Actor_PlaySfx_FlaggedCentered2(Actor* actor, u16 sfxId);
 
 #if defined(GAME_OOT)
 u32 Health_IsCritical(void);
-#else
+#endif
+#if defined(GAME_MM)
 u32 LifeMeter_IsCritical(void);
+
+f32 Math_Vec3f_StepTo(Vec3f* start, Vec3f* target, f32 speed);
+s32 Snap_ValidatePictograph(PlayState* play, Actor* actor, s32 flag, Vec3f* pos, Vec3s* rot, f32 distanceMin, f32 distanceMax, s16 angleRange);
+void EffectSsDtBubble_SpawnCustomColor(PlayState* play, Vec3f* pos, Vec3f* velocity, Vec3f* accel, Color_RGBA8* primColor, Color_RGBA8* envColor, s16 scale, s16 life, s16 randXZ);
+void Actor_SetColorFilter(Actor* actor, u16 colorFlag, u16 colorIntensityMax, u16 bufFlag, u16 duration);
+void Actor_DrawDamageEffects(PlayState* play, Actor* actor, Vec3f bodyPartsPos[], s16 bodyPartsCount, f32 effectScale, f32 frozenSteamScale, f32 effectAlpha, u8 type);
 #endif

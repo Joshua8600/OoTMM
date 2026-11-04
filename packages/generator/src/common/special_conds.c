@@ -365,7 +365,8 @@ int SpecialConds_Eval(int special)
         }
 
         if (gMmSave.info.inventory.items[ITS_MM_MASK_DEKU] == ITEM_MM_MASK_DEKU) count++;
-        if (gMmSave.info.inventory.items[ITS_MM_MASK_FIERCE_DEITY] == ITEM_MM_MASK_FIERCE_DEITY) count++;
+        if (gMmExtraItems.fierceDeityAdult & (1 << 0)) count++;
+        if (gMmExtraItems.fierceDeityAdult & (1 << 1)) count++;
     }
 
     if (cond->flags & SPF_MASKS_OOT)
@@ -469,7 +470,7 @@ int SpecialConds_Eval(int special)
 
     if (cond->flags & SPF_TRIFORCE)
     {
-        count += gTriforceCount;
+        count += gSharedCustomSave.triforcePieces;
     }
 
     if (cond->flags & SPF_COIN_RED)

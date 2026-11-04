@@ -3,7 +3,7 @@
   exits:
     "GLOBAL": "true"
     "Lost Woods Deep": "true"
-    "Sacred Meadow": "(is_child && (can_damage || can_hammer) && soul_wolfos) || is_adult || climb_anywhere || hookshot_anywhere"
+    "Sacred Meadow": "(is_child && can_kill_wolfos) || is_adult || climb_anywhere || hookshot_anywhere"
     "Wolfos Grotto": "hidden_grotto_bomb"
   events:
     RUPEES: "true"
@@ -17,7 +17,7 @@
     "GLOBAL": "true"
     "Sacred Meadow Entryway": "true"
   locations:
-    "Sacred Meadow Grotto": "soul_wolfos && (can_damage || can_hammer)"
+    "Sacred Meadow Grotto": "can_kill_wolfos"
 
 "Sacred Meadow":
   region: SACRED_MEADOW
@@ -26,7 +26,7 @@
     "Sacred Meadow Entryway": "true"
     "Sacred Meadow Forest Platform": "can_hookshot || (has_hookshot(1) && time_travel_at_will) || climb_anywhere"
     "Sacred Meadow Storms Grotto": "hidden_grotto_storms"
-    "Sacred Meadow Fairy Grotto": "true"
+    "Sacred Meadow Fairy Grotto": "has_shovel"
   locations:
     "Saria's Song": "met_zelda && is_child && soul_npc(SOUL_NPC_SARIA)"
     "Sacred Meadow Sheik Song": "is_adult && soul_npc(SOUL_NPC_SHEIK)"
@@ -36,6 +36,12 @@
     "Sacred Meadow Wonder Item Maze 3": "true"
     "Sacred Meadow Wonder Item Maze 4": "true"
     "Sacred Meadow Wonder Item Maze 5": "true"
+    "Sacred Meadow Gossip Fairy Maze 1": "gossip_fairy"
+    "Sacred Meadow Gossip Fairy Maze 2": "gossip_fairy"
+    "Sacred Meadow Gossip Fairy Deep": "gossip_fairy"
+    "Sacred Meadow Gossip Big Fairy Maze 1": "gossip_fairy_big"
+    "Sacred Meadow Gossip Big Fairy Maze 2": "gossip_fairy_big"
+    "Sacred Meadow Gossip Big Fairy Deep": "gossip_fairy_big"
   gossip:
     "Sacred Meadow Gossip Near Forest Temple": "true"
     "Sacred Meadow Gossip Atop Maze Woods Side": "true"

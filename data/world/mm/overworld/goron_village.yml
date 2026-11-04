@@ -7,7 +7,7 @@
     "Goron Shrine": "(soul_goron && first_day) || has_mask_goron || can_hammer"
   events:
     POWDER_KEG_TRIAL: "soul_medigoron && (is_spring || can_use_fire_short_range) && can_carry_keg && (has_mask_goron || (trick(MM_KEG_HOOKBUNNY) && scarecrow_hookshot && has_mask_bunny)  || (trick(MM_KEG_HOVERBUNNY) && has_hover_boots && has_mask_bunny))"
-    BUY_KEG: "soul_medigoron && event(POWDER_KEG_TRIAL) && event(TRIAL_BOULDER) && has_keg && can_use_wallet(2)"
+    BUY_KEG: "soul_medigoron && access_keg_trial && event(TRIAL_BOULDER) && has_keg && can_use_wallet(2)"
     MAGIC: "true"
     ARROWS: "true"
     BOMBS_OR_BOMBCHU: "true"
@@ -15,12 +15,12 @@
     STICKS: "true"
     RUPEES: "can_break_snowballs || (can_use_light_arrows && soul_tektite)"
   locations:
-    "Goron Village HP": "(has(DEED_SWAMP) && has(MASK_DEKU)) || short_hook_anywhere"
-    "Goron Village Scrub Deed": "soul_business_scrub && has(DEED_SWAMP) && has(MASK_DEKU)"
+    "Goron Village HP": "(has_swamp_title_deed && has_mask_deku) || short_hook_anywhere"
+    "Goron Village Scrub Deed": "soul_business_scrub && has_swamp_title_deed && has_mask_deku"
     "Goron Village Scrub Bomb Bag": "soul_business_scrub && has_mask_goron && can_use_wallet(2)"
 #    "Goron Village Scrub Bomb Bag": "(has_mask_goron || (has(MOON_TEAR) && has(DEED_LAND) && has(DEED_SWAMP))) && can_use_wallet(2)"
-    "Goron Powder Keg": "event(TRIAL_BOULDER) && (event(POWDER_KEG_TRIAL) || (short_hook_anywhere && trick(MM_KEG_TRIAL_HEATLESS)))"
-    "Goron Village Crate": "is_spring || can_use_fire_short_range || (short_hook_anywhere && trick(MM_KEG_TRIAL_HEATLESS))"
+    "Goron Powder Keg": "soul_medigoron && event(TRIAL_BOULDER) && access_keg_trial"
+    "Goron Village Crate": "access_keg_trial"
     "Goron Village Big Snowball 1": "is_winter && can_break_snowballs"
     "Goron Village Big Snowball 2": "is_winter && can_break_snowballs"
     "Goron Village Big Snowball 3": "is_winter && can_break_snowballs"
@@ -98,7 +98,8 @@
     "Goron Village": "true"
     "Goron Shop": "true"
   events:
-    GORON_FOOD: "is_winter && goron_fast_roll && (can_use_fire_arrows || (song_event(0x0a) && soul_goron_child))"
+    GORON_CHANDELIER_LIT: "is_winter && (can_use_fire_arrows || (can_use_din && has_sticks) || (song_event(0x0a) && soul_goron_child))"
+    GORON_FOOD: "is_winter && goron_fast_roll && goron_chandelier_lit"
     STICKS: "true"
     MAGIC: "true"
   locations:

@@ -6,7 +6,7 @@
     "Gerudo Valley Falls": "(is_child && soul_cucco) || can_swim_or_sink"
     "Hyrule Field": "true"
     "Gerudo Valley After Bridge": "can_longshot || can_ride_epona || (is_adult && carpenters_rescued) || (is_child && ((has_hover_boots && trick(OOT_VALLEY_GATE_HOVER)) || can_hookshot)) || time_travel_at_will"
-    "Octorok Grotto Ledge": "true"
+    "Octorok Grotto Ledge": "has_shovel"
     "Gerudo Valley Soil Fairies": "soil_fairies(BEAN_GERUDO_VALLEY)"
   events:
     RUPEES: "true"
@@ -30,11 +30,13 @@
     "Gerudo Valley Rock Entrance Ground 1": "true"
     "Gerudo Valley Rock Entrance Ground 2": "true"
     "Gerudo Valley Rock Entrance Ground 3": "true"
-    "Gerudo Valley Rock Entrance Water 1": "is_adult || has_iron_boots || ((has_explosives || can_use_mask_blast) && can_swim)"
-    "Gerudo Valley Rock Entrance Water 2": "is_adult || has_iron_boots || ((has_explosives || can_use_mask_blast) && can_swim)"
-    "Gerudo Valley Rock Entrance Water 3": "is_adult || has_iron_boots || ((has_explosives || can_use_mask_blast) && can_swim)"
+    "Gerudo Valley Rock Entrance Water 1": "is_adult || has_iron_boots || ((has_bombchu || can_use_mask_blast || (has_bombs && trick(OOT_GV_ROCKS_WATER_BOMB_DROP))) && can_swim)"
+    "Gerudo Valley Rock Entrance Water 2": "is_adult || has_iron_boots || ((has_bombchu || can_use_mask_blast || (has_bombs && trick(OOT_GV_ROCKS_WATER_BOMB_DROP))) && can_swim)"
+    "Gerudo Valley Rock Entrance Water 3": "is_adult || has_iron_boots || ((has_bombchu || can_use_mask_blast || (has_bombs && trick(OOT_GV_ROCKS_WATER_BOMB_DROP))) && can_swim)"
     "Gerudo Valley Boulder Before Bridge 1": "is_adult && has_explosives_or_hammer"
     "Gerudo Valley Boulder Before Bridge 2": "is_adult && has_explosives_or_hammer"
+    "Gerudo Valley Gossip Fairy": "gossip_fairy"
+    "Gerudo Valley Gossip Big Fairy": "gossip_fairy_big"
   gossip:
     "Gerudo Valley Gossip": "true"
 
@@ -114,8 +116,7 @@
   time: flow
   age_change: false
   exits:
-    "GLOBAL": "true"
-    "Lake Hylia": "true"
+    "Lake Hylia Falls": "true"
 
 "Gerudo Valley Storms Grotto":
   region: ENTRANCE

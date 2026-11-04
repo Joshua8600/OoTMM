@@ -4,6 +4,121 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- Change item drop behavior to prevent dropped items from going out of bounds.
+
+### Fixed
+
+- Fix an issue where keaton grass would sometimes not respect CAMC.
+
+## [33.0] - 2026-10-13
+
+### Added
+
+- Add a setting to add extra OoT bottles without having to share bottles.
+- Add gossip fairies / big fairies shuffle.
+- Added MM Adult Mask
+- Added MM item age requirements
+- Added MM Starting Age Selection
+- Add a qol setting to allow time selection when playing song of double time.
+- Add a setting to shuffle a shovel in the item pool, locking grottoes.
+- Add a setting to shuffle the initial stick/nuts capacity as additional upgrades in the item pool.
+- Add a setting to shuffle OoT time flow as a clock item.
+- Add a setting to restore some of the skipped cutscenes in OoT, for glitch purposes.
+- Add a setting to skip most mundane cutscenes in OoT (chests appearing, barred doors opening, etc).
+- Add a trick to skip the Hover Boots or climbing Fire Temple to drop the pillar requirements to reach the boss door.
+- Add multiple settings to skip/keep cutscenes from most boses and major minibosses.
+
+### Changed
+
+- Prevent telescopes from being valid spawn locations and wallmaster destinations.
+- When more than 4 OoT bottles are found, you no longer gain extra trade slot bottle slots unless Extra OoT Bottles is on.
+- When bottle random bottle contents is on, random bottles can be added to plando or starting items.
+- Remove the mostly-unused 'cross' tokens setting.
+- Changed Starting Age to Starting Age OoT to differentiate from the new Starting Age MM setting.
+- Remove "Swordless Adult" as a setting - it's now always enabled.
+- When loading a save, if the player have not swapped ages at the temple of time at least once, put them in their starting age, unless they respawn in a dungeon or Link's House.
+- When going back to spawn, players can now explicitly select which spawn point to get back to from the non-starting age, after having traveled through time at the Temple of Time.
+- Remove the "Distinct Worlds" setting, all worlds are now distinct by default.
+- Complete overhaul of the multiplayer system, see website for the setup guide and details.
+- Change how the region-state wisps are handled when set to "dungeon beaten", ER is no longer required for them to show up.
+- Added other methods for child to reach the plateau in Zora's River.
+- Child can now use Bombchu or Blast Mask with the ability to swim to get the rocks underwater in Zora's River.
+- Megaflip is now logical to reach the grass in Zora's River.
+- Add the itemless jump to Fire Temple Boss door trick to all blitz presets
+- The Romani Ranch alien defense now accounts for Din's Fire as a trick
+- The pot on top of the Smithy in Mountain Village can now logically be reached with scarecrow and short hookshot in winter.
+- The grass item on the platform in Zora River can now be obtained with Boomerang from afar.
+- The Gerudo Fortress wonder item near the archery range can now be gotten logically as child without Gerudo Card.
+- Add Blast Mask to logic for Dodongo's Cavern's skull eyes.
+- Add Iron Boots to logic to access Pirate's Fortress Exterior without Bronze Scale.
+- Gerudo Fortress and Thieves' Hideout logic has been overhauled and is now entirely accurate for future settings.
+- Make using Bombs for the underwater rocks in Gerudo Valley a trick.
+- Add Din's Fire and Sticks to logic for lighting the chandelier in Goron Shrine.
+
+### Fixed
+
+- Fix Telescope ER not respecting polarity.
+- Fix a logic issue making MM access way too restrictive in some cases.
+- Fix traps sometimes triggering at unsafe times.
+- Plentiful item pool now properly has an extra shared bottle when bottles are shared.
+- Fix bottles not having a consistent amount in pool under certain combinations of settings.
+- Fix equip swapped items from reverting to bottles if they were equip swapped over bottles.
+- Fixed MM Hyper enemy crash during Majora boss fight phase 3 when he spawns tops.
+- Logic now accounts for Bronze Scale or Iron Boots when coming from Gerudo Valley in Lake Hylia.
+- Fix Deku Seeds pickups from shuffled locations having text in Majora's Mask when playing with slingshot in said game when they shouldn't.
+- Fix some logic for warp songs, eggs, and age change that could create impossible seeds in rare circumstances.
+- Logic for when the cows in Romani Ranch can be interacted with has been fixed.
+- Fix logic for Market grass.
+- Fix logic for the entrance tree in Path to Snowhead considered as being in the middle section.
+- Fix logic for MQ Water Temple's "Storage Room" not being logical with the lowest water level outside hookshot anywhere.
+- Fix logic for Sacred Forest Meadow considering Hookshot to defeat Wolfos.
+- Fix logic for the pots in the jail with four torches considered as being in the room with three torches.
+- Fix MM great Bay Goast Gossip Stone and Fairy checks being in the wrong region.
+- Fix ER logic bug that could expect you to access the Great Fairy in DMC from the top when it doesn't actually lead to the Great Fairy.
+- Fix logic for the MM Great Bay Temple Map Room not expecting swimming to be able to surface in some circumstances.
+- Fix the Powder Keg Trial item location being logically too strict outside ER.
+- Fix a logic issue where Dampe's Gravedigging Tour could expect Sun's Song instead of Song of Double Time or access to areas where time flows.
+- Fix logic in Snowhead Temple expecting access with only Silver Gauntlets and nothing to break the icicles.
+- Fix logic for the rocks on the wall in Ikana Graveyard expecting Blast Mask for the ones higher up.
+- Fix logic not accounting for Bronze Scale in Woodfall.
+
+## [32.3] - 2026-08-23
+
+### Changed
+
+- GBC Tingle now accounts for Hookshot and Slingshot in logic.
+
+### Fixed
+
+- Fix logic for most of the pots in Great Bay Coast not checking for the ability to swim.
+- Fix logic for GBC Tingle's photo not checking for the ability to knock him down.
+
+## [32.2] - 2026-08-21
+
+### Fixed
+
+- Fix an issue where the MQ forest scripted stalfos fight would behave incorrectly when the stalfos soul was not collected.
+- Fix an issue where obtaining silver rupee pouches while owning the magical rupee could corrupt flags.
+- Logic for reaching the front of Zora River without Bronze Scale is now accounted for.
+
+## [32.1] - 2026-08-20
+
+### Changed
+
+- Renamed some rusty keys to make them less ambiguous.
+
+### Fixed
+
+- Fix a bug where OoT song event shuffle would not accept goron lullaby in place of goron lullaby intro.
+- Fix a multiplayer issue where stray fairies could be collected more than once.
+- Fix logic mistakenly expecting OoT masks in MM to access the trials.
+- Fix sharp curse not being breakable in song events when the required song is healing.
+- Fix OoT Poes and OoT Big Poes not accounting for the extra bottles on the trade slots.
+- Fix moon gossip stones sometimes hinting non-vanilla masks when item extensions are enabled.
+- Fix typos in item names on spoiler logs.
+
 ## [32.0] - 2026-07-19
 
 ### Added
@@ -1771,7 +1886,11 @@ All notable changes to this project will be documented in this file.
 
 - Initial stable release.
 
-[Unreleased]: https://github.com/OoTMM/OoTMM/compare/v32.0...HEAD
+[Unreleased]: https://github.com/OoTMM/OoTMM/compare/v33.0...HEAD
+[33.0]: https://github.com/OoTMM/OoTMM/compare/v32.2...v33.0
+[32.3]: https://github.com/OoTMM/OoTMM/compare/v32.2...v32.3
+[32.2]: https://github.com/OoTMM/OoTMM/compare/v32.1...v32.2
+[32.1]: https://github.com/OoTMM/OoTMM/compare/v32.0...v32.1
 [32.0]: https://github.com/OoTMM/OoTMM/compare/v31.1...v32.0
 [31.1]: https://github.com/OoTMM/OoTMM/compare/v31.0...v31.1
 [31.0]: https://github.com/OoTMM/OoTMM/compare/v30.1...v31.0

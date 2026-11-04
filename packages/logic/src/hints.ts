@@ -1,9 +1,13 @@
-import type { Game, Settings, CountMap, PlayerItems, PlayerItem, Region } from '@ootmm/core';
+import type { Game } from '@ootmm/data';
+import type { Settings, CountMap, Region } from '@ootmm/core';
+import type { PlayerItems, PlayerItem } from './items';
 import type { ItemPlacement, Location } from './types';
 import type { Analysis, AnalysisPath } from './analysis';
 import type { World } from './world';
 
-import { Monitor, Random, sample, shuffle, randomInt, countMapArray, ItemGroups, ItemHelpers, Items, itemByID, makePlayerItem, makeRegion, hintLocations } from '@ootmm/core';
+import { hintLocations, CHECKS_BY_LOCATION } from '@ootmm/data';
+import { Monitor, Random, sample, shuffle, randomInt, countMapArray, makeRegion } from '@ootmm/core';
+import { ItemGroups, ItemHelpers, Items, itemByID, makePlayerItem } from './items';
 import { Pathfinder } from './pathfind';
 import { DUNGEONS_REGIONS } from './world';
 import { isLocationFullyShuffled, locationData, makeLocation } from './locations';
@@ -462,9 +466,6 @@ class LogicPassHints {
   }
 
   private placeGossipItemExact(worldId: number, checkWorldId: number, checkHint: string, extra: number, context: 'normal' | 'moon' | 'playthrough') {
-    if (checkHint === 'NONE') {
-      return false;
-    }
     const world = this.state.worlds[worldId];
     const checkWorld = this.state.worlds[checkWorldId];
     const locations = hintLocations(checkHint).filter(x => checkWorld.locations.has(x)).map(x => makeLocation(x, checkWorldId));
@@ -638,8 +639,9 @@ class LogicPassHints {
     if (this.state.settings.noDuplicatePlaythroughHints && context === 'playthrough' && this.hintedPlaythroughItems.has(item)) {
       return false;
     }
-    const hint = locWorld.checks[locD.id].hint;
-    if (this.placeGossipItemExact(worldId, locD.world as number, hint, extra, context)) {
+    const check = CHECKS_BY_LOCATION[locD.id];
+    const hint = check.hint;
+    if (hint && this.placeGossipItemExact(worldId, locD.world as number, hint, extra, context)) {
       return true;
     }
     let gossip;
@@ -729,7 +731,7 @@ class LogicPassHints {
   }
 
   private placeMoonGossip(world: number) {
-    for (const mask of ItemGroups.MASKS_REGULAR) {
+    for (const mask of ItemGroups.MASKS_REGULAR_VANILLA_MM) {
       const location = this.findItem(makePlayerItem(mask, world)).loc;
       this.placeGossipItemRegion(world, location, 0, 'moon');
     }

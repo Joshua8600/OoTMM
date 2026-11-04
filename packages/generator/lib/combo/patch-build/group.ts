@@ -47,7 +47,6 @@ export const PATCH_GROUPS = [
   'CRIT_WIGGLE_DISABLE',
   'OOT_LOST_WOODS_EXITS',
   'MM_VOID_WARP',
-  'OOT_SWORDLESS_ADULT',
   'MM_FAST_MASKS',
   'OOT_FAST_BOAT',
   'MM_WELL_OPEN_OR_REMORSELESS',
@@ -57,6 +56,14 @@ export const PATCH_GROUPS = [
   'MM_JP_LAYOUT_GREAT_BAY_COAST',
   'MM_KEG_STRENGTH_3',
   'ER_TELESCOPES',
+  'OOT_SKIP_CUTSCENES',
+  'MM_CS_GOHT',
+  'MM_CS_WART',
+  'MM_CS_GYORG',
+  'MM_CS_IGOS',
+  'MM_CS_GOMESS',
+  'MM_CS_TWINMOLD',
+  'MM_CS_MAJORA',
 ] as const;
 
 export type PatchGroup = typeof PATCH_GROUPS[number];

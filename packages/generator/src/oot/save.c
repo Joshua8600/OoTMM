@@ -1,22 +1,28 @@
 #include <combo.h>
+#include <combo/age.h>
 #include <combo/item.h>
-#include <combo/net.h>
 #include <combo/dungeon.h>
 #include <combo/dma.h>
 #include <combo/time.h>
 #include <combo/config.h>
 #include <combo/context.h>
 #include <combo/entrance.h>
+#include <combo/multi.h>
 
 static void fixSpawn(void)
 {
     u32 entrance;
+    u32 entranceOriginal;
     s32 override;
 
     gSaveContext.respawnFlag = 0;
     gSaveContext.respawn[RESPAWN_MODE_DOWN].entrance = 0xffff;
 
-    if (gSharedCustomSave.respawn[CUSTOM_RESPAWN_MODE_DUNGEON_ENTRANCE].playerParams && !gComboCtx.valid && gPlay)
+    /* Don't override anything if it's not a cold start */
+    if (gComboCtx.valid)
+        return;
+
+    if (gSharedCustomSave.respawn[CUSTOM_RESPAWN_MODE_DUNGEON_ENTRANCE].playerParams && gPlay)
     {
         if (gSharedCustomSave.respawn[CUSTOM_RESPAWN_MODE_DUNGEON_ENTRANCE].data & 0x80)
         {
@@ -34,18 +40,28 @@ static void fixSpawn(void)
         }
     }
 
-    /* If the player saved in link's house, and it's not ER, honor that */
-    if (gSave.info.sceneId == SCE_OOT_LINK_HOUSE && !Config_Flag(CFG_ER_ANY))
+    /* If the player saved in link's house, honor that */
+    if (gSave.info.sceneId == SCE_OOT_LINK_HOUSE)
     {
         gSave.entrance = ENTR_OOT_SPAWN_CHILD;
+        Multi_InfoEntrance(0xffffffff, ENTR_OOT_SPAWN_CHILD, gSave.age);
         return;
     }
 
+    /* If the player hasn't reached ToT age swap and is supposed to reach their default spawn, ensure they're set to their default age */
+    if (!gCustomSave.hasTimeTraveledAtTemple)
+    {
+        Age_SetOot(NULL, Age_GetStarting());
+    }
+
     entrance = gSave.age == AGE_CHILD ? ENTR_OOT_SPAWN_CHILD : ENTR_OOT_SPAWN_ADULT;
+    entranceOriginal = entrance;
     override = comboEntranceOverride(entrance);
     if (override != -1)
         entrance = (u32)override;
     gSave.entrance = entrance;
+
+    Multi_InfoEntrance(entranceOriginal, gSave.entrance, gSave.age);
 }
 
 void Sram_AfterOpenSave(void)
@@ -235,9 +251,36 @@ static void applyStartingEvents(void)
     }
 }
 
+static void Save_InitNewMmLinkAge(void)
+{
+    if (Config_Flag(CFG_MM_CROSS_AGE))
+    {
+        gMmSave.linkAge = gOotSave.age;
+    }
+    else
+    {
+        gMmSave.linkAge = Config_Flag(CFG_MM_START_ADULT)
+            ? AGE_ADULT
+            : AGE_CHILD;
+    }
+
+    for (int age = 0; age < 2; ++age)
+    {
+        MmHumanAgeLoadout* equips = &gSharedCustomSave.mm.humanAgeLoadouts[age];
+        for (int i = 0; i < 4; ++i)
+        {
+            equips->buttonItems[i] = ITEM_NONE;
+            equips->cButtonSlots[i] = 0xff;
+        }
+        equips->boots = 0;
+        equips->tunic = 0;
+        equips->shield = 0;
+        equips->sword = 0;
+    }
+}
+
 void comboCreateSave(void* unk, void* buffer)
 {
-    int dungeonClearFlags;
     u32 base;
 
     /* Create MM save */
@@ -252,6 +295,20 @@ void comboCreateSave(void* unk, void* buffer)
         gOotExtraFlags.childWallet = 1;
         gMmExtraFlags2.childWallet = 1;
     }
+
+    if (!Config_Flag(CFG_INITIAL_STICKS_NUTS_UPGRADES))
+    {
+        gOotSave.info.inventory.upgrades.dekuStick = 1;
+        gOotSave.info.inventory.upgrades.dekuNut = 1;
+
+    }
+
+    if (!Config_Flag(CFG_INITIAL_STICKS_NUTS_UPGRADES) || !Config_Flag(CFG_MM_UPGRADES_STICKS_NUTS))
+    {
+        gMmSave.info.inventory.upgrades.dekuStick = 1;
+        gMmSave.info.inventory.upgrades.dekuNut = 1;
+    }
+
     comboWalletRefresh();
     Inventory_UpdateMaxBombchu();
 
@@ -337,6 +394,8 @@ void comboCreateSave(void* unk, void* buffer)
         }
     }
 
+    Save_InitNewMmLinkAge();
+
     /* Apply starting items */
     applyStartingItems();
 
@@ -344,13 +403,10 @@ void comboCreateSave(void* unk, void* buffer)
     applyStartingEvents();
 
     /* Apply pre-completed dungeons */
-    dungeonClearFlags = DUNGEONCLEARFLAG_BOSS;
-    if (Config_Flag(CFG_REGION_STATE_DUNGEONS))
-        dungeonClearFlags |= DUNGEONCLEARFLAG_WISP;
     for (int i = 0; i < 32; ++i)
     {
         if (gComboConfig.preCompleted & (1 << i))
-            comboDungeonSetFlags(i, dungeonClearFlags);
+            Dungeon_SetFlags(i, DUNGEONCLEARFLAG_BOSS);
     }
 
     /* Write save */
@@ -371,14 +427,14 @@ static void DeathWarpWrapper(PlayState* play)
     {
         if (dungeonEntranceRespawn->data & 0x80)
         {
-            play->nextEntranceIndex = ENTR_CROSS_RESPAWN;
+            play->nextEntrance = ENTR_CROSS_RESPAWN;
         }
         else
         {
             memcpy(&gSaveContext.respawn[RESPAWN_MODE_RETURN], dungeonEntranceRespawn, sizeof(OotRespawnData));
             /* Copy to the void respawn */
             memcpy(&gSaveContext.respawn[RESPAWN_MODE_DOWN], &gSaveContext.respawn[RESPAWN_MODE_RETURN], sizeof(OotRespawnData));
-            play->nextEntranceIndex = dungeonEntranceRespawn->entrance;
+            play->nextEntrance = dungeonEntranceRespawn->entrance;
             gSaveContext.respawnFlag = 2;
         }
     }
@@ -397,9 +453,6 @@ void PrepareAndSave(void)
 
 void Save_DoSave(PlayState* play, int saveFlags)
 {
-    /* Wait for net */
-    netWaitSave();
-
     if (!(saveFlags & SF_PASSIVE))
     {
         if (!(saveFlags & SF_NOCOMMIT))

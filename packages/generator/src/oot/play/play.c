@@ -1,20 +1,22 @@
 #include <combo.h>
-#include <combo/souls.h>
-#include <combo/net.h>
-#include <combo/menu.h>
-#include <combo/entrance.h>
-#include <combo/debug.h>
-#include <combo/magic.h>
-#include <combo/config.h>
-#include <combo/global.h>
-#include <combo/dpad.h>
-#include <combo/multi.h>
-#include <combo/context.h>
-#include <combo/dungeon.h>
 #include <combo/audio.h>
-#include <combo/inventory.h>
+#include <combo/checks.h>
+#include <combo/config.h>
+#include <combo/context.h>
+#include <combo/debug.h>
+#include <combo/dpad.h>
 #include <combo/draw.h>
+#include <combo/dungeon.h>
+#include <combo/entrance.h>
+#include <combo/global.h>
+#include <combo/inventory.h>
+#include <combo/magic.h>
 #include <combo/mark.h>
+#include <combo/menu.h>
+#include <combo/message.h>
+#include <combo/multi.h>
+#include <combo/souls.h>
+#include <combo/sr.h>
 
 PlayState* gPlay;
 
@@ -51,8 +53,8 @@ static int isRainbowBridgeOpen(void)
 
 static void eventFixes(PlayState* play)
 {
-    /* Skip forest temple cutscene */
-    if (gSave.entrance == ENTR_OOT_TEMPLE_FOREST)
+    /* Skip forest temple po sisters cutscene */
+    if (!Config_Flag(CFG_OOT_CUTSCENE_GLITCH_AID) && gSave.entrance == ENTR_OOT_TEMPLE_FOREST)
     {
         u32 tmp;
         tmp = gSave.info.perm[SCE_OOT_TEMPLE_FOREST].switches;
@@ -60,6 +62,37 @@ static void eventFixes(PlayState* play)
             tmp |= 0x08000000;
         gSave.info.perm[SCE_OOT_TEMPLE_FOREST].switches = tmp;
     }
+
+    /* Skip Fire Temple Darunia cutscene */
+    if(!Config_Flag(CFG_OOT_CUTSCENE_GLITCH_AID) && gSave.entrance == ENTR_OOT_TEMPLE_FIRE)
+        BITMAP16_SET(gSave.info.eventsMisc, EV_OOT_INF_DARUNIA_FIRE_TEMPLE);
+
+    if(Config_Flag(CFG_OOT_CS_GOHMA) && gSave.entrance == ENTR_OOT_BOSS_DEKU_TREE)
+        SetEventChk(EV_OOT_CHK_BEGAN_GOHMA_BATTLE);
+
+    if(Config_Flag(CFG_OOT_CS_KING_DODONGO) && gSave.entrance == ENTR_OOT_BOSS_DODONGO_CAVERN)
+        SetEventChk(EV_OOT_CHK_BEGAN_KING_DODONGO_BATTLE);
+
+    if(Config_Flag(CFG_OOT_CS_BARINADE) && gSave.entrance == ENTR_OOT_BOSS_JABU_JABU)
+        SetEventChk(EV_OOT_CHK_BEGAN_BARINADE_BATTLE);
+
+    if(Config_Flag(CFG_OOT_CS_PHANTOM_GANON) && gSave.entrance == ENTR_OOT_BOSS_TEMPLE_FOREST)
+        SetEventChk(EV_OOT_CHK_BEGAN_PHANTOM_GANON_BATTLE);
+
+    if(Config_Flag(CFG_OOT_CS_VOLVAGIA) && gSave.entrance == ENTR_OOT_BOSS_TEMPLE_FIRE)
+        SetEventChk(EV_OOT_CHK_BEGAN_VOLVAGIA_BATTLE);
+
+    if(Config_Flag(CFG_OOT_CS_MORPHA) && gSave.entrance == ENTR_OOT_BOSS_TEMPLE_WATER)
+        SetEventChk(EV_OOT_CHK_BEGAN_MORPHA_BATTLE);
+
+    if(Config_Flag(CFG_OOT_CS_TWINROVA) && gSave.entrance == ENTR_OOT_BOSS_TEMPLE_SPIRIT)
+        SetEventChk(EV_OOT_CHK_BEGAN_TWINROVA_BATTLE);
+
+    if(Config_Flag(CFG_OOT_CS_BONGO_BONGO) && gSave.entrance == ENTR_OOT_BOSS_TEMPLE_SHADOW)
+        SetEventChk(EV_OOT_CHK_BEGAN_BONGO_BONGO_BATTLE);
+
+    if(Config_Flag(CFG_OOT_CS_GANONDORF) && gSave.entrance == ENTR_OOT_BOSS_GANONDORF)
+        SetEventChk(EV_OOT_CHK_BEGAN_GANONDORF_BATTLE);
 
     /* Ruto fixes */
     if (gSave.entrance == ENTR_OOT_JABU_JABU)
@@ -123,27 +156,17 @@ static void eventFixes(PlayState* play)
 
 static void sendSelfTriforce(void)
 {
-    NetContext* net;
     int npc;
     s16 gi;
-
-    if (!Config_Flag(CFG_MULTIPLAYER))
-        return;
 
     gi = GI_OOT_TRIFORCE_FULL;
     npc = NPC_OOT_GANON;
 
-    net = netMutexLock();
-    netWaitCmdClear();
-    bzero(&net->cmdOut, sizeof(net->cmdOut));
-    net->cmdOut.op = NET_OP_ITEM_SEND;
-    net->cmdOut.itemSend.playerFrom = gComboConfig.playerId;
-    net->cmdOut.itemSend.playerTo = gComboConfig.playerId;
-    net->cmdOut.itemSend.game = 0;
-    net->cmdOut.itemSend.gi = gi;
-    net->cmdOut.itemSend.key = ((u32)OV_NPC << 24) | npc;
-    net->cmdOut.itemSend.flags = 0;
-    netMutexUnlock();
+    if (BITMAP8_GET(gSharedCustomSave.oot.npc, npc))
+        return;
+
+    Multi_SendSelfItem(gi, 0, Checks_MakeNpcOverrideKey(npc));
+    Multi_InfoItem(0, gi, 0x01);
 
     /* Mark the NPC as obtained */
     BITMAP8_SET(gSharedCustomSave.oot.npc, npc);
@@ -204,7 +227,7 @@ static void endGame(void)
     }
 }
 
-static u32 entranceForOverride(u32 entrance)
+u32 Play_EntranceForOverride(u32 entrance)
 {
     switch (entrance)
     {
@@ -354,7 +377,7 @@ static const OotRespawnData kSpiritTempleMainEntrance = {
     0,
 };
 
-static void applyGrottoExit(u32* entrance, int id)
+static u32 applyGrottoExit(int id)
 {
     OotRespawnData* rs;
     const GrottoExit* ge;
@@ -379,44 +402,47 @@ static void applyGrottoExit(u32* entrance, int id)
     /* Set the respawn flags */
     gSaveContext.respawnFlag = 2;
     gSaveContext.nextTransitionType = 3;
-    *entrance = rs->entrance;
+    return rs->entrance;
 }
 
-static void applyCustomEntrance(u32* entrance)
+u32 Play_ApplyCustomEntrance(u32 entrance)
 {
-    u32 id;
-
-    id = *entrance;
-    if (id >= ENTR_OOT_GROTTO_GENERIC_KOKIRI_FOREST && id <= ENTR_OOT_GROTTO_GENERIC_HF_MARKET)
+    if (entrance >= ENTR_OOT_GROTTO_GENERIC_KOKIRI_FOREST && entrance <= ENTR_OOT_GROTTO_GENERIC_HF_MARKET)
     {
-        id -= ENTR_OOT_GROTTO_GENERIC_KOKIRI_FOREST;
-        *entrance = ENTR_OOT_GROTTO_TYPE_GENERIC;
+        entrance -= ENTR_OOT_GROTTO_GENERIC_KOKIRI_FOREST;
         gGrottoData &= ~0x1f;
-        gGrottoData |= kGrottoDataGeneric[id];
+        gGrottoData |= kGrottoDataGeneric[entrance];
+        return ENTR_OOT_GROTTO_TYPE_GENERIC;
     }
-    else if (id >= ENTR_OOT_GROTTO_FAIRY_SFM && id <= ENTR_OOT_GROTTO_FAIRY_FORTRESS)
+
+    if (entrance >= ENTR_OOT_GROTTO_FAIRY_SFM && entrance <= ENTR_OOT_GROTTO_FAIRY_FORTRESS)
     {
-        id -= ENTR_OOT_GROTTO_FAIRY_SFM;
-        *entrance = ENTR_OOT_GROTTO_TYPE_FAIRY;
-        gLastScene = kGrottoDataFairy[id];
+        entrance -= ENTR_OOT_GROTTO_FAIRY_SFM;
+        gLastScene = kGrottoDataFairy[entrance];
+        return ENTR_OOT_GROTTO_TYPE_FAIRY;
     }
-    else if (id >= ENTR_OOT_GROTTO_SCRUBS2_SFM && id <= ENTR_OOT_GROTTO_SCRUBS2_COLOSSUS)
+
+    if (entrance >= ENTR_OOT_GROTTO_SCRUBS2_SFM && entrance <= ENTR_OOT_GROTTO_SCRUBS2_COLOSSUS)
     {
-        id -= ENTR_OOT_GROTTO_SCRUBS2_SFM;
-        *entrance = ENTR_OOT_GROTTO_TYPE_SCRUB2;
-        gLastScene = kGrottoDataScrubs2[id];
+        entrance -= ENTR_OOT_GROTTO_SCRUBS2_SFM;
+        gLastScene = kGrottoDataScrubs2[entrance];
+        return ENTR_OOT_GROTTO_TYPE_SCRUB2;
     }
-    else if (id >= ENTR_OOT_GROTTO_SCRUBS3_RANCH && id <= ENTR_OOT_GROTTO_SCRUBS3_LAKE)
+
+    if (entrance >= ENTR_OOT_GROTTO_SCRUBS3_RANCH && entrance <= ENTR_OOT_GROTTO_SCRUBS3_LAKE)
     {
-        id -= ENTR_OOT_GROTTO_SCRUBS3_RANCH;
-        *entrance = ENTR_OOT_GROTTO_TYPE_SCRUB3;
-        gLastScene = kGrottoDataScrubs3[id];
+        entrance -= ENTR_OOT_GROTTO_SCRUBS3_RANCH;
+        gLastScene = kGrottoDataScrubs3[entrance];
+        return ENTR_OOT_GROTTO_TYPE_SCRUB3;
     }
-    else if (id >= ENTR_OOT_GROTTO_EXIT_GENERIC_KOKIRI_FOREST && id <= ENTR_OOT_GROTTO_EXIT_OCTOROK)
+
+    if (entrance >= ENTR_OOT_GROTTO_EXIT_GENERIC_KOKIRI_FOREST && entrance <= ENTR_OOT_GROTTO_EXIT_OCTOROK)
     {
-        id -= ENTR_OOT_GROTTO_EXIT_GENERIC_KOKIRI_FOREST;
-        applyGrottoExit(entrance, id);
+        entrance -= ENTR_OOT_GROTTO_EXIT_GENERIC_KOKIRI_FOREST;
+        return applyGrottoExit(entrance);
     }
+
+    return entrance;
 }
 
 static void playAdjustEntrance(PlayState* play)
@@ -448,7 +474,7 @@ static void playAdjustEntrance(PlayState* play)
         break;
     }
 
-    applyCustomEntrance(&gSave.entrance);
+    gSave.entrance = Play_ApplyCustomEntrance(gSave.entrance);
 }
 
 static void masterSwordFix(PlayState* play)
@@ -458,18 +484,6 @@ static void masterSwordFix(PlayState* play)
 
     /* Re-add the Master Sword to the inventory */
     gSave.info.inventory.equipment.swords |= EQ_OOT_SWORD_MASTER;
-
-    if (Config_Flag(CFG_OOT_SWORDLESS_ADULT))
-        return;
-    if (gSave.age != AGE_ADULT)
-        return;
-    if (gSave.info.equips.buttonItems[0] != ITEM_NONE)
-        return;
-
-    /* We need to force-reequip */
-    gSave.info.equips.buttonItems[0] = ITEM_OOT_SWORD_MASTER;
-    gSave.info.equips.equipment.swords = EQ_OOT_SWORD_MASTER;
-    EV_OOT_UNSET_SWORDLESS();
 }
 
 static void Play_AfterInit(PlayState* play)
@@ -534,6 +548,21 @@ static void Play_AfterInit(PlayState* play)
     }
 }
 
+static void Play_ApplyClock(void)
+{
+    u16 time;
+
+    if (!Config_Flag(CFG_OOT_CLOCKS) || SaveFlag_Get(SAVE_FLAG_CLOCK_OOT) || gSaveContext.gameMode != GAMEMODE_NORMAL)
+        return;
+
+    if (Config_Flag(CFG_OOT_CLOCKS_NIGHT))
+        time = CLOCK_TIME(0, 0);
+    else
+        time = CLOCK_TIME(12, 0);
+    Time_Set(time);
+    gSaveContext.nextDayTime = NEXT_TIME_NONE;
+}
+
 void hookPlay_Init(PlayState* play)
 {
     gPlay = play;
@@ -549,6 +578,7 @@ void hookPlay_Init(PlayState* play)
     gMarkSwitch1 = 0;
     Multi_ResetWisps();
     Inventory_ReobtainProgressiveShields();
+    Play_ApplyClock();
 
     /* Adjust entrance */
     playAdjustEntrance(play);
@@ -570,6 +600,8 @@ void hookPlay_Init(PlayState* play)
 
 void Play_MainWrapper(PlayState* play)
 {
+    Play_ApplyClock();
+
     /* Auto-press A during credits */
     if (g.isCredits)
         play->state.input[0].press.button = (play->state.frameCount & 1) ? A_BUTTON : 0;
@@ -578,8 +610,14 @@ void Play_MainWrapper(PlayState* play)
     Debug_Input();
     comboCacheGarbageCollect();
     comboObjectsGC();
-    Multi_Update(play);
+
+    if (gSaveContext.gameMode == GAMEMODE_NORMAL)
+        Multi_Update(play);
+    else
+        Multi_Disconnect();
+
     Play_Main(play);
+    Message_UpdateBlocking(play);
     Dpad_Draw(play);
     Audio_DisplayMusicName(play);
 
@@ -590,6 +628,7 @@ void Play_MainWrapper(PlayState* play)
         Triggers_Update(play);
     }
 
+    SilverRupees_Update(play);
     Debug_Update();
 }
 
@@ -615,18 +654,8 @@ static void Minigame_Fix(PlayState* play)
         ReloadSword(play);
 }
 
-NORETURN static void Play_GameSwitch(PlayState* play, u32 entrance)
+u32 Play_GrottoExitEntrance(PlayState* play)
 {
-    Horse_ForceUnmount(play);
-    Minigame_Fix(play);
-    comboGameSwitch(play, entrance);
-}
-
-static u32 entrGrottoExit(PlayState* play)
-{
-    if (!Config_Flag(CFG_ER_GROTTOS))
-        return ENTR_OOT_INTERNAL_EXIT_GROTTO;
-
     switch (play->sceneId)
     {
     case SCE_OOT_GROTTOS:
@@ -697,107 +726,6 @@ static u32 entrGrottoExit(PlayState* play)
     return ENTR_OOT_INTERNAL_EXIT_GROTTO;
 }
 
-void Play_TransitionDone(PlayState* play)
-{
-    u32 entrance;
-    s32 override;
-
-    /* Resolve extended entrance */
-    entrance = play->nextEntranceIndex;
-    switch (entrance)
-    {
-    case ENTR_EXTENDED:
-        entrance = g.nextEntrance;
-        break;
-    case ENTR_FW_CROSS:
-        entrance = gSharedCustomSave.mm.fw[gSave.age].entrance | MASK_FOREIGN_ENTRANCE;
-        gComboCtx.isFwSpawn = 1;
-        break;
-    case ENTR_CROSS_RESPAWN:
-        entrance = gSharedCustomSave.respawn[CUSTOM_RESPAWN_MODE_DUNGEON_ENTRANCE].entrance | MASK_FOREIGN_ENTRANCE;
-        gComboCtx.isDungeonEntranceSpawn = 1;
-        break;
-    }
-
-    /* Handle grottos */
-    if (entrance == ENTR_OOT_INTERNAL_EXIT_GROTTO)
-    {
-        entrance = entrGrottoExit(play);
-        if (entrance == ENTR_OOT_INTERNAL_EXIT_GROTTO)
-        {
-            gIsEntranceOverride = 0;
-            entrance = gSaveContext.respawn[1].entrance;
-            gSaveContext.respawnFlag = 2;
-            gSaveContext.nextTransitionType = 3;
-        }
-    }
-
-    /* Handle transition override */
-    if (gIsEntranceOverride)
-    {
-        gIsEntranceOverride = 0;
-        override = comboEntranceOverride(entranceForOverride(entrance));
-        if (override != -1)
-            entrance = (u32)override;
-    }
-
-    applyCustomEntrance(&entrance);
-
-    /* Check for foreign */
-    if (entrance & MASK_FOREIGN_ENTRANCE)
-    {
-        Play_GameSwitch(play, entrance & ~MASK_FOREIGN_ENTRANCE);
-    }
-    else
-    {
-        play->nextEntranceIndex = entrance & 0xffff;
-    }
-}
-
-static void TimeTravelUpdateEquipment(void)
-{
-    OotItemEquips* prevAge;
-    OotItemEquips* nextAge;
-    u8 item;
-
-    if (gSave.age == AGE_ADULT)
-    {
-        prevAge = &gSave.info.adultEquips;
-        nextAge = &gSave.info.childEquips;
-    }
-    else
-    {
-        prevAge = &gSave.info.childEquips;
-        nextAge = &gSave.info.adultEquips;
-    }
-
-    memcpy(prevAge, &gSave.info.equips, sizeof(*prevAge));
-    if (EV_OOT_IS_SWORDLESS())
-        prevAge->buttonItems[0] = ITEM_NONE;
-    memcpy(&gSave.info.equips, nextAge, sizeof(*nextAge));
-
-    /* Reload bottles */
-    for (int i = 0; i < 3; ++i)
-    {
-        item = gSave.info.equips.buttonItems[i + 1];
-        if ((item >= ITEM_OOT_BOTTLE_EMPTY && item <= ITEM_OOT_POE) || comboIsTradeBottleOot(item))
-            item = gSave.info.inventory.items[gSave.info.equips.cButtonSlots[i]];
-        gSave.info.equips.buttonItems[i + 1] = item;
-    }
-
-    /* Fix sword */
-    if (gSave.info.equips.buttonItems[0] == ITEM_NONE)
-        EV_OOT_SET_SWORDLESS();
-    else
-        EV_OOT_UNSET_SWORDLESS();
-
-    /* Fix shield, if opposite age lost it */
-    if (gSave.info.equips.equipment.shields && !(gSave.info.inventory.equipment.shields & (1 << (gSave.info.equips.equipment.shields - 1))))
-        gSave.info.equips.equipment.shields = 0;
-}
-
-PATCH_FUNC(0x8006f804, TimeTravelUpdateEquipment);
-
 void Play_FastInit(GameState* gs)
 {
     u32 entrance;
@@ -824,13 +752,15 @@ void Play_FastInit(GameState* gs)
 
     if (gComboCtx.isFwSpawn)
     {
+        u8 fwAge = gComboCtx.fwSpawnAge;
+        OotFaroreWind* fw;
+        if (Config_Flag(CFG_MM_CROSS_AGE))
+            Age_SetRawOot(NULL, fwAge);
+
         gSaveContext.respawnFlag = 3;
         gComboCtx.isFwSpawn = 0;
-
-        /* Restore dungeon entrance respawn data. */
-        memcpy(&gSharedCustomSave.respawn[CUSTOM_RESPAWN_MODE_DUNGEON_ENTRANCE], &gCustomSave.fwRespawnDungeonEntrance[gOotSave.age], sizeof(OotRespawnData));
-
-        OotFaroreWind* fw = &gSave.info.fw;
+        memcpy(&gSharedCustomSave.respawn[CUSTOM_RESPAWN_MODE_DUNGEON_ENTRANCE], &gCustomSave.fwRespawnDungeonEntrance[fwAge], sizeof(OotRespawnData));
+        fw = Age_GetFaroreOot(fwAge);
 
         if (fw->set)
         {
@@ -869,7 +799,7 @@ void Play_FastInit(GameState* gs)
 
     /* Set the entrance */
     entrance = gComboCtx.entrance;
-    applyCustomEntrance(&entrance);
+    entrance = Play_ApplyCustomEntrance(entrance);
     gSave.entrance = (s32)entrance;
 
     /* Set magic */
@@ -885,3 +815,30 @@ void Play_FastInit(GameState* gs)
     gComboCtx.valid = 0;
 }
 
+int Play_ExpandMQ(PlayState* play, int sceneId)
+{
+    switch (sceneId)
+    {
+    case SCE_OOT_DEKU_TREE: if (Config_IsMq(MQ_DEKU_TREE)) return SCE_OOT_DEKU_TREE_MQ; break;
+    case SCE_OOT_DODONGO_CAVERN: if (Config_IsMq(MQ_DODONGOS_CAVERN)) return SCE_OOT_DODONGO_CAVERN_MQ; break;
+    case SCE_OOT_INSIDE_JABU_JABU: if (Config_IsMq(MQ_JABU_JABU)) return SCE_OOT_INSIDE_JABU_JABU_MQ; break;
+    case SCE_OOT_TEMPLE_FOREST: if (Config_IsMq(MQ_TEMPLE_FOREST)) return SCE_OOT_TEMPLE_FOREST_MQ; break;
+    case SCE_OOT_TEMPLE_FIRE: if (Config_IsMq(MQ_TEMPLE_FIRE)) return SCE_OOT_TEMPLE_FIRE_MQ; break;
+    case SCE_OOT_TEMPLE_WATER: if (Config_IsMq(MQ_TEMPLE_WATER)) return SCE_OOT_TEMPLE_WATER_MQ; break;
+    case SCE_OOT_TEMPLE_SPIRIT: if (Config_IsMq(MQ_TEMPLE_SPIRIT)) return SCE_OOT_TEMPLE_SPIRIT_MQ; break;
+    case SCE_OOT_TEMPLE_SHADOW: if (Config_IsMq(MQ_TEMPLE_SHADOW)) return SCE_OOT_TEMPLE_SHADOW_MQ; break;
+    case SCE_OOT_BOTTOM_OF_THE_WELL: if (Config_IsMq(MQ_BOTTOM_OF_THE_WELL)) return SCE_OOT_BOTTOM_OF_THE_WELL_MQ; break;
+    case SCE_OOT_ICE_CAVERN: if (Config_IsMq(MQ_ICE_CAVERN)) return SCE_OOT_ICE_CAVERN_MQ; break;
+    case SCE_OOT_GERUDO_TRAINING_GROUND: if (Config_IsMq(MQ_GERUDO_TRAINING_GROUNDS)) return SCE_OOT_GERUDO_TRAINING_GROUND_MQ; break;
+    case SCE_OOT_INSIDE_GANON_CASTLE: if (Config_IsMq(MQ_GANON_CASTLE)) return SCE_OOT_INSIDE_GANON_CASTLE_MQ; break;
+    }
+
+    return sceneId;
+}
+
+NORETURN void Play_GameSwitch(PlayState* play, u32 entrance)
+{
+    Horse_ForceUnmount(play);
+    Minigame_Fix(play);
+    comboGameSwitch(play, entrance);
+}

@@ -204,6 +204,7 @@ int Player_OverrideLimbDrawGameplayFirstPerson(PlayState* play, s32 limbIndex, G
 void Player_SetBootData(PlayState* play, Player* player);
 int Player_GetStrength(void);
 s32 Player_SetCsAction(PlayState* play, Actor* csActor, u8 csAction);
+s32 _Player_SetCsAction(PlayState* play, Actor* csActor, u8 csAction);
 int Player_IsBurningStickInRange(PlayState* play, Vec3f* pos, f32 xzRange, f32 yRange);
 s32 func_80123590(PlayState* play, Actor* actor);
 
@@ -218,5 +219,9 @@ int Player_InBlockingCsMode(PlayState *play, Player *player);
 
 /* Custom stuff */
 void Player_HandleBronzeScale(Player* this, PlayState* play);
+
+void Player_UpdateWrapper(Player* this, PlayState* play);
+
+void Player_CheckCustomBoots(PlayState* play);
 
 #endif

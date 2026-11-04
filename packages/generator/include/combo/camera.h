@@ -2,6 +2,9 @@
 #define COMBO_CAMERA_H
 
 #if defined(GAME_OOT)
+
+#define SUBCAM_NONE -1
+
 typedef enum CameraSettingType {
     /* 0x00 */ CAM_SET_NONE,
     /* 0x01 */ CAM_SET_NORMAL0,
@@ -168,9 +171,19 @@ typedef enum {
     /* 0x5A */ CAM_SET_DUNGEON4, /* Used in Pirates Fortress Interior, hidden room near hookshot "DUNGEON4" */
     /* 0x5B */ CAM_SET_MAX
 } CameraSettingType;
+
+void Camera_SetFocalActor(Camera* camera, Actor* actor);
+void _Camera_SetFocalActor(Camera* camera, Actor* actor);
 #endif
 
 s32 Camera_RequestSetting(Camera* camera, s16 setting);
 int Camera_CheckValidMode(Camera* camera, s16 mode);
+s32 Camera_ChangeMode(Camera* camera, s16 mode);
+void func_800E0348(Camera* camera);
+
+#if defined(GAME_OOT)
+s32 func_8005B198(void);
+#endif
+
 
 #endif

@@ -1,4 +1,4 @@
-import type { Game } from '../defines';
+import type { Game } from '@ootmm/data';
 
 /*
  * Each trick should have a user friendly name, a tooltip to explain the trick's function within the logic,
@@ -363,6 +363,16 @@ export const TRICKS: Tricks = {
     game: 'oot',
     name: "MQ Jabu without cow soul",
     tooltip: "Logic can expect you to hit the switches in MQ Jabu-Jabu without needing to possess the cow soul.",
+  },
+  OOT_FIRE_TEMPLE_BOSS_DOOR_ROLL_JUMP: {
+    game: 'oot',
+    name: "Roll Jump to Fire Temple Boss Door",
+    tooltip: "Removes the hover boots or the temple climbing requirement to reach the boss door"
+  },
+  OOT_GV_ROCKS_WATER_BOMB_DROP: {
+    game: 'oot',
+    name: "Gerudo Valley Underwater Rocks with Bombs",
+    tooltip: "Bombs can be used to destroy the rocks underwater at the Hyrule Field entrance of Gerudo Valley. Stand above them on the bridge and drop a bomb down right as it starts flashing repeatedly."
   },
   MM_LENS: {
     game: 'mm',
@@ -804,6 +814,12 @@ export const TRICKS: Tricks = {
     game: 'mm',
     name: "Defeat the waterfall Like Like in Zora Cape by using a precise Bombchu launch.",
     tooltip: "It is possible to get a precise angle for the Bombchu to crawl along and blow up the Like Like for the Piece of Heart.",
+  },
+  MM_ALIENS_DIN: {
+    game: 'mm',
+    name: "Defend Romani Ranch from the aliens using only Din's Fire",
+    tooltip: "Din's Fire is able to defeat the aliens and with careful usage of it can defend the ranch for the entire duration, needing only one refill of magic.",
+    linkVideo: 'https://youtu.be/QMuKmQ7NGIE',
   },
   GLITCH_OOT_EQUIP_SWAP: {
     game: 'oot',

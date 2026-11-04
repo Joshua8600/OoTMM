@@ -2,6 +2,7 @@
 #define INCLUDED_COMBO_ITEMS_H
 
 #include <combo/types.h>
+#include <combo/xflags.h>
 #include <combo/data/items.h>
 #include <combo/common/actors/Item_Decoy.h>
 #include <combo/oot/save.h>
@@ -133,7 +134,9 @@
 #define IA_MM_SEEDS             0x7b
 #define IA_MM_STONEGERUDOSKULL  0x7c
 #define IA_MM_GIBDOSPOOKY       0x7d
-#define IA_MAX                  0x7e
+#define IA_MM_FIERCE_DEITY_ADULT 0x7e
+#define IA_SAVE_FLAG            0x7f
+#define IA_MAX                  0x80
 #define IA_NONE                 0xff
 
 #define ITT_NONE        0x00
@@ -161,22 +164,10 @@
 #define OV_SCRUB        0x08
 #define OV_SR           0x09
 #define OV_FISH         0x0a
+#define OV_XFLAG        0x10
 
-#define OV_XFLAG0       0x10
-#define OV_XFLAG1       0x11
-#define OV_XFLAG2       0x12
-#define OV_XFLAG3       0x13
-#define OV_XFLAG4       0x14
-#define OV_XFLAG5       0x15
-#define OV_XFLAG6       0x16
-#define OV_XFLAG7       0x17
-#define OV_XFLAG8       0x18
-#define OV_XFLAG9       0x19
-#define OV_XFLAG10      0x1a
-#define OV_XFLAG11      0x1b
-
-#define OVF_RENEW             (1 << 2)
-#define OVF_PRECOND           (1 << 3)
+#define OVF_RENEW             (1 << 0)
+#define OVF_PRECOND           (1 << 1)
 
 typedef struct PlayState PlayState;
 
@@ -197,6 +188,7 @@ typedef struct ComboItemOverride
 {
     u8  player;
     u8  playerFrom;
+    u8  playerName[8];
     s16 giRaw;
     s16 gi;
     s16 cloakGi;
@@ -232,6 +224,7 @@ extern const u8 kOotHammerGFS[];
 extern const u8 kMmBowSlingshot[];
 extern const u8 kMmStoneGerudoSkull[];
 extern const u8 kMmGibdoSpooky[];
+extern const u8 kMmFierceDeityAdult[];
 
 void comboSyncItems(void);
 
@@ -259,7 +252,7 @@ void comboGiveItemNpcEx(Actor* actor, PlayState* play, s16 gi, int npcId, int fl
 void comboItemOverride(ComboItemOverride* dst, const ComboItemQuery* q);
 u8   comboItemType(s16 gi);
 
-u8 comboSceneKey(u8 sceneId);
+u8 Play_SceneKey(u8 sceneId);
 
 void comboPlayItemFanfare(s16 gi, int isShort);
 
@@ -268,6 +261,7 @@ s16 comboItemResolve(PlayState* play, s16 gi);
 s16 Item_Progressive(s16 gi, int ovflags);
 
 Actor_ItemDecoy* Item_AddWithDecoy(PlayState* play, const ComboItemQuery* q);
+Actor_ItemDecoy* Item_AddWithDecoyNamed(PlayState* play, const ComboItemQuery* q, const char* name);
 
 extern u8 gMaxBombchuOot;
 extern u8 gMaxBombchuMm;

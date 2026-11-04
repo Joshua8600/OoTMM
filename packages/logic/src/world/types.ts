@@ -1,4 +1,6 @@
-import type { Entrance, Game, Item, Region } from '@ootmm/core';
+import type { Entrance, Game } from '@ootmm/data';
+import type { Region } from '@ootmm/core';
+import type { Item } from '../items';
 import type { ResolvedWorldFlags } from './flags';
 import type { Expr, ExprParser } from '../expr';
 
@@ -19,25 +21,6 @@ export type WorldArea = {
   time: 'still' | 'day' | 'night' | 'flow';
   region: string;
 };
-
-export type WorldCheckType = 'chest' | 'collectible' | 'gs' | 'sf' | 'cow' | 'shop' | 'scrub' | 'sr' | 'pot' | 'crate' | 'barrel' | 'grass' | 'tree' | 'bush' | 'rock' | 'soil' | 'wonder' | 'fish' | 'fairy' | 'snowball' | 'hive' | 'rupee' | 'heart' | 'fairy_spot' | 'butterfly' | 'boulder' | 'boulder-red' | 'boulder-silver' | 'icicle' | 'redice';
-
-type WorldCheckNumeric = {
-  type: WorldCheckType;
-  id: number;
-};
-
-type WorldCheckSymbolic = {
-  type: 'npc';
-  id: string;
-};
-
-export type WorldCheck = {
-  game: Game;
-  scene: string;
-  item: Item;
-  hint: string;
-} & (WorldCheckNumeric | WorldCheckSymbolic);
 
 export type WorldGossip = {
   game: Game;
@@ -66,7 +49,6 @@ export type DungeonEntrance =
 
 export type World = {
   areas: { [k: string]: WorldArea };
-  checks: { [k: string]: WorldCheck };
   dungeons: { [k: string]: Set<string> };
   dungeonsBossAreas: { [k: string]: Set<string> };
   regions: { [k: string]: string };
@@ -84,4 +66,5 @@ export type World = {
   resolvedFlags: ResolvedWorldFlags;
   exprParsers: ExprParsers;
   dungeonsEntrances: Map<string, DungeonEntrance>;
+  checkItems: Map<string, Item>;
 };

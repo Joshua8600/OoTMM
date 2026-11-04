@@ -1,9 +1,10 @@
-import type { Options, TrickKey, PlayerItem, Region, SongEventSongs } from '@ootmm/core';
-import type { LogicResult, HintGossipFoolish, HintGossipPath, HintGossipItemExact, HintGossipItemRegion, AnalysisPath, SphereEntryEvent, Location } from '@ootmm/logic';
+import type { Options, TrickKey, Region, SongEventSongs } from '@ootmm/core';
+import type { PlayerItem, LogicResult, HintGossipFoolish, HintGossipPath, HintGossipItemExact, HintGossipItemRegion, AnalysisPath, SphereEntryEvent, Location } from '@ootmm/logic';
 
 import { sortBy } from 'lodash-es';
-import { SETTINGS, TRICKS, exportSettings, regionData, ENTRANCES, hintLocations, SONG_EVENT_LOCATIONS_OOT, SONG_EVENT_LOCATIONS_MM, SONG_EVENT_SONGS } from '@ootmm/core';
-import { DUNGEONS_BY_KEY, PATH_EVENT_DATA, BOSS_METADATA_BY_DUNGEON, isShuffled, ANALYSIS_EVENTS, WORLD_FLAGS, locationData, makeLocation } from '@ootmm/logic';
+import { ENTRANCES, hintLocations } from '@ootmm/data';
+import { SETTINGS, TRICKS, exportSettings, regionData, SONG_EVENT_LOCATIONS_OOT, SONG_EVENT_LOCATIONS_MM, SONG_EVENT_SONGS } from '@ootmm/core';
+import { DUNGEONS_BY_KEY, PATH_EVENT_DATA, BOSS_METADATA_BY_DUNGEON, ANALYSIS_EVENTS, WORLD_FLAGS, locationData, makeLocation } from '@ootmm/logic';
 
 import { itemName } from './names';
 import { regionName } from './regions';
@@ -174,9 +175,6 @@ class SpoilerWriter {
 
   private writeWorldFlags() {
     let worlds = this.logic.worlds;
-    if (!this.opts.settings.distinctWorlds) {
-      worlds = [this.logic.worlds[0]];
-    }
 
     this.writer.indent('World Flags');
     for (let i = 0; i < worlds.length; ++i) {
@@ -210,9 +208,6 @@ class SpoilerWriter {
 
   private writePreCompleted() {
     let worlds = this.logic.worlds;
-    if (!this.opts.settings.distinctWorlds) {
-      worlds = [this.logic.worlds[0]];
-    }
     if (!worlds.some(world => world.preCompleted.size > 0)) {
       return;
     }
@@ -236,9 +231,6 @@ class SpoilerWriter {
 
   private writeEntrances() {
     let worlds = this.logic.worlds;
-    if (!this.opts.settings.distinctWorlds) {
-      worlds = [this.logic.worlds[0]];
-    }
     if (!worlds.some(world => world.entranceOverrides.size > 0)) {
       return;
     }
@@ -319,10 +311,6 @@ class SpoilerWriter {
 
   private writeSongEvents() {
     let worlds = this.logic.worlds;
-
-    if (!this.opts.settings.distinctWorlds) {
-      worlds = [this.logic.worlds[0]];
-    }
 
     const shouldWriteOot = this.opts.settings.songEventsShuffleOot;
     const shouldWriteMm = this.opts.settings.songEventsShuffleMm;
@@ -584,11 +572,9 @@ class SpoilerWriter {
       if (this.isMulti) this.writer.indent(`World ${i+1} (${worlds[i].locations.size})`);
       const world = worlds[i];
       const regionNames = new Set(Object.values(world.regions));
-      const dungeonLocations = Object.values(world.dungeons).reduce((acc, x) => new Set([...acc, ...x]));
       for (const region of regionNames) {
         const regionalLocations = Object.keys(world.regions)
           .filter(location => world.regions[location] === region)
-          .filter(location => isShuffled(this.opts.settings, world, location, dungeonLocations))
           .map(loc => `${loc}: ${this.itemNameAt(makeLocation(loc, i)!)}`);
         this.writer.indent(`${regionName(region)} (${regionalLocations.length}):`);
         for (const loc of regionalLocations) {

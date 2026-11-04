@@ -57,6 +57,8 @@ static int canSpawnSoul(PlayState *play, s16 actorId, u16 variable)
         return opt(comboHasSoulOot(GI_OOT_SOUL_MISC_BUSINESS_SCRUB));
     case ACTOR_EN_TEST:
         return comboHasSoulOot(GI_OOT_SOUL_ENEMY_STALFOS);
+    case ACTOR_BG_MORI_BIGST:
+        return opt(comboHasSoulOot(GI_OOT_SOUL_ENEMY_STALFOS));
     case ACTOR_BG_BDAN_OBJECTS:
         if (variable & 0xff)
             return 1;
@@ -327,6 +329,8 @@ static int canSpawnActor(PlayState *play, s16 actorId, u16 param)
             return opt(comboHasSoulOot(GI_OOT_SOUL_NPC_CITIZEN));
         else
             return 1;
+    case ACTOR_DOOR_ANA:
+        return !(Config_Flag(CFG_OOT_SHOVEL) && !SaveFlag_Get(SAVE_FLAG_SHOVEL_OOT));
     default:
         return 1;
     }

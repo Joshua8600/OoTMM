@@ -1,9 +1,12 @@
-import type { Game, Settings, Item, SongEventSongs } from '@ootmm/core';
-import type { World, WorldCheck, WorldArea, ExprMap, ExprParsers } from './types';
+import type { Game } from '@ootmm/data';
+import type { Settings, SongEventSongs } from '@ootmm/core';
+import type { World, WorldArea, ExprMap, ExprParsers } from './types';
 import type { Expr } from '../expr';
 
 import { cloneDeep, mapValues } from 'lodash-es';
-import { MACROS, WORLD, REGIONS, POOL, Monitor, GAMES, Random, itemByID, ItemHelpers, Items, gameId, GOSSIPS_BY_LOCATION, SONG_EVENT_SONG_IDS } from '@ootmm/core';
+import { gameId, MACROS, WORLD, REGIONS, CHECKS, GAMES, GOSSIPS_BY_LOCATION } from '@ootmm/data';
+import { Monitor, Random, SONG_EVENT_SONG_IDS } from '@ootmm/core';
+import { itemByID, ItemHelpers } from '../items';
 import { ExprParser, exprTrue, MM_TIME_SLICES } from '../expr';
 import { defaultPrices } from '../price';
 import { resolveWorldFlags } from './flags';
@@ -63,14 +66,6 @@ const mapExprs = (exprParser: ExprParser, game: Game, char: string, data: any) =
   return result;
 }
 
-function cloneChecks(checks: { [k: string]: WorldCheck }): { [k: string]: WorldCheck } {
-  const result: { [k: string]: WorldCheck } = {};
-  for (const [k, v] of Object.entries(checks)) {
-    result[k] = { ...v };
-  }
-  return result;
-}
-
 function cloneWorldArea(worldArea: WorldArea): WorldArea {
   return {
     exits: { ...worldArea.exits },
@@ -90,7 +85,6 @@ function cloneWorldArea(worldArea: WorldArea): WorldArea {
 export function cloneWorld(world: World): World {
   return {
     areas: mapValues(world.areas, cloneWorldArea),
-    checks: cloneChecks(world.checks),
     dungeons: mapValues(world.dungeons, x => new Set(x)),
     dungeonsBossAreas: mapValues(world.dungeonsBossAreas, x => new Set(x)),
     regions: cloneDeep(world.regions),
@@ -108,6 +102,7 @@ export function cloneWorld(world: World): World {
     resolvedFlags: world.resolvedFlags,
     exprParsers: world.exprParsers,
     dungeonsEntrances: new Map(world.dungeonsEntrances),
+    checkItems: new Map(world.checkItems),
   };
 }
 
@@ -129,15 +124,8 @@ class LogicPassWorld {
     const worlds: World[] = [];
     this.state.monitor.log('Logic: World Building');
 
-    if (this.state.settings.distinctWorlds) {
-      for (let i = 0; i < this.state.settings.players; ++i) {
-        worlds.push(this.createWorld());
-      }
-    } else {
-      const world = this.createWorld();
-      for (let i = 0; i < this.state.settings.players; ++i) {
-        worlds.push(cloneWorld(world));
-      }
+    for (let i = 0; i < this.state.settings.players; ++i) {
+      worlds.push(this.createWorld());
     }
 
     return { worlds };
@@ -228,7 +216,6 @@ class LogicPassWorld {
 
     return {
       areas: {},
-      checks: {},
       dungeons: {},
       dungeonsBossAreas: {},
       regions: {},
@@ -246,13 +233,14 @@ class LogicPassWorld {
       resolvedFlags,
       exprParsers,
       dungeonsEntrances: new Map,
+      checkItems: new Map,
     };
   }
 
   private loadGame(game: Game) {
     /* Create the expr parser */
     this.loadAreas(game, this.world.exprParsers[game]);
-    this.loadPool(game);
+    this.loadChecks(game);
   }
 
   private loadMacrosFile(exprParser: ExprParser, data: any) {
@@ -390,37 +378,19 @@ class LogicPassWorld {
     }
   }
 
-  private loadPool(game: Game) {
-    for (const record of POOL[game]) {
-      const location = gameId(game, String(record.location), ' ');
-      if (!this.world.locations.has(location))
+  private loadChecks(game: Game) {
+    for (const check of CHECKS) {
+      if (check.game !== game) continue;
+      if (!this.world.locations.has(check.location))
         continue;
-      const type = String(record.type);
-      const scene = gameId(game, String(record.scene), '_');
-      let id = null;
-      if (type === 'npc') {
-        id = gameId(game, String(record.id), '_');
-      } else {
-        id = Number(record.id);
-      }
-      let item: Item;
-      if (record.item === 'NOTHING') {
-        item = Items.NOTHING;
-      } else {
-        item = itemByID(gameId(game, String(record.item), '_'));
-      }
-      let hint = String(record.hint);
-      if (hint !== 'NONE') {
-        hint = gameId(game, hint, '_');
-      }
-      const check = { game, type, scene, id, item, hint } as WorldCheck;
-      this.world.checks[location] = check;
 
+      const item = itemByID(check.item);
       if (ItemHelpers.isSong(item)) {
-        this.world.songLocations.add(location);
+        this.world.songLocations.add(check.location);
       } else if (ItemHelpers.isDungeonReward(item)) {
-        this.world.warpLocations.add(location);
+        this.world.warpLocations.add(check.location);
       }
+      this.world.checkItems.set(check.location, item);
     }
   }
 }

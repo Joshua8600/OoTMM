@@ -21,11 +21,18 @@ osWritebackDCache = 0x80003440;
 osWritebackDCacheAll = 0x800d5aa0;
 DMARomToRam = 0x8000085c;
 Audio_SetMainBgmTempoFreqAfterFanfare = 0x800c64a0;
+Actor_GetScreenPos = 0x80022b14;
+Color_RGBA8_Copy = 0x800646c8;
+CollisionCheck_SetInfo2 = 0x80050370;
+func_8005B198 = 0x80049da4;
+Sfx_PlaySfxAtPos = 0x80064780;
+Collider_SetCylinderPosition = 0x80050b44;
 
 gAudioLoadStatusFontSample = 0x80128a68;
 
 Player_GetHeight = 0x80021600;
 
+Actor_ProjectPos = 0x8001f7a0;
 Graph_Alloc = 0x800a1a2c;
 Gfx_Open = 0x800a1aa0;
 Gfx_Close = 0x800a1aac;
@@ -52,7 +59,7 @@ AudioLoad_InitTable = 0x800b70c8;
 Audio_SetFileSelectSettings = 0x800c7420;
 Magic_Refill = 0x80072500;
 
-ActorRemove = 0x80025648;
+Actor_Delete = 0x80025648;
 
 Play_InitEnvironment = 0x8009cda0;
 gWeatherMode = 0x800f1640;
@@ -318,9 +325,9 @@ Flags_GetTreasure = 0x8002060c;
 SetChestFlag = 0x80020624;
 Actor_GetPlayerExchangeItemId = 0x80022b04;
 
-AddItem = 0x8006fdcc;
+Item_Give = 0x8006fdcc;
 Player_AddItemWithIcon = 0x8083c590;
-GetItemCollectBehavior = 0x80071420;
+Item_CheckObtainability = 0x80071420;
 Inventory_ReplaceItem = 0x800719e0;
 Inventory_UpdateBottleItem = 0x80071b7c;
 Interface_SetDoAction = 0x80071E6C;
@@ -340,7 +347,7 @@ osSetIntMask = 0x80003cc0;
 
 Sram_CopySave = 0x80090fd0;
 
-SetRoomClear = 0x800206ac;
+Flags_SetClear = 0x800206ac;
 
 Play_GetCamera = 0x8009d2f0;
 PlayStoreFlags = 0x8009d894;
@@ -793,6 +800,7 @@ WaterBox_GetSurfaceImpl = 0x80034908;
 gFrogsSongPtr = 0x80102b50;
 Audio_PlaySfxTransposed = 0x800c5934;
 OnePointCutscene_Init = 0x8006b6fc;
+OnePointCutscene_EndCutscene = 0x8006b9b4;
 Message_UpdateOcarinaMemoryGame = 0x800d5fec;
 Message_ShouldAdvance = 0x800d6110;
 Message_CloseTextbox = 0x800d6218;
@@ -844,3 +852,5 @@ sKaleidoSetupRightPageIndex = 0x800f15d8;
 Audio_PlaySfx_PauseMenuOpenOrClose = 0x800c7200;
 
 Player_InBlockingCsMode = 0x8007938c;
+
+D_8011D3AC = 0x800ef1b4;

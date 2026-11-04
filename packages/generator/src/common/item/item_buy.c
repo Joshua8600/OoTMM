@@ -1,34 +1,7 @@
 #include <combo.h>
 #include <combo/item.h>
 #include <combo/config.h>
-
-static int hasFreeBottleOot(void)
-{
-    for (int i = 0; i < 4; ++i)
-    {
-        if (gOotSave.info.inventory.items[ITS_OOT_BOTTLE + i] == ITEM_OOT_BOTTLE_EMPTY)
-            return 1;
-    }
-    if ((gOotExtraTrade.adult & (1 << XITEM_OOT_ADULT_BOTTLE)) && gOotExtraItems.bottleAdultSlot == ITEM_OOT_BOTTLE_EMPTY)
-    {
-        return 1;
-    }
-    if ((gOotExtraTrade.child & (1 << XITEM_OOT_CHILD_BOTTLE)) && gOotExtraItems.bottleChildSlot == ITEM_OOT_BOTTLE_EMPTY)
-    {
-        return 1;
-    }
-    return 0;
-}
-
-static int hasFreeBottleMm(void)
-{
-    for (int i = 0; i < 6; ++i)
-    {
-        if (gMmSave.info.inventory.items[ITS_MM_BOTTLE + i] == ITEM_MM_BOTTLE_EMPTY)
-            return 1;
-    }
-    return 0;
-}
+#include <combo/inventory.h>
 
 static int canBuyShieldOotRaw(int level)
 {
@@ -82,11 +55,11 @@ int isItemBuyable(s16 gi)
     case GI_OOT_STICK:
     case GI_OOT_STICKS_5:
     case GI_OOT_STICKS_10:
-        return (gOotSave.info.inventory.upgrades.dekuStick == 0) || (gOotSave.info.inventory.ammo[ITS_OOT_STICKS] < kMaxSticks[gOotSave.info.inventory.upgrades.dekuStick]);
+        return gOotSave.info.inventory.ammo[ITS_OOT_STICKS] < kMaxSticks[gOotSave.info.inventory.upgrades.dekuStick];
     case GI_OOT_NUTS_5:
     case GI_OOT_NUTS_5_ALT:
     case GI_OOT_NUTS_10:
-        return (gOotSave.info.inventory.upgrades.dekuNut == 0) || (gOotSave.info.inventory.ammo[ITS_OOT_NUTS] < kMaxNuts[gOotSave.info.inventory.upgrades.dekuNut]);
+        return gOotSave.info.inventory.ammo[ITS_OOT_NUTS] < kMaxNuts[gOotSave.info.inventory.upgrades.dekuNut];
     case GI_OOT_BOMB:
     case GI_OOT_BOMBS_5:
     case GI_OOT_BOMBS_10:
@@ -121,7 +94,7 @@ int isItemBuyable(s16 gi)
     case GI_OOT_FAIRY:
     case GI_OOT_MILK:
     case GI_OOT_CHATEAU:
-        return hasFreeBottleOot();
+        return comboHasFreeBottleOot();
     case GI_OOT_SHIELD_DEKU:
         return canBuyShieldOot(0);
     case GI_OOT_SHIELD_HYLIAN:
@@ -132,11 +105,11 @@ int isItemBuyable(s16 gi)
     case GI_MM_MAGIC_JAR_LARGE:
         return (gMmSave.info.playerData.isMagicAcquired && (gMmSave.info.playerData.magic < (gMmSave.info.playerData.isDoubleMagicAcquired ? 0x60 : 0x30)));
     case GI_MM_STICK:
-        return (gMmSave.info.inventory.upgrades.dekuStick == 0) || (gMmSave.info.inventory.ammo[ITS_MM_STICKS] < kMaxSticks[gMmSave.info.inventory.upgrades.dekuStick]);
+        return gMmSave.info.inventory.ammo[ITS_MM_STICKS] < kMaxSticks[gMmSave.info.inventory.upgrades.dekuStick];
     case GI_MM_NUT:
     case GI_MM_NUTS_5:
     case GI_MM_NUTS_10:
-        return (gMmSave.info.inventory.upgrades.dekuNut == 0) || (gMmSave.info.inventory.ammo[ITS_MM_NUTS] < kMaxNuts[gMmSave.info.inventory.upgrades.dekuNut]);
+        return gMmSave.info.inventory.ammo[ITS_MM_NUTS] < kMaxNuts[gMmSave.info.inventory.upgrades.dekuNut];
     case GI_MM_BOMB:
     case GI_MM_BOMBS_5:
     case GI_MM_BOMBS_10:
@@ -172,7 +145,7 @@ int isItemBuyable(s16 gi)
     case GI_MM_POE:
     case GI_MM_BIG_POE:
     case GI_MM_BLUE_FIRE:
-        return hasFreeBottleMm();
+        return comboHasFreeBottleMm();
     case GI_MM_SHIELD_DEKU:
         return canBuyShieldMm(0);
     case GI_MM_SHIELD_HERO:

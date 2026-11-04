@@ -1,8 +1,10 @@
-import type { Game, Options } from '@ootmm/core';
+import type { Game } from '@ootmm/data';
+import type { Options } from '@ootmm/core';
 import type { DecompressedRoms } from './decompress';
 import type { GameAddresses } from './addresses';
 
-import { Monitor, GAMES, FILES } from '@ootmm/core';
+import { GAMES, FILES } from '@ootmm/data';
+import { Monitor } from '@ootmm/core';
 
 import { CONFIG } from './config';
 import { cosmetics } from './cosmetics';
@@ -150,25 +152,31 @@ export async function pack(args: PackArgs): Promise<PackOutput> {
     romBuilder.alias(`oot/${a}`, `mm/${a}`);
   }
 
+  /* Inject a unique player ID */
+  const playerId = new Uint8Array(16);
+  crypto.getRandomValues(playerId);
+  patchfile.addSymbolPatch('MULTI_PLAYER_ID', playerId);
+
+  /* Apply sympatches */
+  for (const [sym, data] of patchfile.symPatches.entries()) {
+    for (const game of GAMES) {
+      const addrs = patchfile.symbols[game].get(sym);
+      if (addrs) {
+        for (const addr of addrs) {
+          const file = romBuilder.fileByVRAM(game, addr);
+          if (file === null) {
+            throw new Error(`Failed to find file for symbol ${sym} in ${game}`);
+          }
+          const offset = addr - file.vram![game]![0];
+          file.data.set(data, offset);
+        }
+      }
+    }
+  }
+
   /* Apply cosmetics */
   monitor.log("Pack: Cosmetics");
   const cosmeticLog = await cosmetics(monitor, args.opts, romBuilder, patchfile.symbols);
-
-  /* Inject the multi Id */
-  for (const game of GAMES) {
-    const addrs = patchfile.symbols[game].get('MULTI_ID');
-    if (addrs === undefined) {
-      throw new Error(`Missing MULTI_ID symbol for ${game}`);
-    }
-    for (const addr of addrs) {
-      const file = romBuilder.fileByVRAM(game, addr);
-      if (file === null) {
-        throw new Error(`Failed to find file for MULTI_ID in ${game}`);
-      }
-      const offset = addr - file.vram![game]![0];
-      file.data.set(patchfile.multiId, offset);
-    }
-  }
 
   /* Build the final ROM */
   monitor.log("Pack: Finishing up ROM");

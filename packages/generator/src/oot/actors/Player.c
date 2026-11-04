@@ -1,5 +1,4 @@
 #include <combo.h>
-#include <combo/sr.h>
 #include <combo/dungeon.h>
 #include <combo/custom.h>
 #include <combo/player.h>
@@ -444,18 +443,6 @@ void Player_UpdateWrapper(Player* this, PlayState* play)
     Ocarina_HandleCustomSongs(this, play);
     Dpad_Update(play);
     Dpad_Use(play, DPF_EQUIP);
-
-    if (!(this->stateFlags1 & (PLAYER_ACTOR_STATE_CLIMB | PLAYER_ACTOR_STATE_CLIMB2)) || Message_GetState(&play->msgCtx) == TEXT_STATE_NONE)
-    {
-        if (g.delayedSwitchFlagsCount)
-        {
-            for (int i = 0; i < g.delayedSwitchFlagsCount; ++i)
-                Flags_SetSwitch(play, g.delayedSwitchFlags[i]);
-            g.delayedSwitchFlagsCount = 0;
-        }
-    }
-
-    comboSrUpdate(play);
 }
 
 int Player_DpadHook(Player* this, PlayState* play)
@@ -943,7 +930,7 @@ int Player_OverrideLimbDrawPauseWrapper(PlayState* play, s32 limbIndex, Gfx** dL
 
 int Player_OverrideLimbDrawGameplayFirstPersonWrapper(PlayState* play, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, Player* player)
 {
-    if (!(gSave.age == AGE_CHILD && limbIndex == PLAYER_LIMB_R_FOREARM))
+    if (!(gSave.age == AGE_CHILD && limbIndex == PLAYER_LIMB_R_FOREARM && player->heldItemAction != 15 && play->sceneId != SCE_OOT_SHOOTING_GALLERY))
     {
         /* Forward */
         if (Player_OverrideLimbDrawGameplayFirstPerson(play, limbIndex, dList, pos, rot, player))
@@ -1044,7 +1031,7 @@ PATCH_CALL(0x8007a0d0, Player_DrawFlexLod);
 static void Player_AddMasterSwordGanonFight(PlayState* play)
 {
     if (gSharedCustomSave.foundMasterSword)
-        AddItem(play, ITEM_OOT_SWORD_MASTER);
+        Item_Give(play, ITEM_OOT_SWORD_MASTER);
 }
 
 PATCH_CALL(0x80850758, Player_AddMasterSwordGanonFight);

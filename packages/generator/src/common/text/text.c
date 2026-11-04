@@ -2,6 +2,7 @@
 #include <combo/text.h>
 #include <combo/item.h>
 #include <combo/config.h>
+#include <combo/multi.h>
 
 typedef struct
 {
@@ -337,12 +338,16 @@ static int isItemAmbiguous(s16 gi)
         return !Config_Flag(CFG_SHARED_SONG_ORDER) && Config_Flag(CFG_OOT_SONG_ORDER);
     case GI_OOT_STICK_UPGRADE:
     case GI_OOT_STICK_UPGRADE2:
+    case GI_OOT_STICK_UPGRADE3:
     case GI_MM_STICK_UPGRADE:
     case GI_MM_STICK_UPGRADE2:
+    case GI_MM_STICK_UPGRADE3:
     case GI_OOT_NUT_UPGRADE:
     case GI_OOT_NUT_UPGRADE2:
+    case GI_OOT_NUT_UPGRADE3:
     case GI_MM_NUT_UPGRADE:
     case GI_MM_NUT_UPGRADE2:
+    case GI_MM_NUT_UPGRADE3:
         return Config_Flag(CFG_MM_UPGRADES_STICKS_NUTS) && !Config_Flag(CFG_SHARED_NUTS_STICKS);
     case GI_OOT_SPIN_UPGRADE:
     case GI_MM_SPIN_UPGRADE:
@@ -577,6 +582,9 @@ static int isItemAmbiguous(s16 gi)
     case GI_MM_SOUL_MISC_GS:
     case GI_MM_SOUL_MISC_BUSINESS_SCRUB:
         return !Config_Flag(CFG_SHARED_SOULS_MISC);
+    case GI_OOT_SHOVEL:
+    case GI_MM_SHOVEL:
+        return !Config_Flag(CFG_SHARED_SHOVEL);
     case GI_OOT_SKELETON_KEY:
     case GI_MM_SKELETON_KEY:
         return !Config_Flag(CFG_SHARED_SKELETON_KEY);
@@ -714,6 +722,17 @@ static int isItemAmbiguous(s16 gi)
     case GI_MM_POE:
     case GI_MM_BIG_POE:
         return !Config_Flag(CFG_SHARED_BOTTLES);
+    case GI_MM_CLOCK1:
+    case GI_MM_CLOCK2:
+    case GI_MM_CLOCK3:
+    case GI_MM_CLOCK4:
+    case GI_MM_CLOCK5:
+    case GI_MM_CLOCK6:
+    case GI_OOT_CLOCK:
+        return Config_Flag(CFG_MM_CLOCKS) && Config_Flag(CFG_OOT_CLOCKS);
+    case GI_OOT_FAIRY_BIG:
+    case GI_MM_FAIRY_BIG:
+        return !(Config_Flag(CFG_SHARED_MAGIC) && Config_Flag(CFG_SHARED_HEALTH));
     case GI_MM_MAGIC_BEAN:
     case GI_OOT_MAGIC_BEAN:
         return 1;
@@ -1066,6 +1085,8 @@ void comboTextAppendItemNameEx(char** b, s16 gi, int flags, int importance)
             break;
         case GI_OOT_WALLET:
         case GI_MM_WALLET:
+        case GI_OOT_WALLET2:
+        case GI_MM_WALLET2:
             itemName = "a " TEXT_C1 "Progressive Wallet";
             ambiguous = !Config_Flag(CFG_SHARED_WALLETS);
             break;
@@ -1074,6 +1095,8 @@ void comboTextAppendItemNameEx(char** b, s16 gi, int flags, int importance)
             break;
         case GI_OOT_SCALE_BRONZE:
         case GI_MM_SCALE_BRONZE:
+        case GI_OOT_SCALE_SILVER:
+        case GI_MM_SCALE_SILVER:
             itemName = "a " TEXT_C1 "Progressive Scale";
             ambiguous = !Config_Flag(CFG_SHARED_SCALES) && Config_Flag(CFG_MM_SCALES);
             break;
@@ -1106,6 +1129,20 @@ void comboTextAppendItemNameEx(char** b, s16 gi, int flags, int importance)
         case GI_MM_BOMBCHU_20:
             if (gComboConfig.bombchuBehaviorMm == BOMBCHU_BEHAVIOR_BAG_FIRST)
                 itemName = TEXT_C1 "Bombchu"; /* Generic term for pack or bag */
+            break;
+        case GI_OOT_STICK_UPGRADE:
+        case GI_OOT_STICK_UPGRADE2:
+        case GI_MM_STICK_UPGRADE:
+        case GI_MM_STICK_UPGRADE2:
+            itemName = "a " TEXT_C1 "Progressive Deku Stick Upgrade";
+            ambiguous = !Config_Flag(CFG_SHARED_NUTS_STICKS);
+            break;
+        case GI_OOT_NUT_UPGRADE:
+        case GI_OOT_NUT_UPGRADE2:
+        case GI_MM_NUT_UPGRADE:
+        case GI_MM_NUT_UPGRADE2:
+            itemName = "a " TEXT_C1 "Progressive Deku Nuts Upgrade";
+            ambiguous = !Config_Flag(CFG_SHARED_NUTS_STICKS);
             break;
         }
 
@@ -1159,6 +1196,12 @@ void comboTextAppendItemNameOverride(char** b, const ComboItemOverride* o, int f
 void comboTextAppendItemNameOverrideEx(char** b, const ComboItemOverride* o, int flags, int importance)
 {
     s16 gi;
+    int isNotSelf;
+    char name[9];
+
+    isNotSelf = !Item_IsPlayerSelf(o->player);
+    if (isNotSelf)
+        flags |= TF_PROGRESSIVE;
 
     if (flags & TF_PROGRESSIVE)
         gi = o->giRaw;
@@ -1169,17 +1212,18 @@ void comboTextAppendItemNameOverrideEx(char** b, const ComboItemOverride* o, int
         gi = o->cloakGi;
 
     comboTextAppendItemNameEx(b, gi, flags, importance);
-    if (!Item_IsPlayerSelf(o->player))
+    if (isNotSelf)
     {
-        comboTextAppendStr(b, " for " TEXT_COLOR_YELLOW "Player ");
+        comboTextAppendStr(b, " for " TEXT_COLOR_YELLOW "World ");
         comboTextAppendNum(b, o->player);
         comboTextAppendClearColor(b);
     }
 
-    if (!Item_IsPlayerSelf(o->playerFrom))
-    {
-        comboTextAppendStr(b, " from " TEXT_COLOR_YELLOW "Player ");
-        comboTextAppendNum(b, o->playerFrom);
+    if (o->playerName[0]) {
+        memcpy(name, o->playerName, 8);
+        name[8] = 0;
+        comboTextAppendStr(b, " from " TEXT_COLOR_YELLOW);
+        comboTextAppendStr(b, name);
         comboTextAppendClearColor(b);
     }
 }
@@ -1210,7 +1254,7 @@ void comboTextAppendRegionName(char** b, u8 regionId, u8 world, int flags)
     comboTextAppendStr(b, regName->name);
     comboTextAppendClearColor(b);
 
-    if (world != 0 && world != 0xff && world != gComboConfig.playerId)
+    if (world != 0 && world != 0xff && world != Multi_WorldID())
     {
         comboTextAppendStr(b, " in " TEXT_COLOR_YELLOW "World ");
         comboTextAppendNum(b, world);
@@ -1239,7 +1283,7 @@ int comboTextAppendCheckName(char** b, u8 checkId, u8 world)
     comboTextAppendStr(b, cn->name);
     comboTextAppendClearColor(b);
 
-    if (world != 0 && world != 0xff && world != gComboConfig.playerId)
+    if (world != 0 && world != 0xff && world != Multi_WorldID())
     {
         comboTextAppendStr(b, " in " TEXT_COLOR_YELLOW "World ");
         comboTextAppendNum(b, world);

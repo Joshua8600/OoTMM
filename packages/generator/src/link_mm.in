@@ -6,10 +6,15 @@ sFlashromMesgQueue = 0x801fbe10;
 Collider_UpdatePlayerWeapon = 0x80126440;
 _Interface_Update = 0x801210e0;
 
+Actor_GetScreenPos = 0x800b8898;
+SubS_OfferTalkExchangeFacing = 0x8013e8f8;
+Play_SetMotionBlurAlpha = 0x80165658;
 CollisionCheck_SpawnShieldParticlesMetal = 0x800e8668;
 Collider_InitQuad = 0x800e1e18;
 Collider_SetQuad = 0x800e1f20;
-
+Actor_OfferOcarinaInteraction = 0x800b874c;
+SubS_FillCutscenesList = 0x8013e3b8;
+gOneVec3f = 0x801c5db0;
 bzero = 0x80089630;
 InitDmaManager = 0x80080d0c;
 Play_Init = 0x8016a2c8;
@@ -17,6 +22,10 @@ gSaveContext = 0x801ef670;
 DMARomToRam = 0x80080790;
 Camera_GetCamDir = 0x800DFC90;
 SkelAnime_DrawOpa = 0x80133b3c;
+Message_DisplayOcarinaStaff = 0x80152434;
+SubS_StartCutscene = 0x8013e2d4;
+Actor_OcarinaInteractionAccepted = 0x800b8718;
+Color_RGB8_Lerp = 0x801001b8;
 
 EffectSs_Delete = 0x800b0210;
 gEffectSsTable = 0x801ae3a0;
@@ -38,6 +47,13 @@ Fault_AddHungupAndCrashImpl = 0x80083df4;
 Interface_NewDay = 0x8010ee74;
 Environment_NewDay = 0x800feaf4;
 
+Interface_DrawClock = 0x80119610;
+Environment_IsTimeStopped = 0x800fe4a8;
+Message_DrawMain = 0x801541d4;
+Font_LoadMessageBoxEndIcon = 0x800f4fc0;
+Message_Decode = 0x8014D7B4;
+Message_DecodeNES = 0x8015B198;
+
 Play_DrawHudButtons = 0x80117100;
 Interface_DrawAmmoCount = 0x80117bd0;
 Audio_GetActiveSeqId = 0x801a8a50;
@@ -50,10 +66,40 @@ _Interface_UpdateButtonsPart2 = 0x80110038;
 Schedule_CheckMiscS = 0x8013296c;
 
 AudioSeq_QueueSeqCmd = 0x801a89a8;
+Environment_IsFinalHours = 0x800fe590;
+func_800FE5D0 = 0x800fe5d0;
+
+Audio_SplitBgmChannels = 0x801a0cb0;
+Audio_StopSequenceAtPos = 0x801a1a10;
+Audio_StartSubBgmAtPos = 0x801a1a8c;
+
+Audio_PlaySceneSequence = 0x801a25e4;
+Audio_StartSceneSequence = 0x801a2670;
+Audio_PlayAmbience = 0x801a4a28;
+
+AudioSeq_StopSequence = 0x801a7d04;
+AudioSeq_GetActiveSeqId = 0x801a8a50;
+AudioSeq_IsSeqCmdNotQueued = 0x801a8abc;
+AudioSeq_SetVolumeScale = 0x801a8bd0;
+
+sAudioCutsceneFlag = 0x801d66b0;
+sPrevMainBgmSeqId = 0x801d66cc;
+gAudioSpecId = 0x801db4d4;
+
+sRequestedSceneSeqId = 0x801fd2a0;
+sAudioPauseState = 0x801fd3b0;
+sSpatialSeqIsActive = 0x801fd3b4;
+sSpatialSeqNoFilterPos = 0x801fd410;
+sSpatialSeqFilterPos = 0x801fd420;
+sSpatialSeqMaxDist = 0x801fd42c;
+sSpatialSeqSeqId = 0x801fd430;
+sSpatialSeqFlags = 0x801fd431;
+sSpatialSubBgmFadeTimer = 0x801fd433;
+sSpatialSeqPlayerIndex = 0x801fd435;
+sSpatialSeqFadeTimer = 0x801fd436;
 
 Sleep_Usec = 0x80087a1c;
 
-ActorRemove = 0x800BB498;
 AddMagic = 0x80115d14;
 Magic_RequestChange = 0x80115db4;
 Magic_Reset = 0x80115D5C;
@@ -157,9 +203,12 @@ Gfx_SetupDL_42Opa = 0x8012c8ac;
 Matrix_Put      = 0x8018020c;
 DisplaceTexture = 0x8012cbd0;
 Gfx_SetupDL = 0x8012BF78;
+Gfx_Open = 0x80174a40;
+Gfx_Close = 0x80174a4c;
 
 gOcarinaPressedButtons = 0x801fd450;
 
+Actor_ProjectPos = 0x800b4edc;
 PreDraw1 = 0x800b8050;
 PreDraw2 = 0x800b8118;
 
@@ -245,7 +294,7 @@ CutsceneManager_GetCutsceneEntry = 0x800f208c;
 Rand_S16Offset = 0x800ff450;
 
 gSegments = 0x801f8180;
-AddItem = 0x80112e80;
+Item_Give = 0x80112e80;
 Player_AddItemWithIcon = 0x8083d168;
 GiveItemDefaultRange = 0x800b8b84;
 
@@ -264,7 +313,7 @@ gActorOvl = 0x801aefd0;
 
 Flags_SetSwitch = 0x800b5bf4;
 ClearSwitchFlag = 0x800b5c34;
-GetItemCollectBehavior = 0x801143cc;
+_Item_CheckObtainability = 0x801143cc;
 RemoveItem = 0x801149a0;
 Inventory_UpdateBottleItem = 0x80114fd0;
 
@@ -351,7 +400,7 @@ gDmaData = 0x8009f8b0;
 _ParseSceneRoomHeaders_ActorsList = 0x8012f90c;
 Yaz0_Decompress = 0x80081178;
 osSetThreadPri = 0x8008fc00;
-SetRoomClear = 0x800b5d30;
+Flags_SetClear = 0x800b5d30;
 
 Rand_ZeroOne = 0x80086fdc;
 Rand_Next = 0x80086fa0;
@@ -776,3 +825,35 @@ func_80969DA4 = 0x80969DA4;
 func_80969898 = 0x80969898;
 
 Player_GetCurMaskItemId = 0x80122EEC;
+
+Camera_SetFocalActor = 0x800e02ac;
+sCutsceneMgr = 0x801bd8b0;
+Actor_DeactivateLens = 0x800BAC14;
+Play_EnableMotionBlurPriority = 0x80165DCC;
+Play_DisableMotionBlurPriority = 0x80165DF0;
+Play_FillScreen = 0x8016A268;
+func_80123140 = 0x80123140;
+PlayerCall_Update = 0x80160B80;
+PlayerCall_Draw = 0x80160BC0;
+AnimatedMat_DrawXlu = 0x801317C0;
+gameplay_keep_Matanimheader_054F18 = 0x04054f18;
+AudioSfx_StopById = 0x801A75E8;
+Lib_PlaySfx_2 = 0x801000CC;
+Camera_ChangeMode = 0x800DF840;
+func_8012301C = 0x8012301C;
+func_800E0348 = 0x800E0348;
+Actor_Delete = 0x800BB498;
+Horse_Spawn = 0x800F40A0;
+Skin_Free = 0x80138700;
+Skin_Init = 0x8013859C;
+Skin_Setup = 0x80138410;
+func_8012F73C = 0x8012F73C;
+Message_StartTextbox = 0x801518b0;
+Math_Vec3f_StepTo = 0x80100448;
+Snap_ValidatePictograph = 0x8013a530;
+PreRender_FetchFbufCoverage = 0x801705ec;
+PreRender_CoverageRgba16ToI8 = 0x8017023c;
+EffectSsDtBubble_SpawnCustomColor = 0x800b210c;
+Actor_SetColorFilter = 0x800bcb70;
+Actor_DrawDamageEffects = 0x800be680;
+Matrix_MultVecX = 0x80181b78;

@@ -1,13 +1,13 @@
 import type { Settings } from '@ootmm/core';
 import type { LogicResultWorld } from '@ootmm/logic';
 import type { Confvar } from '../confvars';
-
+import { MM_AGE_REQ_ITEMS } from '@ootmm/core';
 import { isEntranceShuffle, mustStartWithMasterSword } from '@ootmm/logic';
 
 export function worldConfig(world: LogicResultWorld, settings: Settings): Set<Confvar> {
   const config = new Set<Confvar>;
 
-  const exprs: { [k in Confvar]: boolean } = {
+  const exprs: Partial<Record<Confvar, boolean>> = {
     GANON_NO_BOSS_KEY: settings.ganonBossKey === 'removed',
     SMALL_KEY_SHUFFLE: settings.smallKeyShuffleOot === 'anywhere',
     CSMC: settings.csmc === 'always',
@@ -65,6 +65,7 @@ export function worldConfig(world: LogicResultWorld, settings: Settings): Set<Co
     SHARED_SOULS_MISC: settings.sharedSoulsMisc,
     SHARED_SOULS_NPC: settings.sharedSoulsNpc,
     SHARED_SOULS_ANIMAL: settings.sharedSoulsAnimal,
+    SHARED_SHOVEL: settings.sharedShovel,
     SHARED_OCARINA_BUTTONS: settings.sharedOcarinaButtons,
     SHARED_SHIELDS: settings.sharedShields,
     SHARED_SPELL_FIRE: settings.sharedSpellFire,
@@ -77,6 +78,8 @@ export function worldConfig(world: LogicResultWorld, settings: Settings): Set<Co
     SHARED_SCALES: settings.sharedScales,
     SHARED_STRENGTH: settings.sharedStrength,
     SHARED_BOTTLES: settings.sharedBottles,
+    OOT_SHOVEL: settings.shovelOot,
+    MM_SHOVEL: settings.shovelMm,
     MM_CROSS_AGE: settings.crossAge,
     MM_OCARINA_FAIRY: settings.fairyOcarinaMm,
     MM_HOOKSHOT_SHORT: settings.shortHookshotMm,
@@ -145,7 +148,8 @@ export function worldConfig(world: LogicResultWorld, settings: Settings): Set<Co
     OOT_SHUFFLE_MASK_TRADES: settings.shuffleMaskTrades,
     MENU_NOTEBOOK: settings.menuNotebook,
     OOT_AGELESS_CHILD_TRADE: settings.agelessChildTrade,
-    OOT_START_ADULT: settings.startingAge === 'adult',
+    OOT_START_ADULT: settings.startingAgeOot === 'adult',
+    MM_START_ADULT: settings.startingAgeMm === 'adult',
     HINT_IMPORTANCE: settings.hintImportance && settings.logic !== 'none',
     OOT_OCARINA_BUTTONS: settings.ocarinaButtonsShuffleOot,
     MM_OCARINA_BUTTONS: settings.ocarinaButtonsShuffleMm,
@@ -214,6 +218,7 @@ export function worldConfig(world: LogicResultWorld, settings: Settings): Set<Co
     SHARED_SONG_ORDER: settings.sharedSongOrder,
     OOT_POWDER_KEG: settings.powderKegOot,
     SHARED_POWDER_KEG: settings.sharedPowderKeg,
+    OOT_EXTRA_BOTTLES: settings.extraBottlesOot,
     MM_FD_ANYWHERE: settings.fierceDeityAnywhere,
     MM_CLOCK_SPEED_VERYSLOW: settings.clockSpeed === 'veryslow',
     MM_CLOCK_SPEED_SLOW: settings.clockSpeed === 'slow',
@@ -227,20 +232,22 @@ export function worldConfig(world: LogicResultWorld, settings: Settings): Set<Co
     MM_KEEP_BOTTLES_RESET: settings.keepBottlesReset,
     MM_FAST_MASKS: settings.fastMasks,
     OOT_OPEN_ZD_SHORTCUT: settings.openZdShortcut,
-    MM_CLOCKS: settings.clocks,
+    MM_CLOCKS: settings.clocksMm,
     MM_CLOCKS_PROGRESSIVE: settings.progressiveClocks !== 'separate',
     MM_CLOCKS_PROGRESSIVE_REVERSE: settings.progressiveClocks === 'descending',
+    OOT_CLOCKS: settings.clocksOot !== 'none',
+    OOT_CLOCKS_NIGHT: settings.clocksOot === 'night',
     ER_GROTTOS: settings.erGrottos !== 'none',
     ER_OVERWORLD: settings.erOverworld !== 'none',
     ER_INDOORS: settings.erIndoors !== 'none',
     ER_REGIONS_OVERWORLD: settings.erRegions !== 'none' || settings.erOverworld !== 'none',
     CROSS_GAME_FW: settings.crossGameFw,
     RUPEE_SCALING: settings.rupeeScaling,
-    OOT_SWORDLESS_ADULT: settings.swordlessAdult,
     OOT_TIME_TRAVEL_REQUIRES_MS: settings.timeTravelSword,
     OOT_EXTRA_CHILD_SWORDS: settings.extraChildSwordsOot,
     MM_DEKU_SHIELD: settings.dekuShieldMm,
     BRONZE_SCALE: settings.bronzeScale,
+    INITIAL_STICKS_NUTS_UPGRADES: settings.sticksNutsUpgradesInitial,
     ONLY_OOT: settings.games === 'oot',
     ONLY_MM: settings.games === 'mm',
     OOT_PLANTED_BEANS: settings.ootPreplantedBeans,
@@ -250,6 +257,7 @@ export function worldConfig(world: LogicResultWorld, settings: Settings): Set<Co
     OOT_OPEN_WATER_TEMPLE: world.resolvedFlags.openDungeonsOot.has('Water'),
     OOT_OPEN_WELL: world.resolvedFlags.openDungeonsOot.has('BotW'),
     OOT_SONG_OF_DOUBLE_TIME: settings.songOfDoubleTimeOot,
+    MM_SONG_OF_DOUBLE_TIME_TIME_SELECTOR: settings.mmSongOfDoubleTimeTimeSelector,
     MM_PRE_ACTIVATED_OWL_CT: world.resolvedFlags.mmPreActivatedOwls.has('clocktown'),
     MM_PRE_ACTIVATED_OWL_MR: world.resolvedFlags.mmPreActivatedOwls.has('milkroad'),
     MM_PRE_ACTIVATED_OWL_SS: world.resolvedFlags.mmPreActivatedOwls.has('swamp'),
@@ -272,6 +280,7 @@ export function worldConfig(world: LogicResultWorld, settings: Settings): Set<Co
     MM_MASK_GERUDO: settings.gerudoMaskMm,
     MM_MASK_SKULL: settings.skullMaskMm,
     MM_MASK_SPOOKY: settings.spookyMaskMm,
+    MM_MASK_ADULT: settings.adultMaskMm,
     MM_UPGRADES_STICKS_NUTS: settings.sticksNutsUpgradesMm,
     OOT_SHUFFLE_EGGS: settings.eggShuffle,
     MM_STONE_OF_AGONY: settings.stoneAgonyMm,
@@ -305,11 +314,35 @@ export function worldConfig(world: LogicResultWorld, settings: Settings): Set<Co
     MM_TELESCOPE_ER: settings.erIndoorsTelescopes,
     OOT_HYPER_ENEMIES: settings.ootHyperEnemies,
     MM_HYPER_ENEMIES: settings.mmHyperEnemies,
+    OOT_SKIP_CUTSCENES: settings.cutsceneSkipOoT,
+    OOT_CUTSCENE_GLITCH_AID: settings.cutsceneGlitchOoT,
+    MM_SKIP_CUTSCENES: settings.cutsceneSkipMM,
+    OOT_CS_GOHMA: settings.cutsceneIntroGohma,
+    OOT_CS_KING_DODONGO: settings.cutsceneIntroKingDodongo,
+    OOT_CS_BARINADE: settings.cutsceneIntroBarinade,
+    OOT_CS_PHANTOM_GANON: settings.cutsceneIntroPhantomGanon,
+    OOT_CS_VOLVAGIA: settings.cutsceneIntroVolvagia,
+    OOT_CS_MORPHA: settings.cutsceneIntroMorpha,
+    OOT_CS_BONGO_BONGO: settings.cutsceneIntroBongoBongo,
+    OOT_CS_TWINROVA: settings.cutsceneIntroTwinrova,
+    OOT_CS_GANONDORF: settings.cutsceneIntroGanondorf,
+    MM_CS_ODOLWA: settings.cutsceneIntroOdolwa,
+    MM_CS_WART: settings.cutsceneIntroWart,
   };
 
   for (const v in exprs) {
     if (exprs[v as Confvar]) {
       config.add(v as Confvar);
+    }
+  }
+
+  for (const item of MM_AGE_REQ_ITEMS) {
+    if ((settings as any)[item.childSetting]) {
+      config.add(item.childConfvar as Confvar);
+    }
+
+    if ((settings as any)[item.adultSetting]) {
+      config.add(item.adultConfvar as Confvar);
     }
   }
 

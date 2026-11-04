@@ -2,12 +2,17 @@
 
 /* Resize */
 PATCH_START 0x801adecc
-.int 0x1b0
+.int 0x1ac
 PATCH_END
 
 /* Use our init */
 PATCH_START 0x801aded0
 .int EnItem00_InitWrapper
+PATCH_END
+
+/* Route Item00 updates through recovery before vanilla can self-delete. */
+PATCH_START 0x801aded8
+.int EnItem00_UpdateGuard
 PATCH_END
 
 UpdateEnd:
