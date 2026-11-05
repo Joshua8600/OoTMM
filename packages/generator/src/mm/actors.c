@@ -591,6 +591,8 @@ static int canSpawnSoul(PlayState *play, s16 actorId, u16 variable)
     case ACTOR_EN_POH:
     case ACTOR_EN_BIGPO:
         return comboHasSoulMm(GI_MM_SOUL_ENEMY_POE);
+    case ACTOR_EN_WOOD02:
+        return opt(comboHasSoulMm(GI_MM_SOUL_MISC_TREE));
     }
 
     return 1;

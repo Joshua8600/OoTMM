@@ -300,6 +300,16 @@ static int canSpawnSoul(PlayState *play, s16 actorId, u16 variable)
         return opt(comboHasSoulOot(GI_OOT_SOUL_ANIMAL_DOG));
     case ACTOR_EN_BUTTE:
         return opt(comboHasSoulOot(GI_OOT_SOUL_ANIMAL_BUTTERFLY));
+    case ACTOR_EN_A_OBJ:
+        switch (variable & 0xff)
+        {
+        case 0x08:
+            return opt(comboHasSoulOot(GI_OOT_SOUL_MISC_TREE));
+        default:
+            return 1;
+        }
+    case ACTOR_EN_WOOD02:
+        return opt(comboHasSoulOot(GI_OOT_SOUL_MISC_TREE));
     default:
         return 1;
     }

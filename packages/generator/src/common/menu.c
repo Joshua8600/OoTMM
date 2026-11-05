@@ -564,11 +564,13 @@ static const char* const kSoulsAnimalMm[] = {
 static const char* const kSoulsMiscOot[] = {
     "Gold Skulltulas",
     "Business Scrubs",
+    "Trees",
 };
 
 static const char* const kSoulsMiscMm[] = {
     "Gold Skulltulas",
     "Business Scrubs",
+    "Trees",
 };
 
 static const Gfx kDlistQuadRGBA16_12x12[] = {

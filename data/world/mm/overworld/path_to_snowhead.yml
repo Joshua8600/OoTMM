@@ -6,7 +6,7 @@
     "Mountain Village": "true"
     "Path to Snowhead Middle": "goron_fast_roll || hookshot_anywhere || (has_hover_boots && trick(MM_PATH_SNOWHEAD_HOVERS))"
   locations:
-    "Path to Snowhead Snow Tree Entrance": "true"
+    "Path to Snowhead Snow Tree Entrance": "soul_tree"
 
 "Path to Snowhead Middle":
   region: PATH_TO_SNOWHEAD
@@ -37,9 +37,9 @@
     "Path to Snowhead Small Snowball Back 3": "true"
     "Path to Snowhead Small Snowball Spring Back 1": "is_spring"
     "Path to Snowhead Small Snowball Spring Back 2": "is_spring"
-    "Path to Snowhead Snow Tree End 1": "true"
-    "Path to Snowhead Snow Tree End 2": "true"
-    "Path to Snowhead Snow Tree End 3": "true"
+    "Path to Snowhead Snow Tree End 1": "soul_tree"
+    "Path to Snowhead Snow Tree End 2": "soul_tree"
+    "Path to Snowhead Snow Tree End 3": "soul_tree"
 
 "Path to Snowhead Grotto":
   region: ENTRANCE
