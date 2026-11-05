@@ -1,15 +1,24 @@
-import type { Game, Settings } from '@ootmm/core';
-import type { WorldCheck, LogicResult, LogicResultWorld } from '@ootmm/logic';
+import type { Settings } from '@ootmm/core';
+import type { LogicResult, LogicResultWorld } from '@ootmm/logic';
 
 import { concatUint8Arrays } from 'uint8array-extras';
-import { NPC, SCENES } from '@ootmm/core';
+import { CHECKS_BY_LOCATION } from '@ootmm/data';
 import { makeLocation } from '@ootmm/logic';
 
 import { gi, playerId } from './util';
 import { bufReadU32BE, bufWriteU16BE, bufWriteU32BE } from '../util/buffer';
 
 const SHARED_ITEMS_OOT = new Map([
-  ['SHARED_SWORD', 'OOT_SWORD_KOKIRI'],
+  ['SHARED_SWORD', 'OOT_SWORD_MASTER'],
+  ['SHARED_SWORD_CHILD', 'OOT_SWORD_RAZOR'],
+  ['SHARED_SWORD_KOKIRI', 'OOT_SWORD_KOKIRI'],
+  ['SHARED_SWORD_RAZOR', 'OOT_SWORD_RAZOR'],
+  ['SHARED_SWORD_GILDED', 'OOT_SWORD_GILDED'],
+  ['SHARED_SWORD_MASTER', 'OOT_SWORD_MASTER'],
+  ['SHARED_SWORD_KNIFE', 'OOT_SWORD_KNIFE'],
+  ['SHARED_SWORD_BIGGORON', 'OOT_SWORD_BIGGORON'],
+  ['SHARED_SWORD_GORON', 'OOT_SWORD_KNIFE'],
+  ['SHARED_SHIELD_HERO', 'OOT_SHIELD_HERO'],
   ['SHARED_BOW', 'OOT_BOW'],
   ['SHARED_BOMB_BAG', 'OOT_BOMB_BAG'],
   ['SHARED_ARROWS_5', 'OOT_ARROWS_5'],
@@ -21,6 +30,8 @@ const SHARED_ITEMS_OOT = new Map([
   ['SHARED_BOMBS_10', 'OOT_BOMBS_10'],
   ['SHARED_BOMBS_20', 'OOT_BOMBS_20'],
   ['SHARED_BOMBS_30', 'OOT_BOMBS_30'],
+  ['SHARED_DEKU_SEEDS_5', 'OOT_SEEDS_5'],
+  ['SHARED_DEKU_SEEDS_30', 'OOT_SEEDS_30'],
   ['SHARED_MAGIC_UPGRADE', 'OOT_MAGIC_UPGRADE'],
   ['SHARED_ARROW_FIRE', 'OOT_ARROW_FIRE'],
   ['SHARED_ARROW_ICE', 'OOT_ARROW_ICE'],
@@ -28,13 +39,43 @@ const SHARED_ITEMS_OOT = new Map([
   ['SHARED_SONG_TIME', 'OOT_SONG_TIME'],
   ['SHARED_SONG_EPONA', 'OOT_SONG_EPONA'],
   ['SHARED_SONG_STORMS', 'OOT_SONG_STORMS'],
-  ['SHARED_SONG_SUN', 'OOT_SONG_SUN'],
   ['SHARED_SONG_EMPTINESS', 'OOT_SONG_EMPTINESS'],
+  ['SHARED_SONG_HEALING', 'OOT_SONG_HEALING'],
+  ['SHARED_SONG_SOARING', 'OOT_SONG_SOARING'],
+  ['SHARED_SONG_AWAKENING', 'OOT_SONG_AWAKENING'],
+  ['SHARED_SONG_GORON_HALF', 'OOT_SONG_GORON_HALF'],
+  ['SHARED_SONG_GORON', 'OOT_SONG_GORON'],
+  ['SHARED_SONG_ZORA', 'OOT_SONG_ZORA'],
+  ['SHARED_SONG_ORDER', 'OOT_SONG_ORDER'],
+  ['SHARED_SONG_ZELDA', 'OOT_SONG_ZELDA'],
+  ['SHARED_SONG_SARIA', 'OOT_SONG_SARIA'],
+  ['SHARED_SONG_SUN', 'OOT_SONG_SUN'],
+  ['SHARED_SONG_TP_FIRE', 'OOT_SONG_TP_FIRE'],
+  ['SHARED_SONG_TP_FOREST', 'OOT_SONG_TP_FOREST'],
+  ['SHARED_SONG_TP_LIGHT', 'OOT_SONG_TP_LIGHT'],
+  ['SHARED_SONG_TP_SHADOW', 'OOT_SONG_TP_SHADOW'],
+  ['SHARED_SONG_TP_SPIRIT', 'OOT_SONG_TP_SPIRIT'],
+  ['SHARED_SONG_TP_WATER', 'OOT_SONG_TP_WATER'],
   ['SHARED_SONG_NOTE_TIME', 'OOT_SONG_NOTE_TIME'],
   ['SHARED_SONG_NOTE_EPONA', 'OOT_SONG_NOTE_EPONA'],
   ['SHARED_SONG_NOTE_STORMS', 'OOT_SONG_NOTE_STORMS'],
-  ['SHARED_SONG_NOTE_SUN', 'OOT_SONG_NOTE_SUN'],
   ['SHARED_SONG_NOTE_EMPTINESS', 'OOT_SONG_NOTE_EMPTINESS'],
+  ['SHARED_SONG_NOTE_HEALING', 'OOT_SONG_NOTE_HEALING'],
+  ['SHARED_SONG_NOTE_SOARING', 'OOT_SONG_NOTE_SOARING'],
+  ['SHARED_SONG_NOTE_AWAKENING', 'OOT_SONG_NOTE_AWAKENING'],
+  ['SHARED_SONG_NOTE_GORON_HALF', 'OOT_SONG_NOTE_GORON_HALF'],
+  ['SHARED_SONG_NOTE_GORON', 'OOT_SONG_NOTE_GORON'],
+  ['SHARED_SONG_NOTE_ZORA', 'OOT_SONG_NOTE_ZORA'],
+  ['SHARED_SONG_NOTE_ORDER', 'OOT_SONG_NOTE_ORDER'],
+  ['SHARED_SONG_NOTE_ZELDA', 'OOT_SONG_NOTE_ZELDA'],
+  ['SHARED_SONG_NOTE_SARIA', 'OOT_SONG_NOTE_SARIA'],
+  ['SHARED_SONG_NOTE_SUN', 'OOT_SONG_NOTE_SUN'],
+  ['SHARED_SONG_NOTE_TP_FIRE', 'OOT_SONG_NOTE_TP_FIRE'],
+  ['SHARED_SONG_NOTE_TP_FOREST', 'OOT_SONG_NOTE_TP_FOREST'],
+  ['SHARED_SONG_NOTE_TP_LIGHT', 'OOT_SONG_NOTE_TP_LIGHT'],
+  ['SHARED_SONG_NOTE_TP_SHADOW', 'OOT_SONG_NOTE_TP_SHADOW'],
+  ['SHARED_SONG_NOTE_TP_SPIRIT', 'OOT_SONG_NOTE_TP_SPIRIT'],
+  ['SHARED_SONG_NOTE_TP_WATER', 'OOT_SONG_NOTE_TP_WATER'],
   ['SHARED_NUT', 'MM_NUT'] /* OoT lacks single nut */,
   ['SHARED_NUTS_5', 'OOT_NUTS_5'],
   ['SHARED_NUTS_10', 'OOT_NUTS_10'],
@@ -49,6 +90,9 @@ const SHARED_ITEMS_OOT = new Map([
   ['SHARED_MASK_TRUTH', 'OOT_MASK_TRUTH'],
   ['SHARED_MASK_GORON', 'OOT_MASK_GORON'],
   ['SHARED_MASK_ZORA', 'OOT_MASK_ZORA'],
+  ['SHARED_MASK_GERUDO', 'OOT_MASK_GERUDO'],
+  ['SHARED_MASK_SKULL', 'OOT_MASK_SKULL'],
+  ['SHARED_MASK_SPOOKY', 'OOT_MASK_SPOOKY'],
   ['SHARED_WALLET', 'OOT_WALLET'],
   ['SHARED_RUPEE_GREEN', 'OOT_RUPEE_GREEN'],
   ['SHARED_RUPEE_BLUE', 'OOT_RUPEE_BLUE'],
@@ -85,15 +129,28 @@ const SHARED_ITEMS_OOT = new Map([
   ['SHARED_SCALE', 'OOT_SCALE'],
   ['SHARED_STRENGTH', 'OOT_STRENGTH'],
   ['SHARED_HAMMER', 'OOT_HAMMER'],
+  ['SHARED_BOOMERANG', 'OOT_BOOMERANG'],
+  ['SHARED_GREAT_FAIRY_SWORD', 'OOT_GREAT_FAIRY_SWORD'],
+  ['SHARED_SLINGSHOT', 'OOT_SLINGSHOT'],
   ['SHARED_STICK_UPGRADE', 'OOT_STICK_UPGRADE'],
   ['SHARED_NUT_UPGRADE', 'OOT_NUT_UPGRADE'],
   ['SHARED_STONE_OF_AGONY', 'OOT_STONE_OF_AGONY'],
   ['SHARED_SPIN_UPGRADE', 'OOT_SPIN_UPGRADE'],
   ['SHARED_BOMBCHU_BAG', 'OOT_BOMBCHU_BAG'],
+  ['SHARED_POWDER_KEG', 'OOT_POWDER_KEG'],
 ]);
 
 const SHARED_ITEMS_MM = new Map([
-  ['SHARED_SWORD', 'MM_SWORD_KOKIRI'],
+  ['SHARED_SWORD', 'MM_SWORD_MASTER'],
+  ['SHARED_SWORD_CHILD', 'MM_SWORD_RAZOR'],
+  ['SHARED_SWORD_KOKIRI', 'MM_SWORD_KOKIRI'],
+  ['SHARED_SWORD_RAZOR', 'MM_SWORD_RAZOR'],
+  ['SHARED_SWORD_GILDED', 'MM_SWORD_GILDED'],
+  ['SHARED_SWORD_MASTER', 'MM_SWORD_MASTER'],
+  ['SHARED_SWORD_KNIFE', 'MM_SWORD_KNIFE'],
+  ['SHARED_SWORD_BIGGORON', 'MM_SWORD_BIGGORON'],
+  ['SHARED_SWORD_GORON', 'MM_SWORD_KNIFE'],
+  ['SHARED_SHIELD_HERO', 'MM_SHIELD_HERO'],
   ['SHARED_BOW', 'MM_BOW'],
   ['SHARED_BOMB_BAG', 'MM_BOMB_BAG'],
   ['SHARED_ARROWS_5', 'OOT_ARROWS_5'], /* MM lacks 5 pack */
@@ -105,6 +162,8 @@ const SHARED_ITEMS_MM = new Map([
   ['SHARED_BOMBS_10', 'MM_BOMBS_10'],
   ['SHARED_BOMBS_20', 'MM_BOMBS_20'],
   ['SHARED_BOMBS_30', 'MM_BOMBS_30'],
+  ['SHARED_DEKU_SEEDS_5', 'MM_SEEDS_5'],
+  ['SHARED_DEKU_SEEDS_30', 'MM_SEEDS_30'],
   ['SHARED_MAGIC_UPGRADE', 'MM_MAGIC_UPGRADE'],
   ['SHARED_ARROW_FIRE', 'MM_ARROW_FIRE'],
   ['SHARED_ARROW_ICE', 'MM_ARROW_ICE'],
@@ -112,13 +171,43 @@ const SHARED_ITEMS_MM = new Map([
   ['SHARED_SONG_TIME', 'MM_SONG_TIME'],
   ['SHARED_SONG_EPONA', 'MM_SONG_EPONA'],
   ['SHARED_SONG_STORMS', 'MM_SONG_STORMS'],
-  ['SHARED_SONG_SUN', 'MM_SONG_SUN'],
   ['SHARED_SONG_EMPTINESS', 'MM_SONG_EMPTINESS'],
+  ['SHARED_SONG_HEALING', 'MM_SONG_HEALING'],
+  ['SHARED_SONG_SOARING', 'MM_SONG_SOARING'],
+  ['SHARED_SONG_AWAKENING', 'MM_SONG_AWAKENING'],
+  ['SHARED_SONG_GORON_HALF', 'MM_SONG_GORON_HALF'],
+  ['SHARED_SONG_GORON', 'MM_SONG_GORON'],
+  ['SHARED_SONG_ZORA', 'MM_SONG_ZORA'],
+  ['SHARED_SONG_ORDER', 'MM_SONG_ORDER'],
+  ['SHARED_SONG_ZELDA', 'MM_SONG_ZELDA'],
+  ['SHARED_SONG_SARIA', 'MM_SONG_SARIA'],
+  ['SHARED_SONG_SUN', 'MM_SONG_SUN'],
+  ['SHARED_SONG_TP_FIRE', 'MM_SONG_TP_FIRE'],
+  ['SHARED_SONG_TP_FOREST', 'MM_SONG_TP_FOREST'],
+  ['SHARED_SONG_TP_LIGHT', 'MM_SONG_TP_LIGHT'],
+  ['SHARED_SONG_TP_SHADOW', 'MM_SONG_TP_SHADOW'],
+  ['SHARED_SONG_TP_SPIRIT', 'MM_SONG_TP_SPIRIT'],
+  ['SHARED_SONG_TP_WATER', 'MM_SONG_TP_WATER'],
   ['SHARED_SONG_NOTE_TIME', 'MM_SONG_NOTE_TIME'],
   ['SHARED_SONG_NOTE_EPONA', 'MM_SONG_NOTE_EPONA'],
   ['SHARED_SONG_NOTE_STORMS', 'MM_SONG_NOTE_STORMS'],
-  ['SHARED_SONG_NOTE_SUN', 'MM_SONG_NOTE_SUN'],
   ['SHARED_SONG_NOTE_EMPTINESS', 'MM_SONG_NOTE_EMPTINESS'],
+  ['SHARED_SONG_NOTE_HEALING', 'MM_SONG_NOTE_HEALING'],
+  ['SHARED_SONG_NOTE_SOARING', 'MM_SONG_NOTE_SOARING'],
+  ['SHARED_SONG_NOTE_AWAKENING', 'MM_SONG_NOTE_AWAKENING'],
+  ['SHARED_SONG_NOTE_GORON_HALF', 'MM_SONG_NOTE_GORON_HALF'],
+  ['SHARED_SONG_NOTE_GORON', 'MM_SONG_NOTE_GORON'],
+  ['SHARED_SONG_NOTE_ZORA', 'MM_SONG_NOTE_ZORA'],
+  ['SHARED_SONG_NOTE_ORDER', 'MM_SONG_NOTE_ORDER'],
+  ['SHARED_SONG_NOTE_ZELDA', 'MM_SONG_NOTE_ZELDA'],
+  ['SHARED_SONG_NOTE_SARIA', 'MM_SONG_NOTE_SARIA'],
+  ['SHARED_SONG_NOTE_SUN', 'MM_SONG_NOTE_SUN'],
+  ['SHARED_SONG_NOTE_TP_FIRE', 'MM_SONG_NOTE_TP_FIRE'],
+  ['SHARED_SONG_NOTE_TP_FOREST', 'MM_SONG_NOTE_TP_FOREST'],
+  ['SHARED_SONG_NOTE_TP_LIGHT', 'MM_SONG_NOTE_TP_LIGHT'],
+  ['SHARED_SONG_NOTE_TP_SHADOW', 'MM_SONG_NOTE_TP_SHADOW'],
+  ['SHARED_SONG_NOTE_TP_SPIRIT', 'MM_SONG_NOTE_TP_SPIRIT'],
+  ['SHARED_SONG_NOTE_TP_WATER', 'MM_SONG_NOTE_TP_WATER'],
   ['SHARED_NUT', 'MM_NUT'],
   ['SHARED_NUTS_5', 'MM_NUTS_5'],
   ['SHARED_NUTS_10', 'MM_NUTS_10'],
@@ -133,6 +222,9 @@ const SHARED_ITEMS_MM = new Map([
   ['SHARED_MASK_TRUTH', 'MM_MASK_TRUTH'],
   ['SHARED_MASK_GORON', 'MM_MASK_GORON'],
   ['SHARED_MASK_ZORA', 'MM_MASK_ZORA'],
+  ['SHARED_MASK_GERUDO', 'MM_MASK_GERUDO'],
+  ['SHARED_MASK_SKULL', 'MM_MASK_SKULL'],
+  ['SHARED_MASK_SPOOKY', 'MM_MASK_SPOOKY'],
   ['SHARED_WALLET', 'MM_WALLET'],
   ['SHARED_RUPEE_GREEN', 'MM_RUPEE_GREEN'],
   ['SHARED_RUPEE_BLUE', 'MM_RUPEE_BLUE'],
@@ -146,7 +238,7 @@ const SHARED_ITEMS_MM = new Map([
   ['SHARED_RECOVERY_HEART', 'MM_RECOVERY_HEART'],
   ['SHARED_DEFENSE_UPGRADE', 'MM_DEFENSE_UPGRADE'],
   ['SHARED_SHIELD_DEKU', 'MM_SHIELD_DEKU'],
-  ['SHARED_SHIELD_HYLIAN', 'MM_SHIELD_HERO'],
+  ['SHARED_SHIELD_HYLIAN', 'MM_SHIELD_HYLIAN'],
   ['SHARED_SHIELD_MIRROR', 'MM_SHIELD_MIRROR'],
   ['SHARED_SHIELD', 'MM_SHIELD'], /* Progressive */
   ['SHARED_MAGIC_JAR_SMALL', 'MM_MAGIC_JAR_SMALL'],
@@ -169,11 +261,15 @@ const SHARED_ITEMS_MM = new Map([
   ['SHARED_SCALE', 'MM_SCALE'],
   ['SHARED_STRENGTH', 'MM_STRENGTH'],
   ['SHARED_HAMMER', 'MM_HAMMER'],
+  ['SHARED_GREAT_FAIRY_SWORD', 'MM_GREAT_FAIRY_SWORD'],
+  ['SHARED_BOOMERANG', 'MM_BOOMERANG'],
+  ['SHARED_SLINGSHOT', 'MM_SLINGSHOT'],
   ['SHARED_STICK_UPGRADE', 'MM_STICK_UPGRADE'],
   ['SHARED_NUT_UPGRADE', 'MM_NUT_UPGRADE'],
   ['SHARED_STONE_OF_AGONY', 'MM_STONE_OF_AGONY'],
   ['SHARED_SPIN_UPGRADE', 'MM_SPIN_UPGRADE'],
   ['SHARED_BOMBCHU_BAG', 'MM_BOMBCHU_BAG'],
+  ['SHARED_POWDER_KEG', 'MM_POWDER_KEG'],
 ]);
 
 export const SHARED_ITEMS = {
@@ -181,141 +277,36 @@ export const SHARED_ITEMS = {
   mm: SHARED_ITEMS_MM,
 };
 
+/* TODO: Fix/normalize the SEEDS */
 export const ITEMS_SUBSTITUTIONS: { [k: string]: string } = {
-  OOT_SWORD: 'OOT_SWORD_KOKIRI',
+  OOT_WALLET: 'OOT_WALLET2',
+  OOT_SWORD: 'OOT_SWORD_MASTER',
+  OOT_SWORD_CHILD: 'OOT_SWORD_RAZOR',
   OOT_SWORD_GORON: 'OOT_SWORD_KNIFE',
+  MM_SWORD_GORON: 'MM_SWORD_KNIFE',
   OOT_OCARINA: 'OOT_OCARINA_FAIRY',
   OOT_STRENGTH: 'OOT_GORON_BRACELET',
-  OOT_SCALE: 'OOT_SCALE_BRONZE',
+  OOT_SCALE: 'OOT_SCALE_SILVER',
   OOT_SHIELD: 'OOT_PROGRESSIVE_SHIELD_DEKU',
-  MM_SWORD: 'MM_SWORD_KOKIRI',
+  OOT_SEEDS_5: 'OOT_DEKU_SEEDS_5',
+  OOT_SEEDS_30: 'OOT_DEKU_SEEDS_30',
+  MM_WALLET: 'MM_WALLET2',
+  MM_SWORD: 'MM_SWORD_MASTER',
+  MM_SWORD_CHILD: 'MM_SWORD_RAZOR',
   MM_SHIELD: 'MM_PROGRESSIVE_SHIELD_DEKU',
   MM_OCARINA: 'MM_OCARINA_OF_TIME',
-  MM_SCALE: 'MM_SCALE_BRONZE',
+  MM_SCALE: 'MM_SCALE_SILVER',
   MM_STRENGTH: 'MM_GORON_BRACELET',
   MM_CLOCK: 'MM_CLOCK1',
+  MM_SEEDS_5: 'MM_DEKU_SEEDS_5',
+  MM_SEEDS_30: 'MM_DEKU_SEEDS_30',
   SHARED_TRIFORCE: 'OOT_TRIFORCE',
   SHARED_TRIFORCE_POWER: 'OOT_TRIFORCE_POWER',
   SHARED_TRIFORCE_COURAGE: 'OOT_TRIFORCE_COURAGE',
   SHARED_TRIFORCE_WISDOM: 'OOT_TRIFORCE_WISDOM',
 };
 
-const checkId = (check: WorldCheck) => {
-  if (check.type === 'npc') {
-    if (!NPC.hasOwnProperty(check.id)) {
-      throw new Error(`Unknown NPC ${check.id}`);
-    }
-    return (NPC as any)[check.id];
-  }
-  return check.id;
-}
-
-function checkKey(check: WorldCheck): number {
-  /* Extract the ID */
-  const id = checkId(check);
-
-  /* Extract the type */
-  let typeId: number;
-  switch (check.type) {
-    case 'chest':
-      typeId = 0x01;
-      break;
-    case 'collectible':
-      typeId = 0x02;
-      break;
-    case 'npc':
-      typeId = 0x03;
-      break;
-    case 'gs':
-      typeId = 0x04;
-      break;
-    case 'sf':
-      typeId = 0x05;
-      break;
-    case 'cow':
-      typeId = 0x06;
-      break;
-    case 'shop':
-      typeId = 0x07;
-      break;
-    case 'scrub':
-      typeId = 0x08;
-      break;
-    case 'sr':
-      typeId = 0x09;
-      break;
-    case 'fish':
-      typeId = 0x0A;
-      break;
-    case 'pot':
-    case 'crate':
-    case 'barrel':
-    case 'grass':
-    case 'tree':
-    case 'bush':
-    case 'rock':
-    case 'soil':
-    case 'fairy':
-    case 'snowball':
-    case 'hive':
-    case 'rupee':
-    case 'heart':
-    case 'fairy_spot':
-    case 'wonder':
-    case 'butterfly':
-    case 'redboulder':
-    case 'icicle':
-    case 'redice':
-      /* xflag */
-      typeId = 0x10 + ((id >> 16) & 0xf);
-      break;
-  }
-
-  /* Extract the scene ID */
-  let sceneId = 0;
-  switch (check.type) {
-    case 'chest':
-    case 'collectible':
-    case 'sf':
-    case 'pot':
-    case 'crate':
-    case 'barrel':
-    case 'grass':
-    case 'tree':
-    case 'bush':
-    case 'rock':
-    case 'soil':
-    case 'fairy':
-    case 'snowball':
-    case 'hive':
-    case 'rupee':
-    case 'heart':
-    case 'fairy_spot':
-    case 'wonder':
-    case 'butterfly':
-    case 'redboulder':
-    case 'icicle':
-    case 'redice':
-      sceneId = (SCENES as any)[check.scene];
-      if (sceneId === undefined) {
-        throw new Error(`Unknown scene ${check.scene}`);
-      }
-      break;
-    default:
-      break;
-  }
-
-  /* Build the key */
-  let key = 0;
-  key = (key | ((typeId & 0xff) << 24)) >>> 0;
-  key = (key | ((sceneId & 0xff) << 16)) >>> 0;
-  key = (key | (id & 0xffff)) >>> 0;
-
-  return key;
-}
-
 type RandomizerPatcherChecksContext = {
-  game: Game;
   worldId: number;
   logic: LogicResult;
   settings: Settings;
@@ -336,28 +327,23 @@ export class RandomizerPatcherChecks {
 
   private execute(): Uint8Array {
     const buffers: Uint8Array[] = [];
-    for (const locId in this.world.checks) {
+    for (const locId of this.world.locations) {
+      const check = CHECKS_BY_LOCATION[locId];
       const loc = makeLocation(locId, this.ctx.worldId);
-      const c = this.world.checks[locId];
       const item = this.ctx.logic.items.get(loc)!;
 
-      if (c.game !== this.ctx.game) {
-        continue;
-      }
-
       /* Skip cows if not shuffled */
-      if (c.game === 'oot' && c.type === 'cow' && !this.ctx.settings.cowShuffleOot) continue;
-      if (c.game === 'mm' && c.type === 'cow' && !this.ctx.settings.cowShuffleMm) continue;
+      if (check.game === 'oot' && check.type === 'cow' && !this.ctx.settings.cowShuffleOot) continue;
+      if (check.game === 'mm' && check.type === 'cow' && !this.ctx.settings.cowShuffleMm) continue;
 
-      const key = checkKey(c);
-      const itemGi = gi(this.ctx.settings, this.ctx.game, item.item, true);
+      const itemGi = gi(this.ctx.settings, check.game, item.item, true);
       const b = new Uint8Array(16);
       const cloakItem = this.ctx.logic.itemCloaks.get(loc);
       let cloakGi = 0;
       if (cloakItem) {
-        cloakGi = gi(this.ctx.settings, this.ctx.game, cloakItem, true);
+        cloakGi = gi(this.ctx.settings, check.game, cloakItem, true);
       }
-      bufWriteU32BE(b, 0, key);
+      bufWriteU32BE(b, 0, check.key);
       bufWriteU16BE(b, 4, playerId(item.player));
       bufWriteU16BE(b, 6, itemGi);
       bufWriteU16BE(b, 8, cloakGi);

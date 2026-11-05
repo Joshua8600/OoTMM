@@ -1,4 +1,5 @@
 #include <combo.h>
+#include <combo/age.h>
 #include <combo/item.h>
 #include <combo/player.h>
 
@@ -82,6 +83,66 @@ void EnSyatekiMan_GiveItem(Actor* actor, PlayState* play, s16 gi, float a, float
     comboGiveItemNpc(actor, play, gi, npc, a, b);
 }
 
+static int EnSyatekiMan_HasBow(void)
+{
+    return gMmSave.info.inventory.upgrades.quiver != 0;
+}
+
+static int EnSyatekiMan_CheckBowAgeReq(void)
+{
+    return comboCheckItemAgeReqMm(ITEM_MM_BOW);
+}
+
+static int EnSyatekiMan_WrongBowAge(void)
+{
+    return EnSyatekiMan_HasBow() &&
+           !EnSyatekiMan_CheckBowAgeReq();
+}
+
+static void EnSyatekiMan_ShowWrongBowAge(PlayState* play)
+{
+    char* b;
+    char* start;
+    u16 textId;
+    if (play->sceneId == SCE_MM_SHOOTING_GALLERY)
+    {
+        textId = 0x3F9;
+        Audio_PlaySfx(NA_SE_VO_KAVO03);
+    }
+    else
+    {
+        textId = 0xA30;
+        Audio_PlaySfx(NA_SE_VO_SHVO01);
+    }
+
+    PlayerDisplayTextBox(play, textId, NULL);
+
+    b = play->msgCtx.font.textBuffer.schar;
+
+    comboTextAppendHeader(&b);
+    start = b;
+
+    comboTextAppendStr(
+        &b,
+        "Sorry, but ya can't play if ya can't use a Bow!"
+        TEXT_END
+    );
+    comboTextAutoLineBreaks(start);
+}
+
+static int EnSyatekiMan_MessageShouldAdvance_Age(PlayState* play)
+{
+    if (!Message_ShouldAdvance(play))
+        return 0;
+    if (play->msgCtx.choiceIndex == 0 &&
+        EnSyatekiMan_WrongBowAge())
+    {
+        EnSyatekiMan_ShowWrongBowAge(play);
+        return 0;
+    }
+    return 1;
+}
+
 PATCH_CALL(0x809c7b64, EnSyatekiMan_GiveItem);
 PATCH_CALL(0x809c7b90, EnSyatekiMan_GiveItem);
 PATCH_CALL(0x809c7bc4, EnSyatekiMan_GiveItem);
@@ -90,3 +151,6 @@ PATCH_CALL(0x809c7e14, EnSyatekiMan_GiveItem);
 PATCH_CALL(0x809c7e30, EnSyatekiMan_GiveItem);
 PATCH_CALL(0x809c7e64, EnSyatekiMan_GiveItem);
 PATCH_CALL(0x809c7e7c, EnSyatekiMan_GiveItem);
+
+PATCH_CALL(0x809c6a24, EnSyatekiMan_MessageShouldAdvance_Age);
+PATCH_CALL(0x809c73a0, EnSyatekiMan_MessageShouldAdvance_Age);

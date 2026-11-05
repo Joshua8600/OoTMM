@@ -12,13 +12,13 @@ static void EnItem00_ItemQuery(ComboItemQuery* q, Actor_EnItem00* this, PlayStat
     {
     case 0x06:
         q->ovType = OV_COLLECTIBLE;
-        q->sceneId = play->sceneId;
+        q->sceneId = Play_SceneKey(play->sceneId);
         q->id = this->collectibleFlag;
         q->gi = GI_OOT_HEART_PIECE;
         break;
     case 0x11:
         q->ovType = OV_COLLECTIBLE;
-        q->sceneId = play->sceneId;
+        q->sceneId = Play_SceneKey(play->sceneId);
         q->id = this->collectibleFlag;
         q->gi = GI_OOT_SMALL_KEY;
         break;
@@ -42,7 +42,7 @@ void EnItem00_GiveItemDefaultRange(Actor_EnItem00* this, PlayState* play, s16 gi
     if (q.ovType == OV_NONE)
     {
         itemId = kExtendedGetItems[gi - 1].itemId;
-        if (GetItemCollectBehavior(itemId) == 0xff)
+        if (Item_CheckObtainability(itemId) == 0xff)
             itemId = -1;
     }
 
@@ -195,24 +195,6 @@ int EnItem00_FixDrop(int dropId)
 PATCH_CALL(0x8001376c, EnItem00_FixDrop);
 PATCH_CALL(0x80013998, EnItem00_FixDrop);
 PATCH_CALL(0x80013dec, EnItem00_FixDrop);
-
-void EnItem00_AliasFreestandingRupee(Xflag* xflag)
-{
-    switch (xflag->sceneId)
-    {
-    case SCE_OOT_LOST_WOODS:
-        if (xflag->roomId == 7)
-        {
-            xflag->setupId = 0;
-            xflag->id = 4;
-        }
-        break;
-    }
-}
-
-void EnItem00_AliasFreestandingHeart(Xflag* xflag)
-{
-}
 
 void EnItem00_DrawShieldDeku(PlayState* play)
 {

@@ -1,7 +1,4 @@
 import type { Settings } from '@ootmm/core';
-import type { LogicResultWorld } from './pipeline';
-
-import { ItemHelpers } from '@ootmm/core';
 
 export function isEntranceShuffle(settings: Settings) {
   if (settings.erBoss !== 'none')
@@ -32,6 +29,8 @@ export function isEntranceShuffle(settings: Settings) {
     return true;
   if (settings.erIndoorsExtra)
     return true;
+  if (settings.erIndoorsTelescopes)
+    return true;
   if (settings.erWarps !== 'none')
     return true;
   if (settings.erOneWaysMajor)
@@ -55,12 +54,8 @@ export function isEntranceShuffle(settings: Settings) {
 
 export function mustStartWithMasterSword(settings: Settings) {
   /* Child start - doesn't matter */
-  if (settings.startingAge === 'child')
+  if (settings.startingAgeOot === 'child')
     return false;
-
-  /* Swordless disallowed - must start with MS */
-  if (!settings.swordlessAdult)
-    return true;
 
   /* Master Sword not shuffled and no time travel otherwise - must start with it to not be stuck as adult forever */
   if (!settings.shuffleMasterSword && settings.timeTravelSword)
@@ -69,15 +64,3 @@ export function mustStartWithMasterSword(settings: Settings) {
   /* Fine */
   return false;
 }
-
-export const isShuffled = (settings: Settings, world: LogicResultWorld, loc: string, dungLocations?: Set<string>) => {
-  const check = world.checks[loc];
-  const item = check.item;
-
-  // Single Item shuffles - 1 each
-  if (ItemHelpers.isTownStrayFairy(item) && settings.townFairyShuffle === 'vanilla') {
-    return false;
-  }
-
-  return true;
-};

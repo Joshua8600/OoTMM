@@ -2,12 +2,12 @@ import path from 'path';
 import { defineConfig } from 'vite';
 import preact from '@preact/preset-vite';
 import tailwindcss from '@tailwindcss/vite';
-import { visualizer } from 'rollup-plugin-visualizer';
 
 const TARGET = process.env.TARGET || 'web';
 const VERSION = process.env.VERSION || 'XXX';
 const VERSION_SUFFIX = process.env.VERSION_SUFFIX || '';
 const VERSION_FULL = [VERSION, VERSION_SUFFIX].filter(Boolean).join('-');
+const ENV_KEYS = process.env.ENV_KEYS || 'dev';
 
 const STATIC_URL = process.env.STATIC_URL || '/';
 
@@ -27,10 +27,11 @@ export default defineConfig({
     'process.env.VERSION': JSON.stringify(VERSION_FULL),
     'process.env.__IS_BROWSER__': JSON.stringify(true),
     'process.env.DEBUG_LOG_LARGE_FILES': JSON.stringify(false),
+    'process.env.ENV_KEYS': JSON.stringify(ENV_KEYS),
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(import.meta.dirname, 'src'),
     }
   },
   optimizeDeps: {

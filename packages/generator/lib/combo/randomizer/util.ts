@@ -1,9 +1,11 @@
-import type { Game, Settings, Item } from '@ootmm/core';
+import type { Game } from '@ootmm/data';
+import type { Settings } from '@ootmm/core';
+import type { Item } from '@ootmm/logic';
 
-import { ItemHelpers, gameId } from '@ootmm/core';
-import { SharedItemGroups } from '@ootmm/logic';
-import { ITEMS_SUBSTITUTIONS, SHARED_ITEMS } from './checks';
+import { gameId } from '@ootmm/data';
+import { SharedItemGroups, ItemHelpers } from '@ootmm/logic';
 import { GI } from '../data';
+import { ITEMS_SUBSTITUTIONS, SHARED_ITEMS } from './checks';
 
 export function gi(settings: Settings, game: Game, item: Item, generic: boolean) {
   let itemId = item.id;
@@ -67,6 +69,22 @@ export function gi(settings: Settings, game: Game, item: Item, generic: boolean)
     itemId = 'MM_OCARINA_FAIRY';
   } else if (itemId === 'MM_HOOKSHOT' && settings.shortHookshotMm) {
     itemId = 'MM_HOOKSHOT_SHORT';
+  } else if (itemId === 'OOT_SCALE' && settings.bronzeScale) {
+    itemId = 'OOT_SCALE_BRONZE';
+  } else if (itemId === 'MM_SCALE' && settings.bronzeScale) {
+    itemId = 'MM_SCALE_BRONZE';
+  } else if (itemId === 'OOT_WALLET' && settings.childWallets) {
+    itemId = 'OOT_WALLET';
+  } else if (itemId === 'MM_WALLET' && settings.childWallets) {
+    itemId = 'MM_WALLET';
+  } else if (itemId === 'OOT_STICK_UPGRADE' && !settings.sticksNutsUpgradesInitial) {
+    itemId = 'OOT_STICK_UPGRADE2';
+  } else if (itemId === 'OOT_NUT_UPGRADE' && !settings.sticksNutsUpgradesInitial) {
+    itemId = 'OOT_NUT_UPGRADE2';
+  } else if (itemId === 'MM_STICK_UPGRADE' && !settings.sticksNutsUpgradesInitial) {
+    itemId = 'MM_STICK_UPGRADE2';
+  } else if (itemId === 'MM_NUT_UPGRADE' && !settings.sticksNutsUpgradesInitial) {
+    itemId = 'MM_NUT_UPGRADE2';
   } else {
     const subst = ITEMS_SUBSTITUTIONS[itemId];
     if (subst) {

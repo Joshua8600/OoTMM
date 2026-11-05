@@ -60,6 +60,11 @@
     "Hyrule Castle Tree 7": "true"
     "Hyrule Castle Tree 8": "true"
     "Hyrule Castle Tree Guarded": "can_use_mask_stone"
+    "Hyrule Castle Boulder": "has_explosives_or_hammer"
+    "Hyrule Castle Gossip Fairy Near Castle": "gossip_fairy"
+    "Hyrule Castle Gossip Fairy Near Entrance": "gossip_fairy"
+    "Hyrule Castle Gossip Big Fairy Near Castle": "gossip_fairy_big"
+    "Hyrule Castle Gossip Big Fairy Near Entrance": "gossip_fairy_big"
   gossip:
     "Hyrule Castle Gossip After Climb": "true"
     "Hyrule Castle Gossip Before Moat": "true"
@@ -133,6 +138,8 @@
     "Hyrule Castle Grotto Rock Circle Rock 6": "has_explosives_or_hammer"
     "Hyrule Castle Grotto Rock Circle Rock 7": "has_explosives_or_hammer"
     "Hyrule Castle Grotto Rock Circle Rock 8": "has_explosives_or_hammer"
+    "Hyrule Castle Grotto Gossip Fairy": "has_explosives_or_hammer && gossip_fairy_sun"
+    "Hyrule Castle Grotto Gossip Big Fairy": "has_explosives_or_hammer && gossip_fairy_big"
   gossip:
     "Hyrule Castle Gossip Grotto": "has_explosives_or_hammer"
 
@@ -145,13 +152,14 @@
     "Market Castle Entry": "true"
     "Ganon Castle Exterior After Bridge": "event(BRIDGE_OPEN) || (longshot_anywhere && trick(OOT_GANON_CASTLE_ENTRY))"
     "Near Fairy Fountain Defense": "can_lift_gold"
+    "Ganon Castle Exterior Silver Boulders": "can_lift_silver"
   events:
     BRIDGE_OPEN: "rainbow_bridge"
   locations:
     "Ganon Castle Exterior GS": "gs && (has_ranged_weapon || can_use_sword)"
-    "Ganon Castle Exterior Red Boulder 1": "can_hammer"
-    "Ganon Castle Exterior Red Boulder 2": "can_hammer"
-    "Ganon Castle Exterior Red Boulder 3": "can_hammer"
+    "Ganon Castle Exterior Red Boulder 1": "can_hammer_or_keg"
+    "Ganon Castle Exterior Red Boulder 2": "can_hammer_or_keg"
+    "Ganon Castle Exterior Red Boulder 3": "can_hammer_or_keg"
 
 "Ganon Castle Exterior After Bridge":
   region: GANON_CASTLE_EXTERIOR
@@ -164,6 +172,15 @@
     "Ganon Castle": "is_adult"
   events:
     BRIDGE_OPEN: "is_adult && rainbow_bridge"
+
+"Ganon Castle Exterior Silver Boulders":
+  region: GANON_CASTLE_EXTERIOR
+  age_change: false
+  locations:
+    "Ganon Castle Exterior Silver Boulder 1": "true"
+    "Ganon Castle Exterior Silver Boulder 2": "true"
+    "Ganon Castle Exterior Silver Boulder 3": "true"
+    "Ganon Castle Exterior Silver Boulder 4": "true"
 
 "Near Fairy Fountain Defense":
   region: GANON_CASTLE_EXTERIOR

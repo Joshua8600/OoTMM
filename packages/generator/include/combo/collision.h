@@ -93,8 +93,6 @@
 
 #endif
 
-/* MM bgcheck things */
-#if defined(GAME_MM)
 typedef enum FloorType {
     /*  0 */ FLOOR_TYPE_0,
     /*  1 */ FLOOR_TYPE_1,
@@ -114,6 +112,8 @@ typedef enum FloorType {
     /* 15 */ FLOOR_TYPE_15
 } FloorType;
 
+/* MM bgcheck things */
+#if defined(GAME_MM)
 typedef enum SurfaceSfxOffset {
     /*  0 */ SURFACE_SFX_OFFSET_DIRT,
     /*  1 */ SURFACE_SFX_OFFSET_SAND,
@@ -245,5 +245,6 @@ s32 Collider_InitTris(PlayState* play, ColliderTris* tris);
 #endif
 
 DynaPolyActor* DynaPoly_GetActor(CollisionContext* colCtx, s32 bgId);
+int Collider_UpdatePlayerWeapon(PlayState* play, ColliderQuad* collider, WeaponInfo* weaponInfo, Vec3f* newTip, Vec3f* newBase);
 
 #endif

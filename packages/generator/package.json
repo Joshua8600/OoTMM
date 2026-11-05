@@ -8,21 +8,25 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@ootmm/core": "*",
-    "@ootmm/tools": "*",
-    "@ootmm/logic": "*",
+    "@ootmm/core": "workspace:*",
+    "@ootmm/data": "workspace:*",
+    "@ootmm/logic": "workspace:*",
+    "@ootmm/tools": "workspace:*",
     "crc-32": "^1.2.2",
-    "jszip": "^3.10.1",
+    "jszip": "^3.10.2",
     "lodash-es": "catalog:",
     "pngjs": "^7.0.0",
     "uint8array-extras": "^1.5.0",
-    "yaz0": "^4.0.2"
+    "yaz0": "4.0.2"
   },
+  "type": "module",
   "main": "lib/combo/index.ts",
+  "sideEffects": false,
   "devDependencies": {
     "@types/lodash-es": "catalog:",
     "@types/pngjs": "^6.0.5",
-    "fast-xml-parser": "^5.5.10",
+    "fast-xml-parser": "catalog:",
+    "gl-matrix": "^3.4.4",
     "type-fest": "catalog:",
     "yaml": "catalog:"
   },
@@ -62,15 +66,6 @@
           "{projectRoot}/dist/**/*",
           "{projectRoot}/include/combo/custom.h",
           "{projectRoot}/include/combo/custom_animations.h"
-        ]
-      },
-      "test": {
-        "inputs": [
-          "ts",
-          "{projectRoot}/tests/**/*"
-        ],
-        "dependsOn": [
-          "build"
         ]
       },
       "start": {

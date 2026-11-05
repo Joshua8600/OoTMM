@@ -112,7 +112,7 @@ static void addDefs(const DungeonDef* defs, int count)
     gDungeonDefCount += count;
 }
 
-static u8 gSongNotesOot[16] = {
+static u8 gSongNotesOot[19] = {
     NOTES_SONG_OOT_ZELDA,
     NOTES_SONG_OOT_EPONA,
     NOTES_SONG_OOT_SARIA,
@@ -129,7 +129,7 @@ static u8 gSongNotesOot[16] = {
 
 static u8 gSongNotesCountOot = 12;
 
-static u8 gSongNotesMm[16] = {
+static u8 gSongNotesMm[19] = {
     NOTES_SONG_MM_TIME,
     NOTES_SONG_MM_HEALING,
     NOTES_SONG_MM_EPONA,
@@ -157,7 +157,13 @@ static const char* kSongNames[] = {
     "Sun's Song", // NOTES_SONG_OOT_SUN
     "Song of Time", // NOTES_SONG_OOT_TIME
     "Song of Storms", // NOTES_SONG_OOT_STORMS
+    "Song of Healing", // NOTES_SONG_OOT_HEALING
+    "Song of Soaring", // NOTES_SONG_OOT_SOARING
+    "Sonata of Awakening", // NOTES_SONG_OOT_AWAKENING
+    "Goron Lullaby", // NOTES_SONG_OOT_GORON
+    "New Wave Bossa Nova", // NOTES_SONG_OOT_ZORA
     "Elegy of Emptiness", // NOTES_SONG_OOT_EMPTINESS
+    "Oath to Order", // NOTES_SONG_OOT_ORDER
     "Sonata of Awakening", // NOTES_SONG_MM_AWAKENING
     "Goron's Lullaby", // NOTES_SONG_MM_GORON
     "New Wave Bossa Nova", // NOTES_SONG_MM_ZORA
@@ -168,7 +174,87 @@ static const char* kSongNames[] = {
     "Epona's Song", // NOTES_SONG_MM_EPONA
     "Song of Soaring", // NOTES_SONG_MM_SOARING
     "Song of Storms", // NOTES_SONG_MM_STORMS
+    "Minuet of Forest", // NOTES_SONG_MM_TP_FOREST
+    "Bolero of Fire", // NOTES_SONG_MM_TP_FIRE
+    "Serenade of Water", // NOTES_SONG_MM_TP_WATER
+    "Requiem of Spirit", // NOTES_SONG_MM_TP_SPIRIT
+    "Nocturne of Shadow", // NOTES_SONG_MM_TP_SHADOW
+    "Prelude of Light", // NOTES_SONG_MM_TP_LIGHT
+    "Zelda's Lullaby", // NOTES_SONG_MM_ZELDA
+    "Saria's Song", // NOTES_SONG_MM_SARIA
     "Sun's Song", // NOTES_SONG_MM_SUN
+};
+
+static const char* kRustyKeysNamesOot[] = {
+    "Market Treasure Chest Game",
+    "Guard House",
+    "Hyrule Castle Gatehouse",
+    "Dog Lady House",
+    "Back Alley House",
+    "Bombchu Shop",
+    "Mask Shop",
+    "Market Bazaar",
+    "Market Potion Shop",
+    "Market Shooting Gallery",
+    "Bombchu Bowling",
+    "Lakeside Laboratory",
+    "Fishing Pond",
+    "Lon Lon Ranch Silo",
+    "Lon Lon Ranch Stables",
+    "Lon Lon Ranch House",
+    "Malon's Room",
+    "Kakariko Graveyard Hut",
+    "Windmill",
+    "Impa's House",
+    "Carpenter's House",
+    "Granny Potion Shop",
+    "Kakariko Shooting Gallery",
+    "House of Skulltula",
+    "Kakariko Bazaar",
+    "Kakariko Potion Shop",
+    "Kakariko Potion Shop Back",
+};
+
+static const char* kRustyKeysNamesMm[] = {
+    "Tourist Information",
+    "Kotake's Potion Shop",
+    "Post Office",
+    "Swordsman's School",
+    "Lottery",
+    "Bomb Shop",
+    "Trading Post",
+    "Curiosity Shop",
+    "Kafei's Hideout",
+    "Clock Town Shooting Gallery",
+    "Swamp Shooting Gallery",
+    "Astral Observatory",
+    "Mountain Smithy",
+    "Music Box House",
+    "Marine Research Lab",
+    "Beneath the Graveyard",
+    "Dampe's House",
+    "Mayor's Residence",
+    "Mayor's Residence Office",
+    "Mayor's Residence Salon",
+    "Mayor's Residence Bedroom",
+    "Clock Town Chest Game",
+    "Honey & Darling",
+    "Milk Bar",
+    "Doggy Racetrack",
+    "Cucco Shack",
+    "Romani Ranch House",
+    "Romani Ranch Barn",
+    "Romani Ranch Bedroom",
+    "Zora Shop",
+    "Japas' Room",
+    "Tijo's Room",
+    "Lulu's Room",
+    "Evan's Room",
+    "Stock Pot Inn",
+    "Stock Pot Inn Roof",
+    "Grandma's Room",
+    "Stock Pot Inn Staff Room",
+    "Stock Pot Inn Dormitory",
 };
 
 void menuInit()
@@ -191,11 +277,53 @@ void menuInit()
             addDefs(kDungeonDefsCoins + i, 1);
     }
 
+    if (Config_Flag(CFG_MM_SONG_ZELDA))
+        gSongNotesMm[gSongNotesCountMm++] = NOTES_SONG_MM_ZELDA;
+
+    if (Config_Flag(CFG_MM_SONG_SARIA))
+        gSongNotesMm[gSongNotesCountMm++] = NOTES_SONG_MM_SARIA;
+
     if (Config_Flag(CFG_MM_SONG_SUN))
         gSongNotesMm[gSongNotesCountMm++] = NOTES_SONG_MM_SUN;
 
+    if (Config_Flag(CFG_MM_SONG_TP_FOREST))
+        gSongNotesMm[gSongNotesCountMm++] = NOTES_SONG_MM_TP_FOREST;
+
+    if (Config_Flag(CFG_MM_SONG_TP_FIRE))
+        gSongNotesMm[gSongNotesCountMm++] = NOTES_SONG_MM_TP_FIRE;
+
+    if (Config_Flag(CFG_MM_SONG_TP_WATER))
+        gSongNotesMm[gSongNotesCountMm++] = NOTES_SONG_MM_TP_WATER;
+
+    if (Config_Flag(CFG_MM_SONG_TP_SPIRIT))
+        gSongNotesMm[gSongNotesCountMm++] = NOTES_SONG_MM_TP_SPIRIT;
+
+    if (Config_Flag(CFG_MM_SONG_TP_SHADOW))
+        gSongNotesMm[gSongNotesCountMm++] = NOTES_SONG_MM_TP_SHADOW;
+
+    if (Config_Flag(CFG_MM_SONG_TP_LIGHT))
+        gSongNotesMm[gSongNotesCountMm++] = NOTES_SONG_MM_TP_LIGHT;
+
+    if (Config_Flag(CFG_OOT_SONG_HEALING))
+        gSongNotesOot[gSongNotesCountOot++] = NOTES_SONG_OOT_HEALING;
+
+    if (Config_Flag(CFG_OOT_SONG_SOARING))
+        gSongNotesOot[gSongNotesCountOot++] = NOTES_SONG_OOT_SOARING;
+
+    if (Config_Flag(CFG_OOT_SONG_AWAKENING))
+        gSongNotesOot[gSongNotesCountOot++] = NOTES_SONG_OOT_AWAKENING;
+
+    if (Config_Flag(CFG_OOT_SONG_GORON))
+        gSongNotesOot[gSongNotesCountOot++] = NOTES_SONG_OOT_GORON;
+
+    if (Config_Flag(CFG_OOT_SONG_ZORA))
+        gSongNotesOot[gSongNotesCountOot++] = NOTES_SONG_OOT_ZORA;
+
     if (Config_Flag(CFG_OOT_SONG_EMPTINESS))
         gSongNotesOot[gSongNotesCountOot++] = NOTES_SONG_OOT_EMPTINESS;
+
+    if (Config_Flag(CFG_OOT_SONG_ORDER))
+        gSongNotesOot[gSongNotesCountOot++] = NOTES_SONG_OOT_ORDER;
 }
 
 static const char* const kSoulsEnemyOot[] = {
@@ -805,7 +933,7 @@ static void printDungeonSilverRupees(PlayState* play, float x, float y, int srBa
         if (data->count == 0)
             continue;
         digits = digitCount(data->count);
-        count = comboSilverRupeesGetCount(sr);
+        count = SilverRupees_GetCount(sr);
         printNumColored(play, count, data->count, digits, x, y, 0);
         x += 8.f * digits + 3.f;
     }
@@ -836,6 +964,28 @@ static void printSongNote(PlayState* play, int offset, u8 note)
         gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 200, 100, 100, 255);
     }
     printNum(play, count, max, 1, x + 8.f * 24, y, 0);
+    CLOSE_DISPS();
+}
+
+
+static void printBitmap(PlayState* play, int index, const char* str, int bit)
+{
+    float x;
+    float y;
+
+    x = -110.f;
+    y = 42.f - 12 * index;
+
+    OPEN_DISPS(play->state.gfxCtx);
+    if (bit)
+    {
+        gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 255, 255);
+    }
+    else
+    {
+        gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 70, 70, 70, 255);
+    }
+    printStr(play, str, x, y);
     CLOSE_DISPS();
 }
 
@@ -1005,7 +1155,7 @@ static void printDungeonData(PlayState* play, int base, int index)
             /* Triforce */
             gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 255, 255);
             drawTexRGBA16_12x12(play, CK_PTR(CUSTOM_KEEP_SMALL_ICON_TRIFORCE), x + 104.f, y);
-            printNumColored(play, gTriforceCount, triforceMax, triforceDigits, x + 116.f, y, 1);
+            printNumColored(play, gSharedCustomSave.triforcePieces, triforceMax, triforceDigits, x + 116.f, y, 1);
             break;
         case 3:
             /* Red Coins */
@@ -1151,6 +1301,12 @@ void comboMenuUpdate(PlayState* play)
     case MENU_SOULS_MM_MISC:
         g.menuCursorMax = ARRAY_COUNT(kSoulsMiscMm);
         break;
+    case MENU_RUSTY_KEYS_OOT:
+        g.menuCursorMax = ARRAY_COUNT(kRustyKeysNamesOot);
+        break;
+    case MENU_RUSTY_KEYS_MM:
+        g.menuCursorMax = ARRAY_COUNT(kRustyKeysNamesMm);
+        break;
     }
 
     updateCursor(play);
@@ -1177,7 +1333,24 @@ static void drawMenuSouls(PlayState* play, const char* title, const char* const*
     gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 0, 255);
     printStr(play, title, -110.f, 54.f);
     for (int i = 0; i < min(LINES, g.menuCursorMax); ++i)
+    {
         printSoul(play, names, soulBase, g.menuCursor, i, mm);
+    }
+    CLOSE_DISPS();
+}
+
+static void drawMenuBitmap(PlayState* play, const char* title, const char* const* names, u8* bitmap)
+{
+    int id;
+
+    OPEN_DISPS(play->state.gfxCtx);
+    gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 0, 255);
+    printStr(play, title, -110.f, 54.f);
+    for (int i = 0; i < min(LINES, g.menuCursorMax); ++i)
+    {
+        id = g.menuCursor + i;
+        printBitmap(play, i, names[id], BITMAP8_GET(bitmap, id));
+    }
     CLOSE_DISPS();
 }
 
@@ -1267,6 +1440,12 @@ void comboMenuDraw(PlayState* play)
     case MENU_SOULS_MM_MISC:
         drawMenuSouls(play, "MM Misc. Souls", kSoulsMiscMm, GI_MM_SOUL_MISC_GS, 1);
         break;
+    case MENU_RUSTY_KEYS_OOT:
+        drawMenuBitmap(play, "OoT Rusty Keys", kRustyKeysNamesOot, gSharedCustomSave.rustyKeysOot);
+        break;
+    case MENU_RUSTY_KEYS_MM:
+        drawMenuBitmap(play, "MM Rusty Keys", kRustyKeysNamesMm, gSharedCustomSave.rustyKeysMm);
+        break;
     }
 }
 
@@ -1306,6 +1485,10 @@ void comboMenuNext(void)
     if (g.menuScreen == MENU_SOULS_MM_ANIMAL && !Config_Flag(CFG_MM_SOULS_ANIMAL))
         g.menuScreen++;
     if (g.menuScreen == MENU_SOULS_MM_MISC && !Config_Flag(CFG_MM_SOULS_MISC))
+        g.menuScreen++;
+    if (g.menuScreen == MENU_RUSTY_KEYS_OOT && !Config_Flag(CFG_OOT_RUSTY_KEYS))
+        g.menuScreen++;
+    if (g.menuScreen == MENU_RUSTY_KEYS_MM && !Config_Flag(CFG_MM_RUSTY_KEYS))
         g.menuScreen++;
 
     if (g.menuScreen >= MENU_MAX)

@@ -117,6 +117,20 @@ static s16 Triggers_NextGivenSong(void)
         return GI_OOT_SONG_STORMS;
     if (notes[NOTES_SONG_OOT_EMPTINESS] >= 7 && !gSharedCustomSave.oot.hasElegy)
         return GI_OOT_SONG_EMPTINESS;
+    if (notes[NOTES_SONG_OOT_HEALING] >= 6 && !gSharedCustomSave.oot.hasSongHealing)
+        return GI_OOT_SONG_HEALING;
+    if (notes[NOTES_SONG_OOT_SOARING] >= 6 && !gSharedCustomSave.oot.hasSongSoaring)
+        return GI_OOT_SONG_SOARING;
+    if (notes[NOTES_SONG_OOT_AWAKENING] >= 7 && !gSharedCustomSave.oot.hasSongAwakening)
+        return GI_OOT_SONG_AWAKENING;
+    if (notes[NOTES_SONG_OOT_GORON] >= 8 && !gSharedCustomSave.oot.hasSongGoron)
+        return GI_OOT_SONG_GORON;
+    if (notes[NOTES_SONG_OOT_GORON] >= 6 && !gSharedCustomSave.oot.hasSongGoronHalf && Config_Flag(CFG_OOT_PROGRESSIVE_LULLABY))
+        return GI_OOT_SONG_GORON_HALF;
+    if (notes[NOTES_SONG_OOT_ZORA] >= 7 && !gSharedCustomSave.oot.hasSongZora)
+        return GI_OOT_SONG_ZORA;
+    if (notes[NOTES_SONG_OOT_ORDER] >= 6 && !gSharedCustomSave.oot.hasSongOrder)
+        return GI_OOT_SONG_ORDER;
 
     if (notes[NOTES_SONG_MM_AWAKENING] >= 7 && !gMmSave.info.inventory.quest.songAwakening)
         return GI_MM_SONG_AWAKENING;
@@ -142,6 +156,22 @@ static s16 Triggers_NextGivenSong(void)
         return GI_MM_SONG_STORMS;
     if (notes[NOTES_SONG_MM_SUN] >= 6 && !gMmSave.info.inventory.quest.songSun)
         return GI_MM_SONG_SUN;
+    if (notes[NOTES_SONG_MM_TP_FOREST] >= 6 && !gSharedCustomSave.mm.ootSongs.songTpForest)
+        return GI_MM_SONG_TP_FOREST;
+    if (notes[NOTES_SONG_MM_TP_FIRE] >= 8 && !gSharedCustomSave.mm.ootSongs.songTpFire)
+        return GI_MM_SONG_TP_FIRE;
+    if (notes[NOTES_SONG_MM_TP_WATER] >= 5 && !gSharedCustomSave.mm.ootSongs.songTpWater)
+        return GI_MM_SONG_TP_WATER;
+    if (notes[NOTES_SONG_MM_TP_SPIRIT] >= 6 && !gSharedCustomSave.mm.ootSongs.songTpSpirit)
+        return GI_MM_SONG_TP_SPIRIT;
+    if (notes[NOTES_SONG_MM_TP_SHADOW] >= 7 && !gSharedCustomSave.mm.ootSongs.songTpShadow)
+        return GI_MM_SONG_TP_SHADOW;
+    if (notes[NOTES_SONG_MM_TP_LIGHT] >= 6 && !gSharedCustomSave.mm.ootSongs.songTpLight)
+        return GI_MM_SONG_TP_LIGHT;
+    if (notes[NOTES_SONG_MM_ZELDA] >= 6 && !gSharedCustomSave.mm.ootSongs.songZelda)
+        return GI_MM_SONG_ZELDA;
+    if (notes[NOTES_SONG_MM_SARIA] >= 6 && !gSharedCustomSave.mm.ootSongs.songSaria)
+        return GI_MM_SONG_SARIA;
 
     return GI_NONE;
 }
@@ -173,14 +203,14 @@ static void Triggers_Check(PlayState* play)
     }
 
     /* Triforce (Hunt) */
-    if (Config_Flag(CFG_GOAL_TRIFORCE) && !gOotExtraFlags.triforceWin && gTriforceCount >= gComboConfig.triforceGoal)
+    if (Config_Flag(CFG_GOAL_TRIFORCE) && !gOotExtraFlags.triforceWin && gSharedCustomSave.triforcePieces >= gComboConfig.triforceGoal)
     {
         Trigger_Set(TRIGGER_TRIFORCE);
         return;
     }
 
     /* Triforce (Quest) */
-    if (Config_Flag(CFG_GOAL_TRIFORCE3) && !gOotExtraFlags.triforceWin && gTriforceCount >= 3)
+    if (Config_Flag(CFG_GOAL_TRIFORCE3) && !gOotExtraFlags.triforceWin && gSharedCustomSave.triforcePieces >= 3)
     {
         Trigger_Set(TRIGGER_TRIFORCE);
         return;
@@ -210,7 +240,7 @@ static void Triggers_Check(PlayState* play)
     }
 
     /* Saria's Ocarina */
-    if (comboHasSoulOot(GI_OOT_SOUL_NPC_SARIA) && gSave.entrance == ENTR_OOT_LOST_WOODS_BRIDGE_FROM_FOREST && !GetEventChk(EV_OOT_CHK_SARIA_OCARINA))
+    if (comboHasSoulOot(GI_OOT_SOUL_NPC_SARIA) && gSave.entrance == ENTR_OOT_LOST_WOODS_BRIDGE_FROM_FOREST && !BITMAP8_GET(gSharedCustomSave.oot.npc, NPC_OOT_SARIA_OCARINA))
     {
         Trigger_Set(TRIGGER_OOT_SARIA_OCARINA);
         return;
@@ -290,12 +320,7 @@ static int Triggers_Run(PlayState* play)
         }
         return 0;
     case TRIGGER_OOT_SARIA_OCARINA:
-        if (Triggers_GiveItemNpc(play, GI_OOT_OCARINA_FAIRY, NPC_OOT_SARIA_OCARINA))
-        {
-            SetEventChk(EV_OOT_CHK_SARIA_OCARINA);
-            return 1;
-        }
-        return 0;
+        return Triggers_GiveItemNpc(play, GI_OOT_OCARINA_FAIRY, NPC_OOT_SARIA_OCARINA);
     case TRIGGER_OOT_ZELDA_LIGHT_ARROW:
         if (Triggers_GiveItemNpc(play, GI_OOT_ARROW_LIGHT, NPC_OOT_ZELDA_LIGHT_ARROW))
         {

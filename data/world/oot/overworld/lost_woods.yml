@@ -30,7 +30,7 @@
     "Lost Woods Lost Forest": "true"
     "Lost Woods Bridge": "can_longshot || has_hover_boots || can_ride_bean(BEAN_LOST_WOODS_EARLY) || climb_anywhere || hookshot_anywhere"
     "Lost Woods Deep": "is_child || can_play_saria || trick_mido || hookshot_anywhere || climb_anywhere"
-    "Lost Woods Generic Grotto": "has_explosives_or_hammer"
+    "Lost Woods Generic Grotto": "has_shovel && has_explosives_or_hammer"
     "Goron City Shortcut": "true"
     "Lost Woods Zora River Shortcut": "can_dive_small || hookshot_anywhere || can_swim"
     "Lost Woods Rupee Arrow": "is_child && (can_dive_small || hookshot_anywhere || can_boomerang)"
@@ -49,7 +49,7 @@
   locations:
     "Lost Woods Target": "is_child && (can_use_slingshot || can_use_bow)"
     "Lost Woods Skull Kid": "is_child && can_play_saria"
-    "Lost Woods Sell Skull Mask": "is_child && can_play_saria && has(MASK_SKULL)"
+    "Lost Woods Sell Skull Mask": "is_child && can_play_saria && (has(MASK_SKULL) || has(SHARED_MASK_SKULL))"
     "Lost Woods Memory Game": "is_child && can_play_minigame"
     "Lost Woods Scrub Sticks Upgrade": "is_child && business_scrub(0x00)"
     "Lost Woods Odd Mushroom": "soul_grog && adult_trade(COJIRO)"
@@ -62,6 +62,9 @@
     "Lost Woods Wonder Item 1": "is_child"
     "Lost Woods Wonder Item 2": "is_child"
     "Lost Woods Wonder Item 3": "is_child"
+    "Lost Woods Boulder Early": "has_explosives_or_hammer"
+    "Lost Woods Gossip Fairy": "gossip_fairy"
+    "Lost Woods Gossip Big Fairy": "gossip_fairy_big"
   gossip:
     "Lost Woods Gossip Under Bridge": "true"
 
@@ -89,6 +92,7 @@
 
 "Lost Woods Rupee Arrow":
   region: LOST_WOODS
+  age_change: false
   locations:
     "Lost Woods Rupee Arrow 1": "true"
     "Lost Woods Rupee Arrow 2": "true"
@@ -117,6 +121,8 @@
     "Lost Woods Grotto Generic Butterfly 1": "butterfly"
     "Lost Woods Grotto Generic Butterfly 2": "butterfly"
     "Lost Woods Grotto Generic Butterfly 3": "butterfly"
+    "Lost Woods Generic Grotto Gossip Fairy": "gossip_fairy_sun"
+    "Lost Woods Generic Grotto Gossip Big Fairy": "gossip_fairy_big"
   gossip:
     "Lost Woods Gossip Grotto": "true"
 
@@ -141,8 +147,8 @@
     "GLOBAL": "true"
     "Lost Woods": "is_child || can_play_saria || (climb_anywhere && has_hover_boots) || hookshot_anywhere"
     "Sacred Meadow Entryway": "true"
-    "Deku Theater": "true"
-    "Lost Woods Scrub Grotto": "has_explosives_or_hammer"
+    "Deku Theater": "has_shovel"
+    "Lost Woods Scrub Grotto": "has_shovel && has_explosives_or_hammer"
     "Lost Woods Lost Forest": "!setting(alterLostWoodsExits)"
     "Lost Woods Lost North": "setting(alterLostWoodsExits)"
     "Lost Woods Lost East": "setting(alterLostWoodsExits)"
@@ -174,6 +180,8 @@
     "Lost Woods Butterfly 3": "is_child && butterfly"
     "Lost Woods Butterfly 4": "is_child && butterfly"
     "Lost Woods Butterfly 5": "is_child && butterfly"
+    "Lost Woods Boulder Deep 1": "has_explosives_or_hammer"
+    "Lost Woods Boulder Deep 2": "has_explosives_or_hammer"
 
 "Lost Woods Soil Late Fairies":
   region: LOST_WOODS
@@ -190,7 +198,7 @@
     "GLOBAL": "true"
     "Lost Woods Deep": "true"
   locations:
-    "Deku Theater Sticks Upgrade": "age_child_trade && has(MASK_SKULL)"
+    "Deku Theater Sticks Upgrade": "age_child_trade && (has(MASK_SKULL) || has(SHARED_MASK_SKULL))"
     "Deku Theater Nuts Upgrade": "age_child_trade && has_mask_truth"
 
 "Lost Woods Scrub Grotto":

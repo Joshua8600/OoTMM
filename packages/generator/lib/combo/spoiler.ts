@@ -1,15 +1,39 @@
-import type { Options, TrickKey, PlayerItem, Region } from '@ootmm/core';
-import type { LogicResult, HintGossipFoolish, HintGossipPath, HintGossipItemExact, HintGossipItemRegion, AnalysisPath, SphereEntryEvent, Location } from '@ootmm/logic';
+import type { Options, TrickKey, Region, SongEventSongs } from '@ootmm/core';
+import type { PlayerItem, LogicResult, HintGossipFoolish, HintGossipPath, HintGossipItemExact, HintGossipItemRegion, AnalysisPath, SphereEntryEvent, Location } from '@ootmm/logic';
 
 import { sortBy } from 'lodash-es';
-import { SETTINGS, TRICKS, exportSettings, regionData, ENTRANCES, hintLocations } from '@ootmm/core';
-import { DUNGEONS_BY_KEY, PATH_EVENT_DATA, BOSS_METADATA_BY_DUNGEON, isShuffled, ANALYSIS_EVENTS, WORLD_FLAGS, locationData, makeLocation } from '@ootmm/logic';
+import { ENTRANCES, hintLocations } from '@ootmm/data';
+import { SETTINGS, TRICKS, exportSettings, regionData, SONG_EVENT_LOCATIONS_OOT, SONG_EVENT_LOCATIONS_MM, SONG_EVENT_SONGS } from '@ootmm/core';
+import { DUNGEONS_BY_KEY, PATH_EVENT_DATA, BOSS_METADATA_BY_DUNGEON, ANALYSIS_EVENTS, WORLD_FLAGS, locationData, makeLocation } from '@ootmm/logic';
 
 import { itemName } from './names';
 import { regionName } from './regions';
 import { LogWriter } from './util/log-writer';
 
 const VERSION = process.env.VERSION || 'XXX';
+
+const SONG_EVENT_SONG_NAMES: Record<SongEventSongs, string> = {
+  ZELDAS_LULLABY: 'Zelda\'s Lullaby',
+  EPONAS: 'Epona\'s Song',
+  SARIAS: 'Saria\'s Song',
+  SUNS: 'Sun\'s Song',
+  TIME: 'Song of Time',
+  STORMS: 'Song of Storms',
+  MINUET: 'Minuet of Forest',
+  BOLERO: 'Bolero of Fire',
+  SERENADE: 'Serenade of Water',
+  REQUIEM: 'Requiem of Spirit',
+  NOCTURNE: 'Nocturne of Shadow',
+  PRELUDE: 'Prelude of Light',
+  HEALING: 'Song of Healing',
+  SOARING: 'Song of Soaring',
+  SONATA: 'Sonata of Awakening',
+  GORON_LULLABY: 'Goron Lullaby',
+  GORON_LULLABY_INTRO: 'Goron Lullaby Intro',
+  NEW_WAVE: 'New Wave Bossa Nova',
+  ELEGY: 'Elegy of Emptiness',
+  OATH: 'Oath to Order',
+};
 
 class SpoilerWriter {
   private writer: LogWriter;
@@ -42,6 +66,12 @@ class SpoilerWriter {
       case  3: return "(required)";
       default: return "";
     }
+  }
+
+  private plandoSongEventSongName(song: SongEventSongs | 'random') {
+    return song === 'random'
+        ? 'Random'
+        : this.songEventSongName(song);
   }
 
   private writeHeader() {
@@ -145,9 +175,6 @@ class SpoilerWriter {
 
   private writeWorldFlags() {
     let worlds = this.logic.worlds;
-    if (!this.opts.settings.distinctWorlds) {
-      worlds = [this.logic.worlds[0]];
-    }
 
     this.writer.indent('World Flags');
     for (let i = 0; i < worlds.length; ++i) {
@@ -181,9 +208,6 @@ class SpoilerWriter {
 
   private writePreCompleted() {
     let worlds = this.logic.worlds;
-    if (!this.opts.settings.distinctWorlds) {
-      worlds = [this.logic.worlds[0]];
-    }
     if (!worlds.some(world => world.preCompleted.size > 0)) {
       return;
     }
@@ -207,9 +231,6 @@ class SpoilerWriter {
 
   private writeEntrances() {
     let worlds = this.logic.worlds;
-    if (!this.opts.settings.distinctWorlds) {
-      worlds = [this.logic.worlds[0]];
-    }
     if (!worlds.some(world => world.entranceOverrides.size > 0)) {
       return;
     }
@@ -244,19 +265,41 @@ class SpoilerWriter {
   }
 
   private writePlando() {
-    if (this.logic.plandoLocations.size >= 1) {
+    const plandoSongEventsOot = this.opts.settings.plando.songEvents?.oot || {};
+    const plandoSongEventsMm = this.opts.settings.plando.songEvents?.mm || {};
+    const hasPlandoLocations = this.logic.plandoLocations.size >= 1;
+    const hasPlandoSongEvents =
+        Object.values(plandoSongEventsOot).some(Boolean) ||
+        Object.values(plandoSongEventsMm).some(Boolean);
+
+    if (hasPlandoLocations || hasPlandoSongEvents) {
       this.writer.indent('Plando');
       for (let i = 0; i < this.logic.worlds.length; ++i) {
+        const world = this.logic.worlds[i];
         if (this.logic.worlds.length > 1) {
           this.writer.indent(`World ${i + 1}`);
         }
-        for (const [loc, pi] of this.logic.plandoLocations) {
-          let locD = locationData(loc);
-          if (locD.world !== i) {
-            continue;
+        const plandoLocations = Array.from(this.logic.plandoLocations.entries())
+            .filter(([loc]) => locationData(loc).world === i);
+        if (plandoLocations.length > 0) {
+          this.writer.indent('Locations');
+
+          for (const [loc, pi] of plandoLocations) {
+            const locD = locationData(loc);
+            this.writer.write(`${locD.id}: ${itemName(pi.item.id)}`);
           }
-          const pi = this.logic.plandoLocations.get(loc)!;
-          this.writer.write(`${locD.id}: ${itemName(pi.item.id)}`)
+          this.writer.unindent('');
+        }
+        if (this.opts.settings.songEventsShuffleOot && Object.values(plandoSongEventsOot).some(Boolean)) {
+          this.writer.indent('Song Events - Ocarina of Time');
+          this.writePlandoSongEventGame(SONG_EVENT_LOCATIONS_OOT, world.songEventsOot, plandoSongEventsOot);
+          this.writer.unindent('');
+        }
+
+        if (this.opts.settings.songEventsShuffleMm && Object.values(plandoSongEventsMm).some(Boolean)) {
+          this.writer.indent('Song Events - Majora\'s Mask');
+          this.writePlandoSongEventGame(SONG_EVENT_LOCATIONS_MM, world.songEventsMm, plandoSongEventsMm);
+          this.writer.unindent('');
         }
         if (this.logic.worlds.length > 1) {
           this.writer.unindent('');
@@ -264,6 +307,94 @@ class SpoilerWriter {
       }
       this.writer.unindent('');
     }
+  }
+
+  private writeSongEvents() {
+    let worlds = this.logic.worlds;
+
+    const shouldWriteOot = this.opts.settings.songEventsShuffleOot;
+    const shouldWriteMm = this.opts.settings.songEventsShuffleMm;
+
+    if (!shouldWriteOot && !shouldWriteMm) {
+      return;
+    }
+
+    this.writer.indent('Song Events');
+
+    for (let i = 0; i < worlds.length; ++i) {
+      const world = worlds[i];
+
+      if (worlds.length > 1) {
+        this.writer.indent(`World ${i + 1}`);
+      }
+
+      if (shouldWriteOot) {
+        this.writer.indent('Ocarina of Time');
+        this.writeSongEventGame(SONG_EVENT_LOCATIONS_OOT, world.songEventsOot);
+        this.writer.unindent('');
+      }
+
+      if (shouldWriteMm) {
+        this.writer.indent('Majora\'s Mask');
+        this.writeSongEventGame(SONG_EVENT_LOCATIONS_MM, world.songEventsMm);
+        this.writer.unindent('');
+      }
+
+      if (worlds.length > 1) {
+        this.writer.unindent('');
+      }
+    }
+
+    this.writer.unindent('');
+  }
+
+  private writeSongEventGame(locations: readonly string[], resolvedSongs: readonly number[]) {
+    const entries = locations
+      .map((event, index) => ({ event, song: resolvedSongs[index] }))
+      .filter(({ song }) => song !== undefined);
+
+    if (entries.length === 0) {
+      return;
+    }
+
+    const longestEventName = Math.max(...entries.map(({ event }) => event.length));
+
+    for (const { event, song } of entries) {
+      this.writer.write(`${event.padEnd(longestEventName + 1)}: ${this.songEventSongName(SONG_EVENT_SONGS[song])}`);
+    }
+  }
+
+  private writePlandoSongEventGame(
+      locations: readonly string[],
+      resolvedSongs: readonly number[],
+      plandoSongs: Record<string, { song: SongEventSongs | 'random'; group?: string } | null | undefined>,
+  ) {
+    const entries = Object.entries(plandoSongs)
+        .flatMap(([event, plando]) => {
+          const resolvedSong = resolvedSongs[locations.indexOf(event)];
+          return plando && resolvedSong !== undefined
+              ? [{ event, plando, resolvedSong }]
+              : [];
+        });
+    if (!entries.length) return;
+    const longestEventName = Math.max(...entries.map(({ event }) => event.length));
+    const longestSongName = Math.max(
+        ...entries.map(({ plando }) => this.plandoSongEventSongName(plando.song).length),
+    );
+    for (const { event, plando, resolvedSong } of entries) {
+      const songName = this.plandoSongEventSongName(plando.song);
+      const group = plando.group ? ` (${plando.group})` : '';
+      const eventName = `${event.padEnd(longestEventName + 1)}: `;
+      this.writer.write(
+          plando.song === 'random'
+              ? `${eventName}${songName} - ${this.songEventSongName(SONG_EVENT_SONGS[resolvedSong])}${group}`
+              : `${eventName}${songName}${group}`,
+      );
+    }
+  }
+
+  private songEventSongName(song: SongEventSongs) {
+    return SONG_EVENT_SONG_NAMES[song] ?? `Unknown Song (${song})`;
   }
 
   private pathName(path: AnalysisPath): string {
@@ -441,11 +572,9 @@ class SpoilerWriter {
       if (this.isMulti) this.writer.indent(`World ${i+1} (${worlds[i].locations.size})`);
       const world = worlds[i];
       const regionNames = new Set(Object.values(world.regions));
-      const dungeonLocations = Object.values(world.dungeons).reduce((acc, x) => new Set([...acc, ...x]));
       for (const region of regionNames) {
         const regionalLocations = Object.keys(world.regions)
           .filter(location => world.regions[location] === region)
-          .filter(location => isShuffled(this.opts.settings, world, location, dungeonLocations))
           .map(loc => `${loc}: ${this.itemNameAt(makeLocation(loc, i)!)}`);
         this.writer.indent(`${regionName(region)} (${regionalLocations.length}):`);
         for (const loc of regionalLocations) {
@@ -492,6 +621,7 @@ class SpoilerWriter {
     this.writeWorldFlags();
     this.writePreCompleted();
     this.writeEntrances();
+    this.writeSongEvents();
     this.writeHints();
     this.writePaths();
     this.writePlando();

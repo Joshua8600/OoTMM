@@ -5,7 +5,7 @@ PATCH_START 0x808420c8
   li a0,0x8000
 PATCH_END
 
-/* Force GetItemCollectBehavior return value */
+/* Force Item_CheckObtainability return value */
 PATCH_START 0x8083d554
   li v0,0xff
 PATCH_END
@@ -20,11 +20,6 @@ PATCH_END
 
 PATCH_START 0x8083d2a0
   li v0,0xff
-PATCH_END
-
-/* Never decrement the razor blade health */
-PATCH_START 0x80840024
-  move t8,v0
 PATCH_END
 
 /* Disable first song of time cutscene */
@@ -254,7 +249,13 @@ kItemToGi:
 .short GI_MM_LENS
 .short GI_MM_TUNIC_GORON
 .short GI_MM_TUNIC_ZORA
-.short 0x00
+.short GI_MM_HAMMER
+.short GI_MM_BOOMERANG
+.short GI_MM_SLINGSHOT
+.short GI_MM_MASK_GERUDO
+.short GI_MM_MASK_SKULL
+.short GI_MM_MASK_SPOOKY
+.short GI_MM_MASK_ADULT
 
 /*
 Replaces:
@@ -1393,4 +1394,27 @@ PATCH_END
 /* Reloc for Player_ShowItem */
 PATCH_START 0x8085F510
   .int 0
+PATCH_END
+
+PATCH_GROUP PG_ER_TELESCOPES
+
+PATCH_START 0x8083ac9c
+  jal Player_ExitTelescopeER
+PATCH_END
+
+PATCH_START 0x8083acb0
+  nop
+PATCH_END
+
+PATCH_GROUP_END
+
+.globl _Player_SetCsAction
+_Player_SetCsAction:
+  sw a2, 0x8(sp)
+  j Player_SetCsAction+0x8
+   andi a2, 0xff
+
+PATCH_START Player_SetCsAction
+  j Player_SetCsActionHook
+   nop
 PATCH_END

@@ -1,8 +1,12 @@
+import type { Settings, TrickKey } from '@ootmm/core';
 import type { Expr } from './types';
+import type { Item, ItemID } from '../items';
+
+import { SETTINGS, TRICKS } from '@ootmm/core';
 import { AGE_ADULT, AGE_CHILD, type Age } from '../age';
 import { CONSTRAINT_FLAGS, MM_TIME_SLICES, OOT_TIME } from './data';
-import { Items, SETTINGS, TRICKS, type Item, type ItemID, type Settings, type TrickKey } from '@ootmm/core';
-import { WORLD_FLAGS } from '../world/flags';
+import { Items } from '../items';
+import { WORLD_FLAGS } from '../world';
 import { PRICE_RANGES } from '../price';
 import { compileExpr } from './compile';
 
@@ -260,8 +264,12 @@ export function exprPrice(range: string, id: number, max: number) {
   return compileExpr({ type: 'price', slot, max });
 }
 
-export function exprSongEvent(songId: number, cmp: number) {
-  return compileExpr({ type: 'song-event', songId, cmp });
+export function exprSongEventOot(songId: number, cmp: number) {
+  return compileExpr({ type: 'song-event-oot', songId, cmp });
+}
+
+export function exprSongEventMm(songId: number, cmp: number) {
+  return compileExpr({ type: 'song-event-mm', songId, cmp });
 }
 
 export function exprFish(ageAndType: string, minPounds: number, maxPounds: number) {

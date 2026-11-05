@@ -35,8 +35,7 @@ struct Actor_ObjComb
     s8                      unk_1B8;
 #endif
 
-    Xflag   xflag;
-    u8      isExtended;
+    XflagID   xflag;
 };
 
 #endif

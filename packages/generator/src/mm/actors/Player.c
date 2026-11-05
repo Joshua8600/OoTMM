@@ -1,28 +1,64 @@
 #include <combo.h>
+#include <assets/mm/objects/gameplay_keep.h>
 #include <combo/custom_animations.h>
 #include <combo/custom.h>
 #include <combo/entrance.h>
 #include <combo/player.h>
+#include <combo/inventory.h>
 #include <combo/mask.h>
 #include <combo/magic.h>
 #include <combo/math.h>
 #include <combo/config.h>
 #include <combo/dpad.h>
-#include <combo/multi.h>
 #include <combo/global.h>
 #include <combo/effect.h>
 #include "../actors.h"
+#include <combo/mm/boomerang.h>
+#include <combo/mm/adultmask.h>
+#include "combo/age.h"
 
 void ArrowCycle_Handle(Player* link, PlayState* play);
+
+#define MM_AUDIO_CONTEXT_ADDR               0x80200c70u
+#define MM_AUDIO_CONTEXT_SEQ_PLAYERS_OFFSET 0x4460u
+#define MM_SEQUENCE_PLAYER_SIZE             0x0160u
+#define MM_SEQUENCE_PLAYER_SFX              2u
+#define MM_HUMAN_VOICE_POINTER_BYTES        0x40u
+
+static void PlayerVoice_UpdateHumanAgeRouting(Player* player)
+{
+    u8* seqPlayer;
+    u8* seqData;
+    u8* dst;
+    const u8* src;
+
+    if (!player || player->transformation != MM_PLAYER_FORM_HUMAN)
+        return;
+
+    seqPlayer = (u8*)(MM_AUDIO_CONTEXT_ADDR + MM_AUDIO_CONTEXT_SEQ_PLAYERS_OFFSET + MM_SEQUENCE_PLAYER_SFX * MM_SEQUENCE_PLAYER_SIZE);
+    if (seqPlayer[4] != 0)
+        return;
+
+    seqData = *(u8**)(seqPlayer + 0x18);
+    if (!seqData)
+        return;
+
+    dst = seqData + CUSTOM_MM_HUMAN_VOICE_POINTER_TABLE_OFFSET;
+    src = seqData + (
+        comboIsLinkAdult() ? CUSTOM_MM_ADULT_VOICE_POINTER_TABLE_OFFSET : CUSTOM_MM_CHILD_VOICE_POINTER_TABLE_OFFSET);
+
+    if (memcmp(dst, src, MM_HUMAN_VOICE_POINTER_BYTES))
+        memcpy(dst, src, MM_HUMAN_VOICE_POINTER_BYTES);
+}
 
 static void Player_TryBurnDekuShield(Player* this, PlayState* play)
 {
     char* b;
 
-    if (this->transformation == MM_PLAYER_FORM_HUMAN && this->currentShield == 1 && gSharedCustomSave.mmShieldIsDeku)
+    if (this->transformation == MM_PLAYER_FORM_HUMAN &&
+        MmShield_GetEquipped() == MM_SHIELD_DEKU)
     {
-        gMmSave.info.itemEquips.shield = 0;
-        UpdateEquipment(play, this);
+        MmShield_Lose(play, MM_SHIELD_DEKU);
         PlayerDisplayTextBox(play, 0xf6, NULL);
         b = play->msgCtx.font.textBuffer.schar;
         b += 11;
@@ -48,11 +84,229 @@ static void Player_HandleBurningDekuShield(Player* this, PlayState* play)
         Player_TryBurnDekuShield(this, play);
 }
 
+static s32 Player_IsNightTime(void)
+{
+    u16 time = gSaveContext.save.time;
+    return (time >= CLOCK_TIME(18, 0)) || (time < CLOCK_TIME(6, 0));
+}
+
+static s32 sCustomMaskEffectiveMask = 0;
+
+static s32 Player_GetCustomEffectiveMask(void)
+{
+    switch (gCustomSave.customMask)
+    {
+        case PLAYER_CUSTOM_MASK_SPOOKY:
+            return Player_IsNightTime() ? MASK_GIBDO : 0;
+
+        case PLAYER_CUSTOM_MASK_GERUDO:
+        case PLAYER_CUSTOM_MASK_SKULL:
+        default:
+            return 0;
+    }
+}
+
+static void Player_ClearCustomMaskSpoofBeforeUpdate(Player* player)
+{
+    if (sCustomMaskEffectiveMask > 0 &&
+        gSaveContext.save.equippedMask == 0 &&
+        player->currentMask == sCustomMaskEffectiveMask)
+    {
+        player->currentMask = 0;
+    }
+}
+
+static void Player_UpdateCustomMaskBehavior(Player* player)
+{
+    s32 prevEffectiveMask = sCustomMaskEffectiveMask;
+    s32 effectiveMask = 0;
+
+    if (gCustomSave.customMask == PLAYER_CUSTOM_MASK_NONE || player->transformation != MM_PLAYER_FORM_HUMAN)
+    {
+        gCustomSave.customMask = PLAYER_CUSTOM_MASK_NONE;
+
+        if (prevEffectiveMask > 0 && player->currentMask == prevEffectiveMask)
+            player->currentMask = 0;
+
+        sCustomMaskEffectiveMask = 0;
+        return;
+    }
+
+    effectiveMask = Player_GetCustomEffectiveMask();
+    if (prevEffectiveMask > 0 && player->currentMask == prevEffectiveMask)
+        player->currentMask = 0;
+
+    sCustomMaskEffectiveMask = effectiveMask;
+    if (effectiveMask > 0)
+        player->currentMask = effectiveMask;
+}
+
+static s8 sLoadedMaskObjectAdult = -1;
+
+static void Player_RefreshMaskObjectForAge(Player* player)
+{
+    s32 isAdult;
+
+    if (player->actor.id != ACTOR_PLAYER)
+        return;
+
+    if (player->transformation != MM_PLAYER_FORM_HUMAN)
+        return;
+
+    if (player->currentMask == 0)
+        return;
+
+    if (player->maskObjectLoadState != 0)
+        return;
+
+    if (sLoadedMaskObjectAdult < 0)
+        return;
+
+    isAdult = comboIsLinkAdult();
+
+    if (sLoadedMaskObjectAdult == isAdult)
+        return;
+    player->maskId = player->currentMask;
+    player->maskObjectLoadState = 1;
+}
+
+static void Player_UpdateHumanStrengthRestrictions(void)
+{
+    if (Config_Flag(CFG_MM_KEG_STRENGTH_3))
+    {
+        gPlayerFormItemRestrictions
+            [MM_PLAYER_FORM_HUMAN]
+            [ITEM_MM_POWDER_KEG] = Player_HasStrength(3) ? 1 : 0;
+    }
+}
+
+static u8 Player_GetCustomSwordBItem(void)
+{
+    switch (MmSword_GetEquipped())
+    {
+        case MM_SWORD_MASTER:
+            return ITEM_MM_SWORD_MASTER;
+
+        case MM_SWORD_GIANTS_KNIFE:
+            return ITEM_MM_SWORD_GIANTS_KNIFE;
+
+        case MM_SWORD_BIGGORON:
+            return ITEM_MM_SWORD_BIGGORON;
+
+        default:
+            return ITEM_NONE;
+    }
+}
+
+static s32 Player_MaskUsesSpecialBAction(Player* player)
+{
+    switch (player->currentMask)
+    {
+        case MASK_BLAST:
+        case MASK_BREMEN:
+        case MASK_KAMARO:
+            return 1;
+
+        default:
+            return 0;
+    }
+}
+
+static u8 sCustomSwordHudDirty;
+
+static s32 Player_IsTemporaryMinigameBItem(u8 item)
+{
+    switch (item)
+    {
+        case ITEM_MM_BOW:
+        case ITEM_MM_BOMB:
+        case ITEM_MM_BOMBCHU:
+            return 1;
+
+        default:
+            return 0;
+    }
+}
+
+static void Player_SyncCustomSwordSpecialMaskB(
+    Player* player,
+    PlayState* play,
+    s32 allowHudRefresh)
+{
+    u8 extendedSwordItem;
+    u8 desiredItem;
+    u8 currentItem;
+
+    if (player->transformation != MM_PLAYER_FORM_HUMAN)
+        return;
+
+    if (gSave.playerForm != MM_PLAYER_FORM_HUMAN)
+        return;
+
+    extendedSwordItem = Player_GetCustomSwordBItem();
+
+    if (extendedSwordItem == ITEM_NONE)
+    {
+        sCustomSwordHudDirty = 0;
+        return;
+    }
+    if (player->rideActor != NULL)
+    {
+        sCustomSwordHudDirty = 1;
+        return;
+    }
+
+    currentItem =
+        gMmSave.info.itemEquips.buttonItems[0][EQUIP_SLOT_B];
+    if (Player_IsTemporaryMinigameBItem(currentItem))
+    {
+        sCustomSwordHudDirty = 1;
+        return;
+    }
+
+    if (Player_MaskUsesSpecialBAction(player))
+        desiredItem = ITEM_MM_SWORD_GILDED;
+    else
+        desiredItem = extendedSwordItem;
+
+    if (currentItem != desiredItem)
+    {
+        gMmSave.info.itemEquips.buttonItems[0][EQUIP_SLOT_B] =
+            desiredItem;
+        sCustomSwordHudDirty = 1;
+    }
+
+    if (allowHudRefresh && sCustomSwordHudDirty && desiredItem == extendedSwordItem)
+    {
+        MmSword_RefreshHudIcon(play);
+        sCustomSwordHudDirty = 0;
+    }
+}
+
 void Player_UpdateWrapper(Player* this, PlayState* play)
 {
     ArrowCycle_Handle(this, play);
     Player_HandleBurningDekuShield(this, play);
+    Player_ClearCustomMaskSpoofBeforeUpdate(this);
+    Player_RefreshMaskObjectForAge(this);
+    Player_UpdateHumanStrengthRestrictions();
+    Player_SyncCustomSwordSpecialMaskB(this, play, 0);
+    if (this->transformation == MM_PLAYER_FORM_FIERCE_DEITY)
+    {
+        Inventory_UpdateDeitySwordEquip(play);
+    }
+
     Player_Update(this, play);
+    PlayerVoice_UpdateHumanAgeRouting(this);
+    if (this->transformation == MM_PLAYER_FORM_HUMAN)
+    {
+        MmShieldId shield = MmShield_GetEquipped();
+
+        if (shield != MM_SHIELD_NONE && gMmSave.info.itemEquips.shield == 0 && !(shield == MM_SHIELD_HYLIAN && !comboCheckItemAgeReqMm(ITEM_MM_SHIELD_HYLIAN)))
+            MmShield_Lose(play, shield);
+    }
+    Player_UpdateCustomMaskBehavior(this);
+    Player_SyncCustomSwordSpecialMaskB(this, play, 1);
     Player_HandleBronzeScale(this, play);
     Dpad_Update(play);
     Ocarina_HandleWarp(this, play);
@@ -100,7 +354,13 @@ static s32 sCustomItemActions[] =
     PLAYER_CUSTOM_IA_TUNIC_GORON,
     PLAYER_CUSTOM_IA_TUNIC_ZORA,
     PLAYER_CUSTOM_IA_HAMMER,
+    PLAYER_CUSTOM_IA_BOOMERANG,
+    PLAYER_CUSTOM_IA_SLINGSHOT,
     PLAYER_CUSTOM_IA_BOTTLE_RUTO_LETTER,
+    PLAYER_CUSTOM_IA_MASK_GERUDO,
+    PLAYER_CUSTOM_IA_MASK_SKULL,
+    PLAYER_CUSTOM_IA_MASK_SPOOKY,
+    PLAYER_CUSTOM_IA_MASK_ADULT,
 };
 
 static u8 sMagicSpellCosts[] =
@@ -190,15 +450,23 @@ static u8 sMagicSpellLoopTimer[] = { 70, 10, 10 };
 
 s32 Player_CustomItemToItemAction(Player* this, s32 item, s32 itemAction)
 {
+    switch (item)
+    {
+        case ITEM_MM_SWORD_MASTER:
+            return PLAYER_CUSTOM_IA_SWORD_MASTER;
+        case ITEM_MM_SWORD_GIANTS_KNIFE:
+            return PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE;
+        case ITEM_MM_SWORD_BIGGORON:
+            return PLAYER_CUSTOM_IA_SWORD_BIGGORON;
+    }
     s32 customItem = item - ITEM_MM_CUSTOM_MIN;
     if (customItem < 0)
-    {
         return itemAction;
-    }
+
+    if (item >= ITEM_MM_CUSTOM_USABLE_MAX)
+        return PLAYER_IA_NONE;
     if (customItem >= ARRAY_COUNT(sCustomItemActions))
-    {
-        return 0;
-    }
+        return PLAYER_IA_NONE;
     return sCustomItemActions[customItem];
 }
 
@@ -243,6 +511,78 @@ static s32 Player_ActionToTunic(Player* this, s32 itemAction)
         return -1;
     }
 }
+
+static s32 Player_ActionToCustomMask(Player* this, s32 itemAction)
+{
+    switch (itemAction)
+    {
+        case PLAYER_CUSTOM_IA_MASK_GERUDO:
+            return PLAYER_CUSTOM_MASK_GERUDO;
+        case PLAYER_CUSTOM_IA_MASK_SKULL:
+            return PLAYER_CUSTOM_MASK_SKULL;
+        case PLAYER_CUSTOM_IA_MASK_SPOOKY:
+            return PLAYER_CUSTOM_MASK_SPOOKY;
+        default:
+            return PLAYER_CUSTOM_MASK_NONE;
+    }
+}
+
+s32 Player_CustomSwordFromIA(Player* player, s32 itemAction)
+{
+    (void)player;
+
+    switch (itemAction)
+    {
+        case PLAYER_IA_LAST_USED:
+        case PLAYER_IA_SWORD_KOKIRI:
+            return 0;
+
+        case PLAYER_IA_SWORD_RAZOR:
+            return 1;
+
+        case PLAYER_IA_SWORD_GILDED:
+        case PLAYER_CUSTOM_IA_SWORD_MASTER:
+            return 2;
+
+        case PLAYER_IA_SWORD_TWO_HANDED:
+        case PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE:
+        case PLAYER_CUSTOM_IA_SWORD_BIGGORON:
+            return 3;
+
+        default:
+            return -1;
+    }
+}
+
+PATCH_FUNC(0x80124278, Player_CustomSwordFromIA);
+
+s32 Player_CustomBButtonSwordFromIA(Player* player, s32 itemAction)
+{
+    s32 bButtonSword;
+    switch (itemAction)
+    {
+    case PLAYER_CUSTOM_IA_SWORD_MASTER:
+    case PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE:
+    case PLAYER_CUSTOM_IA_SWORD_BIGGORON:
+        if (player->transformation != MM_PLAYER_FORM_GORON)
+            return 3;
+        return 0;
+
+    default:
+        break;
+    }
+    bButtonSword = itemAction - PLAYER_IA_SWORD_KOKIRI + 1;
+
+    if (player->transformation != MM_PLAYER_FORM_GORON)
+    {
+        if (bButtonSword > 0 && bButtonSword < 4)
+            return bButtonSword;
+    }
+
+    return 0;
+}
+
+PATCH_FUNC(0x80124110, Player_CustomBButtonSwordFromIA);
 
 Actor* Player_SpawnMagicSpellActor(PlayState* play, Player* this, s8 magicSpell)
 {
@@ -317,7 +657,8 @@ void Player_Action_CastingSpell(Player* this, PlayState* play)
 
             if (this->av2.actionVar2 == 0)
             {
-                RespawnData* fw = &gCustomSave.fw[gOotSave.age];
+                u8 fwAge = comboMmFwAge();
+                RespawnData* fw = &gCustomSave.fw[fwAge];
                 gSaveContext.respawn[RESPAWN_MODE_HUMAN].data = 1;
                 Play_SetupRespawnPoint(play, RESPAWN_MODE_HUMAN, 0x6ff);
                 *fw = gSaveContext.respawn[RESPAWN_MODE_DOWN];
@@ -325,8 +666,8 @@ void Player_Action_CastingSpell(Player* this, PlayState* play)
                 fw->data = 40;
 
                 /* Copy Game Over / Soar to Entrance respawn data. */
-                memcpy(&gCustomSave.fwRespawnTop[gOotSave.age], &gSaveContext.respawn[RESPAWN_MODE_TOP], sizeof(RespawnData));
-                memcpy(&gCustomSave.fwRespawnDungeonEntrance[gOotSave.age], &gSharedCustomSave.respawn[CUSTOM_RESPAWN_MODE_DUNGEON_ENTRANCE], sizeof(RespawnData));
+                memcpy(&gCustomSave.fwRespawnTop[fwAge], &gSaveContext.respawn[RESPAWN_MODE_TOP], sizeof(RespawnData));
+                memcpy(&gCustomSave.fwRespawnDungeonEntrance[fwAge], &gSharedCustomSave.respawn[CUSTOM_RESPAWN_MODE_DUNGEON_ENTRANCE], sizeof(RespawnData));
 
                 this->av2.actionVar2 = 2;
             }
@@ -432,10 +773,10 @@ void Player_Action_FaroresWindText(Player* this, PlayState* play)
             play->transitionTrigger = TRANS_TRIGGER_START;
             play->nextEntrance = gSaveContext.respawn[RESPAWN_MODE_HUMAN].entrance;
             play->transitionType = TRANS_TYPE_FADE_WHITE_FAST;
-
+            u8 fwAge = comboMmFwAge();
             /* Restore Game Over / Soar to Entrance respawn data. */
-            memcpy(&gSaveContext.respawn[RESPAWN_MODE_TOP], &gCustomSave.fwRespawnTop[gOotSave.age], sizeof(RespawnData));
-            memcpy(&gSharedCustomSave.respawn[CUSTOM_RESPAWN_MODE_DUNGEON_ENTRANCE], &gCustomSave.fwRespawnDungeonEntrance[gOotSave.age], sizeof(RespawnData));
+            memcpy(&gSaveContext.respawn[RESPAWN_MODE_TOP], &gCustomSave.fwRespawnTop[fwAge], sizeof(RespawnData));
+            memcpy(&gSharedCustomSave.respawn[CUSTOM_RESPAWN_MODE_DUNGEON_ENTRANCE], &gCustomSave.fwRespawnDungeonEntrance[fwAge], sizeof(RespawnData));
 
             /* TODO cancel timers? */
 
@@ -445,8 +786,9 @@ void Player_Action_FaroresWindText(Player* this, PlayState* play)
         if (play->msgCtx.choiceIndex == 1)
         {
             gSaveContext.respawn[RESPAWN_MODE_HUMAN].data = -gSaveContext.respawn[RESPAWN_MODE_HUMAN].data;
-            gCustomSave.fw[gOotSave.age].data = 0;
-            Audio_PlaySfx_AtPos(&gCustomSave.fw[gOotSave.age].pos, 0x8C8); /* NA_SE_PL_MAGIC_WIND_VANISH */
+            RespawnData *fw = &gCustomSave.fw[comboMmFwAge()];
+            fw->data = 0;
+            Audio_PlaySfx_AtPos(&fw->pos, 0x8C8); /* NA_SE_PL_MAGIC_WIND_VANISH */
         }
 
         Player_func_8085B384 = OverlayAddr(0x8085B384);
@@ -455,6 +797,24 @@ void Player_Action_FaroresWindText(Player* this, PlayState* play)
         Player_StopCutscene = OverlayAddr(0x80838760);
         Player_StopCutscene(this);
     }
+}
+
+static s32 Player_HasValidFaroresWind(void)
+{
+    u8 fwAge = comboMmFwAge();
+    RespawnData* fw = &gCustomSave.fw[fwAge];
+
+    if (fw->data <= 0)
+        return 0;
+    if (fw->entrance != ENTR_FW_CROSS)
+        return 1;
+    OotFaroreWind* foreignFw = Age_GetFaroreOot(fwAge);
+    if (foreignFw->set > 0 && foreignFw->entrance != ENTR_FW_CROSS)
+        return 1;
+    fw->data = 0;
+    gSaveContext.respawn[RESPAWN_MODE_HUMAN].data = 0;
+
+    return 0;
 }
 
 typedef void (*Player_func_8082DAD4)(Player*);
@@ -470,7 +830,7 @@ s32 Player_CustomCsItem(Player* this, PlayState* play)
     s32 magicSpell = Player_ActionToMagicSpell(this, this->itemAction);
     if (magicSpell >= PLAYER_MAGIC_SPELL_MIN)
     {
-        if ((magicSpell != PLAYER_MAGIC_SPELL_WIND) || (gSaveContext.respawn[RESPAWN_MODE_HUMAN].data <= 0))
+        if ((magicSpell != PLAYER_MAGIC_SPELL_WIND) || !Player_HasValidFaroresWind())
         {
             Player_CastSpell(play, this, magicSpell);
         }
@@ -487,6 +847,12 @@ s32 Player_CustomCsItem(Player* this, PlayState* play)
         }
         func_8082DAD4 = OverlayAddr(0x8082DAD4);
         func_8082DAD4(this);
+        return 1;
+    }
+    if (AdultMask_IsCsItem(this))
+    {
+        AdultMask_StartCsItem(this, play);
+        AdultMask_AfterStart(this);
         return 1;
     }
     else if (this->itemAction >= 0x3a && this->itemAction <= 0x51) /* PLAYER_IA_MASK_MIN // PLAYER_IA_MASK_MAX */
@@ -602,7 +968,7 @@ s32 Player_CustomUseItem(Player* this, PlayState* play, s32 itemAction)
     s32 magicSpell = Player_ActionToMagicSpell(this, itemAction);
     if (magicSpell >= 0)
     {
-        if (((magicSpell == PLAYER_MAGIC_SPELL_WIND) && (gSaveContext.respawn[RESPAWN_MODE_HUMAN].data > 0)) ||
+        if (((magicSpell == PLAYER_MAGIC_SPELL_WIND) && Player_HasValidFaroresWind()) ||
             ((gSaveContext.magicCapacity != 0) && (gSaveContext.magicState == MAGIC_STATE_IDLE) &&
              (gSaveContext.save.info.playerData.magic >= sMagicSpellCosts[magicSpell])))
         {
@@ -659,6 +1025,52 @@ s32 Player_CustomUseItem(Player* this, PlayState* play, s32 itemAction)
         /* Handled */
         return 1;
     }
+    if (AdultMask_TryUse(this, play, itemAction))
+    {
+        return 1;
+    }
+
+    s32 customMask = Player_ActionToCustomMask(this, itemAction);
+    if (customMask != PLAYER_CUSTOM_MASK_NONE)
+    {
+        if (this->transformation == MM_PLAYER_FORM_HUMAN)
+        {
+            if (gCustomSave.customMask == customMask)
+            {
+                customMask = PLAYER_CUSTOM_MASK_NONE;
+            }
+
+            gCustomSave.customMask = customMask;
+            gSaveContext.save.equippedMask = 0;
+
+            if (customMask == PLAYER_CUSTOM_MASK_NONE)
+            {
+                if (this->currentMask == MASK_GIBDO)
+                    this->currentMask = 0;
+            }
+            else
+            {
+                this->currentMask = 0;
+            }
+
+            Player_PlaySfx(this, 0x835);
+        }
+        else
+        {
+            PlaySound(0x4806);
+        }
+
+        return 1;
+    }
+
+    if (itemAction == PLAYER_CUSTOM_IA_BOOMERANG || itemAction == PLAYER_CUSTOM_IA_SLINGSHOT)
+    {
+        if (this->transformation == MM_PLAYER_FORM_HUMAN)
+            return 0;
+
+        PlaySound(0x4806); /* NA_SE_SY_ERROR */
+        return 1;
+    }
 
     /* PLAYER_IA_MASK_MIN = 0x3A, */
     /* PLAYER_IA_MASK_MAX = 0x51, */
@@ -692,7 +1104,7 @@ void Player_Action_FaroresWindSpawning(Player* this, PlayState* play)
     if (this->av2.actionVar2++ == 20)
     {
         gSaveContext.respawn[RESPAWN_MODE_HUMAN].data++;
-        Audio_PlaySfx_AtPos(&gCustomSave.fw[gOotSave.age].pos, 0x87B); /* NA_SE_PL_MAGIC_WIND_WARP */
+        Audio_PlaySfx_AtPos(&gCustomSave.fw[comboMmFwAge()].pos, 0x87B); /* NA_SE_PL_MAGIC_WIND_WARP */
     }
 }
 
@@ -988,7 +1400,7 @@ Gfx gLinkChildGoronBraceletDL[] = {
     gsSPEndDisplayList(),
 };
 
-static int prepareObject(PlayState* play, u16 objectId)
+int prepareObject(PlayState* play, u16 objectId)
 {
     void* obj;
 
@@ -1011,6 +1423,17 @@ static void DrawHammer(PlayState* play)
     OPEN_DISPS(play->state.gfxCtx);
     gSPMatrix(POLY_OPA_DISP++, 0x0D000300, G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
     gSPDisplayList(POLY_OPA_DISP++, CUSTOM_OBJECT_EQ_HAMMER_0);
+    CLOSE_DISPS();
+}
+
+static void DrawBoomerang(PlayState* play)
+{
+    if (!prepareObject(play, CUSTOM_OBJECT_ID_EQ_BOOMERANG))
+        return;
+
+    OPEN_DISPS(play->state.gfxCtx);
+    gSPMatrix(POLY_OPA_DISP++, 0x0D000300, G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+    gSPDisplayList(POLY_OPA_DISP++, CUSTOM_OBJECT_EQ_BOOMERANG_0);
     CLOSE_DISPS();
 }
 
@@ -1094,26 +1517,77 @@ static Color_RGB8 sTunicColors[4] = {
     { 0, 60, 100 },  /* PLAYER_TUNIC_ZORA */
 };
 
+static Color_RGB8 sGerudoMaskTunicColor = { 120, 0, 180 };
+
 EXPORT_SYMBOL(MM_COLOR_TUNIC_KOKIRI, sTunicColors[0]);
 EXPORT_SYMBOL(MM_COLOR_TUNIC_GORON, sTunicColors[2]);
 EXPORT_SYMBOL(MM_COLOR_TUNIC_ZORA, sTunicColors[3]);
 
 #define DLIST_INDIRECT(x)           (*(u32*)((x)))
 #define DLIST_RHAND_OPEN            DLIST_INDIRECT(0x801c01c4)
+#define DLIST_RHAND_CLOSED          DLIST_INDIRECT(0x801c01ec)
+#define DLIST_LHAND_OPEN            DLIST_INDIRECT(0x801c0134)
+#define DLIST_LHAND_CLOSED          DLIST_INDIRECT(0x801c015c)
 
-static void* Player_CustomHandEq(u32 handDlist, void* eqData, u32 eqDlist)
+static void* Player_CustomEquipment(u32 baseDlist, void* object, u32 eqDlist)
 {
     Gfx* dlist;
     Gfx* d;
-
-    if (!eqData) return (void*)kDListEmpty;
-
-    d = dlist = GRAPH_ALLOC(gPlay->state.gfxCtx, sizeof(Gfx) * 3);
-    gSPDisplayList(d++, handDlist);
-    gSPSegment(d++, 0x0a, eqData);
+    if (!object)
+        return (void*)kDListEmpty;
+    d = dlist = GRAPH_ALLOC(gPlay->state.gfxCtx, sizeof(Gfx) * (baseDlist ? 3 : 2));
+    if (baseDlist)
+        gSPDisplayList(d++, baseDlist);
+    gSPSegment(d++, 0x0a, object);
     gSPBranchList(d++, eqDlist);
 
     return dlist;
+}
+
+static Gfx* Player_OffsetHeldShield(PlayState* play, Gfx* original)
+{
+    Mtx* mtx;
+    Gfx* dlist;
+    Gfx* d;
+    if (!original)
+        return NULL;
+    mtx = GRAPH_ALLOC(play->state.gfxCtx, sizeof(Mtx));
+    dlist = GRAPH_ALLOC(play->state.gfxCtx, sizeof(Gfx) * 4);
+    if (!mtx || !dlist)
+        return original;
+    guTranslate(mtx, 0, 0, -110.0f);
+    d = dlist;
+    gSPMatrix(d++, mtx, G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_PUSH);
+    gSPDisplayList(d++, original);
+    gSPPopMatrix(d++, G_MTX_MODELVIEW);
+    gSPEndDisplayList(d++);
+    return dlist;
+}
+
+
+static MmSwordId Player_GetActiveCustomSword(Player* player)
+{
+    switch (player->heldItemAction)
+    {
+        case PLAYER_CUSTOM_IA_SWORD_MASTER:
+            return MM_SWORD_MASTER;
+        case PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE:
+            return MM_SWORD_GIANTS_KNIFE;
+        case PLAYER_CUSTOM_IA_SWORD_BIGGORON:
+            return MM_SWORD_BIGGORON;
+        default:
+            return MM_SWORD_NONE;
+    }
+}
+
+static s32 Player_IsExtendedSword(MmSwordId sword)
+{
+    return sword == MM_SWORD_MASTER || sword == MM_SWORD_GIANTS_KNIFE || sword == MM_SWORD_BIGGORON;
+}
+
+static s32 Player_UsesChildHylianShield(Player* player)
+{
+    return player->transformation == MM_PLAYER_FORM_HUMAN && player->currentShield != 0 && MmShield_GetEquipped() == MM_SHIELD_HYLIAN && !comboCheckItemAgeReqMm(ITEM_MM_SHIELD_HYLIAN);
 }
 
 static int (*sPlayerOverrideLimb)(PlayState*, s32, Gfx**, Vec3f*, Vec3s*, void*);
@@ -1123,49 +1597,466 @@ extern void* kLinkHumanShieldsDLs[];
 void Player_DrawShield(PlayState* play, Player* player)
 {
     void* obj;
+    MmShieldId shield;
 
     if (player->currentShield == 0)
         return;
 
-    OPEN_DISPS(play->state.gfxCtx);
-    if (gSharedCustomSave.mmShieldIsDeku)
+    MmShield_EnsureState();
+    shield = MmShield_GetEquipped();
+
+    if (shield == MM_SHIELD_DEKU || shield == MM_SHIELD_HYLIAN)
     {
-        obj = comboGetObject(CUSTOM_OBJECT_ID_EQ_SHIELD_DEKU);
+        u32 dlist;
+
+        if (shield == MM_SHIELD_DEKU)
+        {
+            obj = comboGetObject(CUSTOM_OBJECT_ID_EQ_SHIELD_DEKU);
+            dlist = CUSTOM_OBJECT_EQ_SHIELD_DEKU_1;
+        }
+        else
+        {
+            s32 useAdultModel = comboIsLinkAdult();
+
+            obj = comboGetObject(useAdultModel ? CUSTOM_OBJECT_ID_EQ_SHEATH_SHIELD_HYLIAN_ADULT : CUSTOM_OBJECT_ID_EQ_SHEATH_SHIELD_HYLIAN_CHILD);
+            dlist = useAdultModel ? CUSTOM_OBJECT_EQ_SHEATH_SHIELD_HYLIAN_ADULT_0 : CUSTOM_OBJECT_EQ_SHEATH_SHIELD_HYLIAN_CHILD_0;
+        }
+
         if (!obj)
             return;
+        OPEN_DISPS(play->state.gfxCtx);
         gSPSegment(POLY_OPA_DISP++, 0x0a, obj);
-        gSPDisplayList(POLY_OPA_DISP++, CUSTOM_OBJECT_EQ_SHIELD_DEKU_1);
+        if (shield == MM_SHIELD_HYLIAN)
+            gSPClearGeometryMode(POLY_OPA_DISP++, G_TEXTURE_GEN | G_TEXTURE_GEN_LINEAR);
+        gSPDisplayList(POLY_OPA_DISP++, dlist);
+        CLOSE_DISPS();
         return;
     }
 
-    gSPDisplayList(POLY_OPA_DISP++, kLinkHumanShieldsDLs[(player->currentShield - 1) * 2]);
+    OPEN_DISPS(play->state.gfxCtx);
+    if (comboIsLinkAdult() && player->currentShield == 2)
+    {
+        Mtx* mtx = GRAPH_ALLOC(play->state.gfxCtx, sizeof(Mtx));
+        if (mtx)
+        {
+            guTranslate(mtx, -280.0f, 0.0f, 0.0f);
+            gSPMatrix(POLY_OPA_DISP++, mtx, G_MTX_PUSH | G_MTX_MUL | G_MTX_MODELVIEW);
+        }
+        gSPDisplayList(POLY_OPA_DISP++, kLinkHumanShieldsDLs[(player->currentShield - 1) * 2]);
+        if (mtx)
+            gSPPopMatrix(POLY_OPA_DISP++, G_MTX_MODELVIEW);
+    }
+    else
+        gSPDisplayList(POLY_OPA_DISP++, kLinkHumanShieldsDLs[(player->currentShield - 1) * 2]);
     CLOSE_DISPS();
 }
+
+static Vec3f sZeroVec = { 0.0f, 0.0f, 0.0f };
+
+static void DrawSlingshotString(PlayState* play, Player* player)
+{
+    void* obj;
+    Vec3f stringOrigin;
+    f32 distXYZ;
+    f32 stringMaxScale;
+    f32 stringPullScale;
+
+    obj = comboGetObject(CUSTOM_OBJECT_ID_EQ_SLINGSHOT);
+    if (!obj) {
+        return;
+    }
+
+    OPEN_DISPS(play->state.gfxCtx);
+
+    gSPSegment(POLY_XLU_DISP++, 0x0a, obj);
+
+    Matrix_Push();
+
+    Matrix_Translate(606.0f, 236.0f, 0.0f, MTXMODE_APPLY);
+
+    if ((player->stateFlags3 & PLAYER_STATE3_MM_40) &&
+        (player->unk_B28 >= 0) &&
+        (player->unk_ACC < 0xB)) {
+        Matrix_MultVec3f(&sZeroVec, &stringOrigin);
+        distXYZ = Math_Vec3f_DistXYZ(&player->leftHandWorld.pos, &stringOrigin);
+
+        if (comboIsLinkAdult()) {
+            stringMaxScale = 1.65f;
+            stringPullScale = 1.6f;
+        } else {
+            stringMaxScale = 1.0f;
+            stringPullScale = 1.6f;
+        }
+
+        player->unk_B08 = distXYZ - 3.0f;
+
+        if (distXYZ < 3.0f) {
+            player->unk_B08 = 0.0f;
+        } else {
+            player->unk_B08 *= stringPullScale;
+
+            if (player->unk_B08 > stringMaxScale) {
+                player->unk_B08 = stringMaxScale;
+            }
+        }
+
+        player->unk_B0C = -0.5f;
+        }
+
+    Matrix_Scale(1.0f, player->unk_B08, 1.0f, MTXMODE_APPLY);
+
+    if (!comboIsLinkAdult()) {
+        Matrix_RotateZ(player->unk_B08 * -0.2f, MTXMODE_APPLY);
+    }
+
+    gSPMatrix(
+        POLY_XLU_DISP++,
+        Matrix_Finalize(play->state.gfxCtx),
+        G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW
+    );
+
+    gSPDisplayList(POLY_XLU_DISP++, CUSTOM_OBJECT_EQ_SLINGSHOT_1);
+
+    Matrix_Pop();
+
+    CLOSE_DISPS();
+}
+
+static Vec3f sChildHylianShieldQuad[4] = {
+    { -3000.0f, -3000.0f, -900.0f },
+    {  3000.0f, -3000.0f, -900.0f },
+    { -3000.0f,  3000.0f, -900.0f },
+    {  3000.0f,  3000.0f, -900.0f },
+};
 
 void Player_PostLimbDrawGameplayWrapper(PlayState* play, s32 limbIndex, Gfx** dList1, Gfx** dList2, Vec3s* rot, Actor* actor)
 {
     Player* player = (Player*)actor;
     Player_PostLimbDrawGameplay(play, limbIndex, dList1, dList2, rot, actor);
-    if (player->transformation == MM_PLAYER_FORM_HUMAN && limbIndex == PLAYER_LIMB_SHEATH && (player->sheathType == PLAYER_MODELTYPE_SHEATH_14 || player->sheathType == PLAYER_MODELTYPE_SHEATH_15))
-        Player_DrawShield(play, player);
+    if (sPlayerOverrideLimb != Player_OverrideLimbDrawGameplayFirstPerson)
+    {
+        if (player->transformation == MM_PLAYER_FORM_HUMAN && limbIndex == PLAYER_LIMB_SHEATH && (player->sheathType == PLAYER_MODELTYPE_SHEATH_14 || player->sheathType == PLAYER_MODELTYPE_SHEATH_15))
+        {
+            Player_DrawShield(play, player);
+        }
+    }
+
+    if (Player_UsesChildHylianShield(player) && limbIndex == PLAYER_LIMB_SHEATH && (player->stateFlags1 & (1 << 22)))
+    {
+        typedef void (*UpdateShieldColliderFunc)(PlayState*, Player*, ColliderQuad*, Vec3f*);
+        UpdateShieldColliderFunc updateShieldCollider = (UpdateShieldColliderFunc)0x801265C8;
+        updateShieldCollider(play, player, &player->shieldQuad, sChildHylianShieldQuad);
+    }
+    if (AdultMask_IsPuttingOn())
+    {
+        s32 timer = AdultMask_GetTimer();
+        s32 isSetMaskEndAnim = player->skelAnime.animation == &gPlayerAnim_cl_setmaskend;
+
+        if (timer >= 0 &&
+            timer < 11 &&
+            !isSetMaskEndAnim)
+        {
+            if (limbIndex == PLAYER_LIMB_LEFT_HAND)
+            {
+                AdultMask_DrawMaskInHand(play, player);
+            }
+        }
+
+        if (limbIndex == PLAYER_LIMB_HEAD)
+        {
+            if (AdultMask_ShouldDrawTransformFace())
+            {
+                AdultMask_DrawTransformationMaskOnFace(play, player);
+                AdultMask_DrawTransformRing(play, player);
+            }
+            else if (timer >= 12 &&
+                     !isSetMaskEndAnim)
+            {
+                AdultMask_DrawMaskOnFaceNativeLike(play, player);
+            }
+        }
+    }
+    else if (AdultMask_IsTakeOffTransform())
+    {
+        if (limbIndex == PLAYER_LIMB_HEAD)
+            AdultMask_DrawTransformRing(play, player);
+    }
+    else if (AdultMask_IsTakeOffChild())
+    {
+        s32 timer = AdultMask_GetTimer();
+        s32 isSetMaskEndAnim = player->skelAnime.animation == &gPlayerAnim_cl_setmaskend;
+
+        if (timer >= 0 &&
+            timer < 0x7FFF &&
+            !isSetMaskEndAnim)
+        {
+            if (limbIndex == PLAYER_LIMB_LEFT_HAND)
+            {
+                AdultMask_DrawMaskInHand(play, player);
+            }
+        }
+    }
+
+    if (player->transformation == MM_PLAYER_FORM_HUMAN && player->itemAction == PLAYER_CUSTOM_IA_SLINGSHOT && limbIndex == PLAYER_LIMB_RIGHT_HAND)
+    {
+        DrawSlingshotString(play, player);
+    }
+}
+
+static int Player_IsUsingCustomSlingshot(Player* player)
+{
+    return player->transformation == MM_PLAYER_FORM_HUMAN && (player->itemAction == PLAYER_CUSTOM_IA_SLINGSHOT || player->heldItemAction == PLAYER_CUSTOM_IA_SLINGSHOT);
+}
+
+static void* Player_CustomSlingshotFirstPerson(s32 limbIndex)
+{
+    void* slingshotObj;
+    void* armObj;
+    Gfx* dlist;
+    Gfx* d;
+
+    if (comboIsLinkAdult())
+    {
+        armObj = comboGetObject(CUSTOM_OBJECT_ID_EQ_ADULT_RIGHT_ARM_OUT);
+        if (!armObj)
+            return (void*)kDListEmpty;
+
+        /* Adult arm limb: draw only the arm DL here */
+        if (limbIndex == PLAYER_LIMB_RIGHT_FOREARM) /* or PLAYER_LIMB_RIGHT_ARM */
+        {
+            d = dlist = GRAPH_ALLOC(gPlay->state.gfxCtx, sizeof(Gfx) * 4);
+
+            gSPSegment(d++, 0x0a, armObj);
+            gSPDisplayList(d++, CUSTOM_OBJECT_EQ_ADULT_RIGHT_ARM_OUT_0); /* gLinkAdultRightArmOutNearDL */
+
+            gSPEndDisplayList(d++);
+
+            return dlist;
+        }
+
+        /* Adult hand limb: draw hand + slingshot here */
+        if (limbIndex == PLAYER_LIMB_RIGHT_HAND)
+        {
+            slingshotObj = comboGetObject(CUSTOM_OBJECT_ID_EQ_SLINGSHOT);
+            if (!slingshotObj)
+                return (void*)kDListEmpty;
+
+            d = dlist = GRAPH_ALLOC(gPlay->state.gfxCtx, sizeof(Gfx) * 6);
+
+            gSPSegment(d++, 0x0a, armObj);
+            gSPDisplayList(d++, CUSTOM_OBJECT_EQ_ADULT_RIGHT_ARM_OUT_1); /* gLinkAdultRightHandOutNearDL */
+
+            gSPSegment(d++, 0x0a, slingshotObj);
+            gSPDisplayList(d++, CUSTOM_OBJECT_EQ_SLINGSHOT_0);
+
+            gSPEndDisplayList(d++);
+
+            return dlist;
+        }
+
+        return NULL;
+    }
+
+    /* Child: keep the old combined stretched arm on the hand limb */
+    if (limbIndex == PLAYER_LIMB_RIGHT_HAND)
+    {
+        slingshotObj = comboGetObject(CUSTOM_OBJECT_ID_EQ_SLINGSHOT);
+        armObj = comboGetObject(CUSTOM_OBJECT_ID_EQ_SLINGSHOT_RIGHT_ARM_STRETCHED);
+
+        if (!slingshotObj || !armObj)
+            return (void*)kDListEmpty;
+
+        d = dlist = GRAPH_ALLOC(gPlay->state.gfxCtx, sizeof(Gfx) * 6);
+
+        gSPSegment(d++, 0x0a, armObj);
+        gSPDisplayList(d++, CUSTOM_OBJECT_EQ_SLINGSHOT_RIGHT_ARM_STRETCHED_0);
+
+        gSPSegment(d++, 0x0a, slingshotObj);
+        gSPDisplayList(d++, CUSTOM_OBJECT_EQ_SLINGSHOT_0);
+
+        gSPEndDisplayList(d++);
+
+        return dlist;
+    }
+
+    return NULL;
+}
+
+static int Player_IsCustomBoomerangThrown(Player* player)
+{
+    return !!(player->stateFlags1 & PLAYER_STATE1_MM_2000000);
+}
+
+#define MM_PLAYER_IS_Z_TARGETING                 0x8082FBE8
+typedef s32 (*MmPlayerIsZTargetingFunc)(Player* player, PlayState* play);
+#define Player_IsZTargeting                 ((MmPlayerIsZTargetingFunc)OverlayAddr(MM_PLAYER_IS_Z_TARGETING))
+
+static int Player_IsCustomSlingshotZTargetAiming(PlayState* play, Player* player)
+{
+    return player->transformation == MM_PLAYER_FORM_HUMAN &&
+           player->itemAction == PLAYER_CUSTOM_IA_SLINGSHOT &&
+           (
+               Player_IsZTargeting(player, play) ||
+               player->lockOnActor != NULL
+           );
 }
 
 int Player_OverrideLimbWrapper(PlayState* play, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, void* unk)
 {
     Player* player = GET_PLAYER(play);
-
-    if (player->transformation == MM_PLAYER_FORM_HUMAN && sPlayerOverrideLimb != Player_OverrideLimbDrawGameplayFirstPerson)
+    if (Player_IsUsingCustomSlingshot(player) &&
+            sPlayerOverrideLimb == Player_OverrideLimbDrawGameplayFirstPerson)
     {
-        if (limbIndex == PLAYER_LIMB_RIGHT_HAND)
+        if (limbIndex == PLAYER_LIMB_RIGHT_HAND || limbIndex == PLAYER_LIMB_RIGHT_FOREARM)
         {
-            if ((player->rightHandType == PLAYER_MODELTYPE_RH_SHIELD) && gSharedCustomSave.mmShieldIsDeku && player->currentShield)
+            *dList = Player_CustomSlingshotFirstPerson(limbIndex);
+            return FALSE;
+        }
+    }
+    if (player->transformation == MM_PLAYER_FORM_HUMAN &&
+        sPlayerOverrideLimb != Player_OverrideLimbDrawGameplayFirstPerson)
+    {
+        if (limbIndex == PLAYER_LIMB_LEFT_HAND)
+        {
+            if (player->leftHandType == PLAYER_MODELTYPE_LH_ONE_HAND_SWORD || player->leftHandType == PLAYER_MODELTYPE_LH_TWO_HAND_SWORD)
             {
-                *dList = Player_CustomHandEq((u32)kDListEmpty, comboGetObject(CUSTOM_OBJECT_ID_EQ_SHIELD_DEKU), CUSTOM_OBJECT_EQ_SHIELD_DEKU_0);
+                MmSwordId sword = Player_GetActiveCustomSword(player);
+                void* obj = NULL;
+                u32 swordDlist;
+
+                switch (sword)
+                {
+                    case MM_SWORD_MASTER:
+                        obj = comboGetObject(CUSTOM_OBJECT_ID_EQ_MASTER_SWORD);
+                        swordDlist = CUSTOM_OBJECT_EQ_MASTER_SWORD_0;
+                        break;
+
+                    case MM_SWORD_GIANTS_KNIFE:
+                    case MM_SWORD_BIGGORON:
+                        if (sword == MM_SWORD_GIANTS_KNIFE && MmSword_GetGiantsKnifeHealth() == 0)
+                        {
+                            obj = comboGetObject(CUSTOM_OBJECT_ID_EQ_BIGGORON_SWORD_BROKEN);
+                            swordDlist = CUSTOM_OBJECT_EQ_BIGGORON_SWORD_BROKEN_0;
+                        }
+                        else
+                        {
+                            obj = comboGetObject(CUSTOM_OBJECT_ID_EQ_BIGGORON_SWORD);
+                            swordDlist = CUSTOM_OBJECT_EQ_BIGGORON_SWORD_0;
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+
+                if (obj)
+                {
+                    *dList = Player_CustomEquipment(DLIST_LHAND_CLOSED, obj, swordDlist);
+                    return FALSE;
+                }
+            }
+
+            if (player->itemAction == PLAYER_CUSTOM_IA_BOOMERANG)
+            {
+                if (Player_IsCustomBoomerangThrown(player))
+                {
+                    *dList = (Gfx*)DLIST_LHAND_OPEN;
+                }
+                else
+                {
+                    *dList = (Gfx*)DLIST_LHAND_CLOSED;
+                }
+
                 return FALSE;
             }
-            else if (player->rightHandType == PLAYER_MODELTYPE_RH_INSTRUMENT && gMmSave.info.inventory.items[ITS_MM_OCARINA] == ITEM_MM_OCARINA_FAIRY)
+
+            if (Player_IsCustomSlingshotZTargetAiming(play, player))
             {
-                *dList = Player_CustomHandEq(DLIST_RHAND_OPEN, comboGetObject(CUSTOM_OBJECT_ID_EQ_OCARINA_FAIRY), CUSTOM_OBJECT_EQ_OCARINA_FAIRY_0);
+                *dList = (Gfx*)DLIST_LHAND_CLOSED;
+                return FALSE;
+            }
+        }
+
+        if (limbIndex == PLAYER_LIMB_SHEATH)
+        {
+            MmSwordId sword;
+            void* obj = NULL;
+            u32 sheathDlist;
+
+            MmSword_EnsureState();
+            sword = MmSword_GetEquipped();
+
+            if (Player_IsExtendedSword(sword))
+            {
+                s32 isDrawn =
+                    (player->leftHandType == PLAYER_MODELTYPE_LH_ONE_HAND_SWORD ||
+                     player->leftHandType == PLAYER_MODELTYPE_LH_TWO_HAND_SWORD) &&
+                    Player_GetActiveCustomSword(player) == sword;
+
+                obj = comboGetObject(isDrawn ? CUSTOM_OBJECT_ID_EQ_SHEATH_SWORD_OOT_ADULT_EMPTY : CUSTOM_OBJECT_ID_EQ_SHEATH_SWORD_OOT_ADULT_FULL);
+                sheathDlist = isDrawn ? CUSTOM_OBJECT_EQ_SHEATH_SWORD_OOT_ADULT_EMPTY_0 : CUSTOM_OBJECT_EQ_SHEATH_SWORD_OOT_ADULT_FULL_0;
+            }
+
+            if (obj)
+            {
+                *dList = Player_CustomEquipment(0, obj, sheathDlist);
+                return FALSE;
+            }
+        }
+
+        if (limbIndex == PLAYER_LIMB_RIGHT_HAND)
+        {
+            if (player->rightHandType == PLAYER_MODELTYPE_RH_SHIELD && player->currentShield)
+            {
+                MmShieldId shield = MmShield_GetEquipped();
+
+                if (shield == MM_SHIELD_DEKU)
+                {
+                    if (comboIsLinkAdult())
+                    {
+                        *dList = Player_CustomEquipment(DLIST_RHAND_CLOSED, comboGetObject(CUSTOM_OBJECT_ID_EQ_SHIELD_DEKU), CUSTOM_OBJECT_EQ_SHIELD_DEKU_2);
+                        *dList = Player_OffsetHeldShield(play, *dList);
+                    }
+                    else
+                        *dList = Player_CustomEquipment((u32)kDListEmpty, comboGetObject(CUSTOM_OBJECT_ID_EQ_SHIELD_DEKU), CUSTOM_OBJECT_EQ_SHIELD_DEKU_0);
+
+                    return FALSE;
+                }
+
+                if (shield == MM_SHIELD_HYLIAN)
+                {
+                    if (!comboIsLinkAdult())
+                    {
+                        *dList = Player_CustomEquipment(DLIST_RHAND_CLOSED, comboGetObject(CUSTOM_OBJECT_ID_EQ_SHIELD_HYLIAN_ADULT), CUSTOM_OBJECT_EQ_SHIELD_HYLIAN_ADULT_1);
+                        return FALSE;
+                    }
+                    else
+                    {
+                        s32 result;
+                        result = sPlayerOverrideLimb(play, limbIndex, dList, pos, rot, unk);
+                        *dList = Player_CustomEquipment(0, comboGetObject(CUSTOM_OBJECT_ID_EQ_SHIELD_HYLIAN_ADULT), CUSTOM_OBJECT_EQ_SHIELD_HYLIAN_ADULT_0);
+                        return result;
+                    }
+                }
+
+                if (shield == MM_SHIELD_MIRROR && comboIsLinkAdult())
+                {
+                    s32 result;
+                    result = sPlayerOverrideLimb(play, limbIndex, dList, pos, rot, unk);
+                    if (*dList)
+                        *dList = Player_OffsetHeldShield(play, *dList);
+                    return result;
+                }
+            }
+
+            if (player->rightHandType == PLAYER_MODELTYPE_RH_INSTRUMENT && gMmSave.info.inventory.items[ITS_MM_OCARINA] == ITEM_MM_OCARINA_FAIRY)
+            {
+                *dList = Player_CustomEquipment(DLIST_RHAND_OPEN, comboGetObject(CUSTOM_OBJECT_ID_EQ_OCARINA_FAIRY), CUSTOM_OBJECT_EQ_OCARINA_FAIRY_0);
+                return FALSE;
+            }
+            else if (player->itemAction == PLAYER_CUSTOM_IA_SLINGSHOT)
+            {
+                *dList = Player_CustomEquipment(DLIST_RHAND_CLOSED, comboGetObject(CUSTOM_OBJECT_ID_EQ_SLINGSHOT), CUSTOM_OBJECT_EQ_SLINGSHOT_2);
                 return FALSE;
             }
         }
@@ -1173,6 +2064,62 @@ int Player_OverrideLimbWrapper(PlayState* play, s32 limbIndex, Gfx** dList, Vec3
 
     return sPlayerOverrideLimb(play, limbIndex, dList, pos, rot, unk);
 }
+
+static void DrawExtendedMask(PlayState* play, s32 customMask)
+{
+    u16 objectId;
+    u32 dlist;
+    void* obj;
+
+    switch (customMask)
+    {
+        case PLAYER_CUSTOM_MASK_GERUDO:
+            objectId = CUSTOM_OBJECT_ID_MASK_OOT_GERUDO | MASK_FOREIGN_OBJECT;
+            dlist = CUSTOM_OBJECT_MASK_OOT_GERUDO_0;
+            break;
+        case PLAYER_CUSTOM_MASK_SKULL:
+            objectId = CUSTOM_OBJECT_ID_MASK_OOT_SKULL | MASK_FOREIGN_OBJECT;
+            dlist = CUSTOM_OBJECT_MASK_OOT_SKULL_0;
+            break;
+        case PLAYER_CUSTOM_MASK_SPOOKY:
+            objectId = CUSTOM_OBJECT_ID_MASK_OOT_SPOOKY | MASK_FOREIGN_OBJECT;
+            dlist = CUSTOM_OBJECT_MASK_OOT_SPOOKY_0;
+            break;
+        default:
+            return;
+    }
+
+    obj = comboGetObject(objectId);
+    if (!obj)
+        return;
+
+    OPEN_DISPS(play->state.gfxCtx);
+    gSPMatrix(POLY_OPA_DISP++, 0x0d0001c0, G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+    gSPSegment(POLY_OPA_DISP++, 0x0a, obj);
+    gSPDisplayList(POLY_OPA_DISP++, dlist);
+    CLOSE_DISPS();
+}
+
+u8 gGerudoTunic;
+EXPORT_SYMBOL(GERUDO_TUNIC, gGerudoTunic);
+
+static u8 Player_GetEffectiveHumanStrength(void)
+{
+    u8 strength;
+
+    strength = gSaveContext.save.info.inventory.upgrades.strength;
+    if (strength <= 1)
+        return strength;
+
+    if (!comboCheckStrengthAgeReqMm())
+    {
+        return 1;
+    }
+
+    return strength;
+}
+
+typedef void* (*MmSetupHiliteFunc)(Vec3f* pos, PlayState* play);
 
 void Player_SkelAnime_DrawFlexLod(PlayState* play, void** skeleton, Vec3s* jointTable, s32 dListCount, OverrideLimbDrawOpa overrideLimbDraw, PostLimbDrawFlex postLimbDraw, Player* player, s32 lod)
 {
@@ -1184,12 +2131,32 @@ void Player_SkelAnime_DrawFlexLod(PlayState* play, void** skeleton, Vec3s* joint
         u16 tunic;
 
         tunic = CLAMP(gSaveContext.save.info.itemEquips.tunic, 0, 3);
-        tunicColor = &sTunicColors[tunic];
+
+        if (tunic == 0 &&
+            gCustomSave.customMask == PLAYER_CUSTOM_MASK_GERUDO &&
+            gGerudoTunic != 0)
+        {
+            tunicColor = &sGerudoMaskTunicColor;
+        }
+        else
+        {
+            tunicColor = &sTunicColors[tunic];
+        }
+
         gDPSetEnvColor(POLY_OPA_DISP++, tunicColor->r, tunicColor->g, tunicColor->b, 0xFF);
     }
 
-    if (postLimbDraw == (void*)Player_PostLimbDrawGameplay && overrideLimbDraw != Player_OverrideLimbDrawGameplayFirstPerson)
+    if (postLimbDraw == (void*)Player_PostLimbDrawGameplay)
         postLimbDraw = Player_PostLimbDrawGameplayWrapper;
+
+    if (overrideLimbDraw != Player_OverrideLimbDrawGameplayFirstPerson && player->transformation == MM_PLAYER_FORM_HUMAN)
+    {
+        MmSwordId sword;
+        MmSword_EnsureState();
+        sword = MmSword_GetEquipped();
+        if (Player_IsExtendedSword(sword))
+            ((MmSetupHiliteFunc)0x800BCBF4)(&player->actor.world.pos, play);
+    }
 
     sPlayerOverrideLimb = overrideLimbDraw;
     SkelAnime_DrawFlexLod(play, skeleton, jointTable, dListCount, Player_OverrideLimbWrapper, postLimbDraw, &player->actor, lod);
@@ -1206,14 +2173,23 @@ void Player_SkelAnime_DrawFlexLod(PlayState* play, void** skeleton, Vec3s* joint
             break;
         }
 
+        if (player->transformation == MM_PLAYER_FORM_HUMAN)
+        {
+            DrawExtendedMask(play, gCustomSave.customMask);
+        }
+
         if (player->transformation == MM_PLAYER_FORM_HUMAN && player->itemAction == PLAYER_CUSTOM_IA_HAMMER) {
             DrawHammer(play);
+        }
+
+        if (player->transformation == MM_PLAYER_FORM_HUMAN && player->itemAction == PLAYER_CUSTOM_IA_BOOMERANG && !(player->stateFlags1 & PLAYER_STATE1_MM_2000000)) {
+            DrawBoomerang(play);
         }
 
         if (player->transformation == MM_PLAYER_FORM_HUMAN && Config_Flag(CFG_MM_STRENGTH))
         {
             Color_RGB8* gauntletColor;
-            s32 strength = gSaveContext.save.info.inventory.upgrades.strength;
+            s32 strength = Player_GetEffectiveHumanStrength();
             switch (strength)
             {
                 case 1:
@@ -1273,9 +2249,23 @@ void Player_SkelAnime_DrawFlexLod(PlayState* play, void** skeleton, Vec3s* joint
     CLOSE_DISPS();
 }
 
-void Player_ColorAfterMask(GraphicsContext* gfxCtx, s32 maskIDMinusOne, PlayerMaskDList* maskDList, Player* player) {
-    u32 dl = maskDList->maskDListEntry[maskIDMinusOne];
-    gSPDisplayList(gfxCtx->polyOpa.append++, dl);
+static s32 Player_ShouldSuppressVanillaMaskDraw(s32 maskIDMinusOne, Player* player)
+{
+    s32 maskId = maskIDMinusOne + 1;
+
+    return player->transformation == MM_PLAYER_FORM_HUMAN &&
+           gCustomSave.customMask == PLAYER_CUSTOM_MASK_SPOOKY &&
+           Player_IsNightTime() &&
+           maskId == MASK_GIBDO;
+}
+
+void Player_ColorAfterMask(GraphicsContext* gfxCtx, s32 maskIDMinusOne, PlayerMaskDList* maskDList, Player* player)
+{
+    if (!Player_ShouldSuppressVanillaMaskDraw(maskIDMinusOne, player))
+    {
+        u32 dl = maskDList->maskDListEntry[maskIDMinusOne];
+        gSPDisplayList(gfxCtx->polyOpa.append++, dl);
+    }
 
     if (player->transformation == MM_PLAYER_FORM_HUMAN)
     {
@@ -1283,7 +2273,20 @@ void Player_ColorAfterMask(GraphicsContext* gfxCtx, s32 maskIDMinusOne, PlayerMa
         u16 tunic;
 
         tunic = CLAMP(gSaveContext.save.info.itemEquips.tunic, 0, 3);
-        tunicColor = sTunicColors[tunic];
+
+        if (tunic == 0 &&
+            gCustomSave.customMask == PLAYER_CUSTOM_MASK_GERUDO &&
+            gGerudoTunic)
+        {
+            tunicColor.r = 120;
+            tunicColor.g = 0;
+            tunicColor.b = 180;
+        }
+        else
+        {
+            tunicColor = sTunicColors[tunic];
+        }
+
         gDPSetEnvColor(gfxCtx->polyOpa.append++, tunicColor.r, tunicColor.g, tunicColor.b, 0xFF);
     }
 }
@@ -1316,6 +2319,10 @@ s32 Player_ShouldCheckItemUsabilityWhileSwimming(Player* player, u8 itemAction)
     case PLAYER_CUSTOM_IA_BOOTS_HOVER:
     case PLAYER_CUSTOM_IA_TUNIC_ZORA:
     case PLAYER_CUSTOM_IA_TUNIC_GORON:
+    case PLAYER_CUSTOM_IA_MASK_GERUDO:
+    case PLAYER_CUSTOM_IA_MASK_SKULL:
+    case PLAYER_CUSTOM_IA_MASK_SPOOKY:
+    case PLAYER_CUSTOM_IA_MASK_ADULT:
         return 0;
     default:
         return 1;
@@ -1588,7 +2595,7 @@ u8 Player_GetStrengthCustom(u8 formStrength)
 {
     if (Config_Flag(CFG_MM_STRENGTH) && gSaveContext.save.playerForm == MM_PLAYER_FORM_HUMAN) /* || gSaveContext.save.playerForm == MM_PLAYER_FORM_FIERCE_DEITY) */
     {
-        return gSaveContext.save.info.inventory.upgrades.strength;
+        return Player_GetEffectiveHumanStrength();
     }
     return formStrength;
 }
@@ -1611,38 +2618,42 @@ PATCH_CALL(0x8019f874, Player_PlaySfx_GiantsMask);
 
 u8 Player_AfterMaskLoaded(Player* player)
 {
+    s32 isAdult = comboIsLinkAdult();
+
     player->maskObjectLoadState = 0;
 
-    if (player->actor.id == ACTOR_PLAYER && comboIsLinkAdult())
+    if (player->actor.id == ACTOR_PLAYER && isAdult)
     {
         u32* maskObjectSegment;
         switch (player->currentMask)
         {
-        case MASK_KEATON:
-            maskObjectSegment = (u32*) player->maskObjectSegment;
-            maskObjectSegment[0x12a] = 0xde000000;
-            maskObjectSegment[0x12b] = 0x0405a2e0;
-            break;
-        case MASK_BUNNY:
-            maskObjectSegment = (u32*) player->maskObjectSegment;
-            maskObjectSegment[0x188] = 0xde000000;
-            maskObjectSegment[0x189] = 0x0405a2e0;
-            maskObjectSegment[0x1e0] = 0xde000000;
-            maskObjectSegment[0x1e1] = 0x0405a2e8;
-            maskObjectSegment[0x1ec] = 0xde000000;
-            maskObjectSegment[0x1ed] = 0x0405a2e0;
-            maskObjectSegment[0x224] = 0xde000000;
-            maskObjectSegment[0x225] = 0x0405a2e8;
-            maskObjectSegment[0x230] = 0xde000000;
-            maskObjectSegment[0x231] = 0x0405a2e0;
-            break;
-        case MASK_SCENTS:
-            maskObjectSegment = (u32*) player->maskObjectSegment;
-            maskObjectSegment[0x1c6] = 0xde000000;
-            maskObjectSegment[0x1c7] = 0x0405a2e0;
-            break;
+            case MASK_KEATON:
+                maskObjectSegment = (u32*)player->maskObjectSegment;
+                maskObjectSegment[0x12a] = 0xde000000;
+                maskObjectSegment[0x12b] = 0x0405a2e0;
+                break;
+            case MASK_BUNNY:
+                maskObjectSegment = (u32*)player->maskObjectSegment;
+                maskObjectSegment[0x188] = 0xde000000;
+                maskObjectSegment[0x189] = 0x0405a2e0;
+                maskObjectSegment[0x1e0] = 0xde000000;
+                maskObjectSegment[0x1e1] = 0x0405a2e8;
+                maskObjectSegment[0x1ec] = 0xde000000;
+                maskObjectSegment[0x1ed] = 0x0405a2e0;
+                maskObjectSegment[0x224] = 0xde000000;
+                maskObjectSegment[0x225] = 0x0405a2e8;
+                maskObjectSegment[0x230] = 0xde000000;
+                maskObjectSegment[0x231] = 0x0405a2e0;
+                break;
+            case MASK_SCENTS:
+                maskObjectSegment = (u32*)player->maskObjectSegment;
+                maskObjectSegment[0x1c6] = 0xde000000;
+                maskObjectSegment[0x1c7] = 0x0405a2e0;
+                break;
         }
     }
+    if (player->actor.id == ACTOR_PLAYER)
+        sLoadedMaskObjectAdult = isAdult;
 
     return player->currentMask;
 }
@@ -1756,12 +2767,41 @@ static void Player_ToggleFormDelayed(int form)
     Player_FormChangeDeleteEffects();
 }
 
+static s32 Player_ShouldNativeMaskClearCustomMask(s16 itemId)
+{
+    if (itemId < ITEM_MM_MASK_DEKU || itemId > ITEM_MM_MASK_GIANT)
+        return 0;
+    if (gCustomSave.customMask == PLAYER_CUSTOM_MASK_SPOOKY &&
+        Player_IsNightTime() &&
+        itemId == ITEM_MM_MASK_GIBDO)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+s32 Player_IsAdultMaskItem(Player* player, s16 itemId)
+{
+    return Player_CustomItemToItemAction(
+        player,
+        itemId,
+        PLAYER_IA_NONE
+    ) == PLAYER_CUSTOM_IA_MASK_ADULT;
+}
+
 void Player_UseItem(PlayState* play, Player* this, s16 itemId)
 {
     void (*Player_UseItemImpl)(PlayState* play, Player* this, s16 itemId);
     u8 useDefault;
 
     useDefault = 1;
+
+    if (Player_ShouldNativeMaskClearCustomMask(itemId))
+    {
+        gCustomSave.customMask = PLAYER_CUSTOM_MASK_NONE;
+        sCustomMaskEffectiveMask = -1;
+    }
 
     if (Config_Flag(CFG_MM_FAST_MASKS))
     {
@@ -1792,14 +2832,75 @@ void Player_UseItem(PlayState* play, Player* this, s16 itemId)
         Player_UseItemImpl(play, this, itemId);
     }
 }
+static s32 Player_ExtendedSwordActionToNative(s32 itemAction)
+{
+    switch (itemAction)
+    {
+        case PLAYER_CUSTOM_IA_SWORD_MASTER:
+            return PLAYER_IA_SWORD_GILDED;
 
-/* Hammer Stuff */
+        case PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE:
+        case PLAYER_CUSTOM_IA_SWORD_BIGGORON:
+            return PLAYER_IA_SWORD_TWO_HANDED;
+
+        default:
+            return itemAction;
+    }
+}
+
+typedef s32 (*MagicConsumeFunc)(PlayState* play, s16 amount, s16 type);
+
+void Player_StartCustomSpinAttack(PlayState* play, Player* this, s32 magicCost, s32 isSwordBeam)
+{
+    s32 itemAction;
+    s32 swordType;
+
+    if (magicCost != 0)
+        this->unk_B08 = 0.0f;
+    else
+        this->unk_B08 = 0.5f;
+    this->stateFlags1 |= (1 << 12);
+    if ((this->actor.id == ACTOR_PLAYER) && (isSwordBeam || this->transformation == MM_PLAYER_FORM_HUMAN))
+    {
+        s16 pitch = 0;
+        Actor* thunder;
+        if (isSwordBeam)
+        {
+            if (this->lockOnActor != NULL)
+                pitch = Math_Vec3f_Pitch(&this->bodyPartsPos[PLAYER_BODYPART_WAIST], &this->lockOnActor->focus.pos);
+            if (gSaveContext.save.info.playerData.magic == 0)
+                return;
+        }
+        itemAction = Player_ExtendedSwordActionToNative(this->heldItemAction);
+        swordType = itemAction - PLAYER_IA_SWORD_KOKIRI;
+        thunder = Actor_Spawn(&play->actorCtx, play, ACTOR_EN_M_THUNDER, this->bodyPartsPos[PLAYER_BODYPART_WAIST].x, this->bodyPartsPos[PLAYER_BODYPART_WAIST].y, this->bodyPartsPos[PLAYER_BODYPART_WAIST].z, pitch, 0, 0, swordType | magicCost);
+        if ((thunder != NULL) && isSwordBeam)
+        {
+            ((MagicConsumeFunc)0x80115DB4)(play, 1, MAGIC_CONSUME_DEITY_BEAM);
+            this->unk_D57 = 4;
+        }
+    }
+}
+PATCH_FUNC(0x808332A0, Player_StartCustomSpinAttack);
 
 s32 Player_CustomActionToModelGroup(Player* player, s32 itemAction) {
-    if (itemAction == PLAYER_CUSTOM_IA_HAMMER) return 10; /* uses deku stick model group but does not draw deku stick because of the way the original draw code for it works */
+    switch (itemAction)
+    {
+    case PLAYER_CUSTOM_IA_HAMMER:
+        return 10; /* uses deku stick model group but does not draw deku stick because of the way the original draw code for it works */
+    case PLAYER_CUSTOM_IA_BOOMERANG:
+    case PLAYER_CUSTOM_IA_SLINGSHOT:
+    case PLAYER_CUSTOM_IA_MASK_GERUDO:
+    case PLAYER_CUSTOM_IA_MASK_SKULL:
+    case PLAYER_CUSTOM_IA_MASK_SPOOKY:
+    case PLAYER_CUSTOM_IA_MASK_ADULT:
+        return 3;  /* PLAYER_MODELGROUP_DEFAULT */
+    }
 
     u8* sActionModelGroups = (u8*)0x801BFF3C; /* using original table also means original glitches, if that matters */
-    s32 modelGroup = sActionModelGroups[itemAction];
+    s32 modelGroup = sActionModelGroups[Player_ExtendedSwordActionToNative(itemAction)];
+    if (modelGroup == 2 && Player_UsesChildHylianShield(player))
+        return 1;
     /* if ((modelGroup == PLAYER_MODELGROUP_ONE_HAND_SWORD) && Player_IsGoronOrDeku(player)) { */
     if ((modelGroup == 2) && (player->transformation == MM_PLAYER_FORM_GORON || player->transformation == MM_PLAYER_FORM_DEKU)) {
         /* return PLAYER_MODELGROUP_1;  */
@@ -1810,30 +2911,119 @@ s32 Player_CustomActionToModelGroup(Player* player, s32 itemAction) {
 
 PATCH_FUNC(0x80123960, Player_CustomActionToModelGroup)
 
+void Player_SetModelsForHoldingShield_Custom(Player* player)
+{
+    if (Player_UsesChildHylianShield(player))
+        return;
+
+    Player_SetModelsForHoldingShield(player);
+}
+
+static s32 Player_IsGoronOrDekuOrChildHylian(Player* player)
+{
+    typedef s32 (*Player_IsGoronOrDekuFunc)(Player*);
+
+    if (Player_UsesChildHylianShield(player))
+        return 1;
+    return ((Player_IsGoronOrDekuFunc)0x801234b0)(player);
+}
+
+static void Player_HylianShieldAnimationChange(PlayState* play, SkelAnime* skelAnime, PlayerAnimationHeader* anim, f32 playbackSpeed, f32 startFrame, f32 endFrame, u8 mode, f32 morphFrames)
+{
+    typedef void (*Player_AnimReplace_SetupFunc)(PlayState*, Player*, s32);
+    Player* player = GET_PLAYER(play);
+
+    if (Player_UsesChildHylianShield(player))
+    {
+        anim = (PlayerAnimationHeader*)&gPlayerAnim_oot_clink_normal_defense_ALL;
+        startFrame = Animation_GetLastFrame(anim);
+        PlayerAnimation_Change(play, skelAnime, anim, 1.0f, startFrame, startFrame, ANIMMODE_ONCE, 0.0f);
+        ((Player_AnimReplace_SetupFunc)OverlayAddr(0x8082e920))(play, player, 1 << 2);
+        return;
+    }
+
+    PlayerAnimation_Change(play, skelAnime, anim, playbackSpeed, startFrame, endFrame, mode, morphFrames);
+}
+
+static void Player_HylianShieldAnimationReverse(PlayState* play, SkelAnime* skelAnime, PlayerAnimationHeader* anim, f32 playbackSpeed, f32 startFrame, f32 endFrame, u8 mode, f32 morphFrames)
+{
+    typedef void (*Player_AnimReplace_SetupFunc)(PlayState*, Player*, s32);
+    Player* player = GET_PLAYER(play);
+    PlayerAnimation_Change(play, skelAnime, anim, playbackSpeed, startFrame, endFrame, mode, morphFrames);
+    if (Player_UsesChildHylianShield(player))
+        ((Player_AnimReplace_SetupFunc)OverlayAddr(0x8082e920))(play, player, 1 << 2);
+}
+
+PATCH_CALL(0x8084ba14, Player_HylianShieldAnimationReverse);
+PATCH_CALL(0x8083a474, Player_HylianShieldAnimationChange);
+PATCH_CALL(0x80123bbc, Player_SetModelsForHoldingShield_Custom);
+PATCH_CALL(0x8083a384, Player_SetModelsForHoldingShield_Custom);
+PATCH_CALL(0x8084ba7c, Player_SetModelsForHoldingShield_Custom);
+PATCH_CALL(0x8084bb84, Player_SetModelsForHoldingShield_Custom);
+PATCH_CALL(0x8083a2c4, Player_IsGoronOrDekuOrChildHylian);
+PATCH_CALL(0x8083a374, Player_IsGoronOrDekuOrChildHylian);
+PATCH_CALL(0x8084b690, Player_IsGoronOrDekuOrChildHylian);
+PATCH_CALL(0x8084b6c8, Player_IsGoronOrDekuOrChildHylian);
+PATCH_CALL(0x8084b9c8, Player_IsGoronOrDekuOrChildHylian);
+PATCH_CALL(0x80834848, Player_IsGoronOrDekuOrChildHylian);
 /*
     first two arguments match Player_SetUpperAction which allows it to replace relevant calls in which the third argument would always be this->heldItemAction
 */
+extern s32 Player_InitItemAction_CustomBoomerang_Upper(Player* player, PlayState* play);
+extern s32 Player_InitItemAction_CustomBoomerang(Player* player, PlayState* play);
+
+extern s32 Player_InitItemAction_CustomSlingshot(PlayState* play, Player* player);
+extern s32 Player_CheckSlingshotReadyOrStart(Player* player, PlayState* play);
+
 void Player_SetCustomItemActionUpperFunc(PlayState* play, Player* player) {
     PlayerUpperActionFunc* sPlayerUpperActionUpdateFuncs = (PlayerUpperActionFunc*)OverlayAddr(0x8085c9f0);
     void (*Player_SetUpperAction)(PlayState* play, Player* this, PlayerUpperActionFunc upperActionFunc) = OverlayAddr(0x8082f43c);
     s8 upperItemAction = player->heldItemAction;
 
-    if (upperItemAction == PLAYER_CUSTOM_IA_HAMMER) {
+    switch (upperItemAction)
+    {
+    case PLAYER_CUSTOM_IA_HAMMER:
         upperItemAction = PLAYER_IA_SWORD_TWO_HANDED;
+        break;
+    case PLAYER_CUSTOM_IA_BOOMERANG:
+        Player_SetUpperAction(play, player, Player_InitItemAction_CustomBoomerang);
+        return;
+    case PLAYER_CUSTOM_IA_SLINGSHOT:
+        Player_SetUpperAction(play, player, Player_CheckSlingshotReadyOrStart);
+        return;
+    case PLAYER_CUSTOM_IA_MASK_GERUDO:
+    case PLAYER_CUSTOM_IA_MASK_SKULL:
+    case PLAYER_CUSTOM_IA_MASK_SPOOKY:
+    case PLAYER_CUSTOM_IA_MASK_ADULT:
+        return;
     }
-
     /* If more custom items were to be added that go to this extent I would suggest a sPlayerCustomUpperActionUpdateFuncs array */
+    upperItemAction = Player_ExtendedSwordActionToNative(upperItemAction);
     Player_SetUpperAction(play, player, sPlayerUpperActionUpdateFuncs[upperItemAction]);
 }
 
 void Player_RunCustomItemActionInitFunc(PlayState* play, Player* player, s32 itemAction) {
     PlayerInitItemActionFunc* sPlayerItemActionInitFuncs = (PlayerInitItemActionFunc*)OverlayAddr(0x8085cb3c);
 
-    if (itemAction == PLAYER_CUSTOM_IA_HAMMER) {
+    switch (itemAction)
+    {
+    case PLAYER_CUSTOM_IA_HAMMER:
         itemAction = PLAYER_IA_SWORD_TWO_HANDED;
+        break;
+    case PLAYER_CUSTOM_IA_BOOMERANG:
+        Player_InitItemAction_CustomBoomerang_Upper(player, play);
+        return;
+    case PLAYER_CUSTOM_IA_SLINGSHOT:
+        Player_InitItemAction_CustomSlingshot(play, player);
+        return;
+    case PLAYER_CUSTOM_IA_MASK_GERUDO:
+    case PLAYER_CUSTOM_IA_MASK_SKULL:
+    case PLAYER_CUSTOM_IA_MASK_SPOOKY:
+    case PLAYER_CUSTOM_IA_MASK_ADULT:
+        return;
     }
-
     /* If more custom items were to be added that go to this extent I would suggest a sPlayerItemActionInitFuncs array */
+    itemAction = Player_ExtendedSwordActionToNative(itemAction);
     sPlayerItemActionInitFuncs[itemAction](play, player);
 }
 
@@ -1842,12 +3032,15 @@ PATCH_CALL(0x808488B4, Player_SetCustomItemActionUpperFunc);
 PATCH_CALL(0x80848B10, Player_SetCustomItemActionUpperFunc);
 PATCH_CALL(0x8082F914, Player_RunCustomItemActionInitFunc); /* this was not a function but it's ok */
 
-PlayerMeleeWeapon Player_CustomMeleeWeaponFromIA(PlayerItemAction itemAction) {
-    PlayerMeleeWeapon weapon = GET_MELEE_WEAPON_FROM_IA(itemAction);
+PlayerMeleeWeapon
+Player_CustomMeleeWeaponFromIA(s32 itemAction)
+{
+    PlayerMeleeWeapon weapon;
 
-    if (((weapon > PLAYER_MELEEWEAPON_NONE) && (weapon < PLAYER_MELEEWEAPON_MAX)) || (weapon == PLAYER_MELEEWEAPON_HAMMER)) {
+    weapon = GET_MELEE_WEAPON_FROM_IA(Player_ExtendedSwordActionToNative(itemAction));
+
+    if (((weapon > PLAYER_MELEEWEAPON_NONE) && (weapon < PLAYER_MELEEWEAPON_MAX)) || weapon == PLAYER_MELEEWEAPON_HAMMER)
         return weapon;
-    }
 
     return PLAYER_MELEEWEAPON_NONE;
 }
@@ -1861,14 +3054,50 @@ void Player_GetCustomSwordLength(PlayState* play, Player* player) {
 
     if (player->itemAction == PLAYER_CUSTOM_IA_HAMMER) {
         D_801C0994->x = 2500.0f;
-    } else if (player->itemAction == PLAYER_IA_DEKU_STICK) {
-        D_801C0994->x = player->unk_B0C * 5000.0f;
-    } else {
-        D_801C0994->x = sMeleeWeaponLengths[Player_GetMeleeWeaponHeld(player)];
+        return;
     }
+
+    if (player->itemAction == PLAYER_IA_DEKU_STICK)
+    {
+        D_801C0994->x = player->unk_B0C * 5000.0f;
+        return;
+    }
+
+    if (player->transformation == MM_PLAYER_FORM_HUMAN)
+    {
+        switch (player->heldItemAction)
+        {
+            case PLAYER_CUSTOM_IA_SWORD_MASTER:
+                D_801C0994->x = 4000.0f;
+                return;
+
+            case PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE:
+                D_801C0994->x =
+                    MmSword_GetGiantsKnifeHealth()
+                        ? 5500.0f
+                        : 1500.0f;
+                return;
+
+            case PLAYER_CUSTOM_IA_SWORD_BIGGORON:
+                D_801C0994->x = 5500.0f;
+                return;
+
+            default:
+                break;
+        }
+    }
+
+    D_801C0994->x = sMeleeWeaponLengths[Player_GetMeleeWeaponHeld(player)];
 }
 
-static MeleeWeaponDamageInfo megatonHammerDmgInfo = { DMG_GORON_PUNCH, 2, 4, 2, 4 };
+static MeleeWeaponDamageInfo megatonHammerDmgInfo =
+    { DMG_GORON_PUNCH, 2, 4, 2, 4 };
+static MeleeWeaponDamageInfo sMasterSwordDmgInfo =
+    { DMG_SWORD, 4, 8, 2, 4 };
+static MeleeWeaponDamageInfo sBiggoronSwordDmgInfo =
+    { DMG_SWORD, 4, 8, 4, 8 };
+static MeleeWeaponDamageInfo sBrokenGiantsKnifeDmgInfo =
+    { DMG_SWORD, 4, 8, 1, 2 };
 
 void Player_SetMeleeWeaponInfo(Player* this, PlayerMeleeWeaponAnimation meleeWeaponAnim) {
     MeleeWeaponDamageInfo* D_8085D09C = OverlayAddr(0x8085D09C);
@@ -1876,33 +3105,132 @@ void Player_SetMeleeWeaponInfo(Player* this, PlayerMeleeWeaponAnimation meleeWea
     PlayerMeleeWeapon (*Player_GetMeleeWeaponHeld)(Player* this) = (void*)0x80124190;
     void (*func_80833728)(Player* this, s32 index, u32 dmgFlags, s32 damage) = OverlayAddr(0x80833728);
 
-    u32 dmgFlags;
+    s32 strong;
+    s32 human;
     s32 damage;
 
     if (this->actor.id == ACTOR_EN_TEST3) {
-        /* Was Kafei originally intended to be able to punch? (Part of the original function)*/
+        /* Was Kafei originally intended to be able to punch? */
         meleeWeaponAnim = PLAYER_MWA_GORON_PUNCH_LEFT;
         this->meleeWeaponAnimation = -1;
-        dmgFlags = dmgInfo->dmgFlags;
+        dmgInfo = &D_8085D09C[0];
     } else if (this->heldItemAction == PLAYER_CUSTOM_IA_HAMMER) {
         dmgInfo = &megatonHammerDmgInfo;
-        dmgFlags = dmgInfo->dmgFlags;
+    } else if (this->transformation == MM_PLAYER_FORM_HUMAN) {
+        switch (this->heldItemAction) {
+        case PLAYER_CUSTOM_IA_SWORD_MASTER:
+            dmgInfo = &sMasterSwordDmgInfo;
+            break;
 
+        case PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE:
+            dmgInfo = MmSword_GetGiantsKnifeHealth()
+                ? &sBiggoronSwordDmgInfo
+                : &sBrokenGiantsKnifeDmgInfo;
+            break;
+
+        case PLAYER_CUSTOM_IA_SWORD_BIGGORON:
+            dmgInfo = &sBiggoronSwordDmgInfo;
+            break;
+
+        default:
+            dmgInfo = &D_8085D09C[Player_GetMeleeWeaponHeld(this)];
+            break;
+        }
     } else {
-        dmgInfo = &D_8085D09C[(this->transformation == MM_PLAYER_FORM_GORON) ? PLAYER_MELEEWEAPON_NONE : Player_GetMeleeWeaponHeld(this)];
-        dmgFlags = dmgInfo->dmgFlags;
+        dmgInfo = &D_8085D09C[
+            this->transformation == MM_PLAYER_FORM_GORON
+                ? PLAYER_MELEEWEAPON_NONE
+                : Player_GetMeleeWeaponHeld(this)
+        ];
     }
 
-    damage =
-        ((meleeWeaponAnim >= PLAYER_MWA_FLIPSLASH_START) && (meleeWeaponAnim <= PLAYER_MWA_ZORA_JUMPKICK_FINISH))
-            ? ((this->transformation == MM_PLAYER_FORM_HUMAN) ? dmgInfo->dmgHumanStrong : dmgInfo->dmgTransformedStrong)
-            : ((this->transformation == MM_PLAYER_FORM_HUMAN) ? dmgInfo->dmgHumanNormal : dmgInfo->dmgTransformedNormal);
+    human = this->transformation == MM_PLAYER_FORM_HUMAN;
+    strong =
+        meleeWeaponAnim >= PLAYER_MWA_FLIPSLASH_START &&
+        meleeWeaponAnim <= PLAYER_MWA_ZORA_JUMPKICK_FINISH;
 
-    func_80833728(this, 0, dmgFlags, damage);
-    func_80833728(this, 1, dmgFlags, damage);
+    damage = strong
+        ? (human ? dmgInfo->dmgHumanStrong : dmgInfo->dmgTransformedStrong)
+        : (human ? dmgInfo->dmgHumanNormal : dmgInfo->dmgTransformedNormal);
+
+    func_80833728(this, 0, dmgInfo->dmgFlags, damage);
+    func_80833728(this, 1, dmgInfo->dmgFlags, damage);
 }
 
 PATCH_FUNC(0x8083375C, Player_SetMeleeWeaponInfo)
+
+s32 Player_HandleSwordDurability(PlayState* play, Player* player)
+{
+    u16 health;
+    u16 maxDurability;
+    s32 shared;
+
+    if (player->heldItemAction == PLAYER_IA_SWORD_RAZOR)
+        return 1;
+    if (player->transformation != MM_PLAYER_FORM_HUMAN || player->heldItemAction != PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE)
+        return 0;
+    shared = Config_Flag(CFG_SHARED_GORON_SWORDS);
+    maxDurability = shared ? gComboConfig.giantsKnifeDurabilityOot : gComboConfig.giantsKnifeDurabilityMm;
+    if (maxDurability == 101)
+        return 1;
+    health = MmSword_GetGiantsKnifeHealth();
+    if (health)
+    {
+        health--;
+        MmSword_SetGiantsKnifeHealth(health);
+        if (!health)
+        {
+            EffectSsStick_Spawn(play, &player->bodyPartsPos[PLAYER_BODYPART_RIGHT_HAND], player->actor.shape.rot.y + 0x8000);
+            Player_PlaySfx(player, NA_SE_IT_MAJIN_SWORD_BROKEN);
+            Interface_LoadItemIconImpl(play, EQUIP_SLOT_B);
+        }
+    }
+
+    return 1;
+}
+
+PATCH_FUNC(0x8083FFEC, Player_HandleSwordDurability)
+
+static Gfx sEffectSsStickCullBackDL[] = {gsSPSetGeometryMode(G_CULL_BACK),gsSPEndDisplayList()};
+
+void EffectSsStick_Draw_Custom(PlayState* play, u32 index, EffectSs* this)
+{
+    Player* player = GET_PLAYER(play);
+    void* obj = NULL;
+    s32 drawSwordShard = player && player->heldItemAction == PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE;
+    (void)index;
+    if (drawSwordShard && !(obj = comboGetObject(CUSTOM_OBJECT_ID_EQ_BIGGORON_SWORD_BROKEN)))
+        drawSwordShard = 0;
+
+    OPEN_DISPS(play->state.gfxCtx);
+
+    Matrix_Translate(this->pos.x, this->pos.y, this->pos.z, MTXMODE_NEW);
+
+    if (drawSwordShard) {
+        Matrix_Scale(0.01f, 0.01f, 0.01f, MTXMODE_APPLY);
+        Matrix_RotateZYX(0, this->regs[1], play->gameplayFrames * 10000, MTXMODE_APPLY);
+    } else {
+        Matrix_Scale(0.01f, 0.0025f, 0.01f, MTXMODE_APPLY);
+        Matrix_RotateZYX(0, this->regs[1], 0, MTXMODE_APPLY);
+    }
+
+    gSPMatrix(POLY_OPA_DISP++, Matrix_Finalize(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+
+    Gfx_SetupDL25_Opa(play->state.gfxCtx);
+    gSPSegment(POLY_OPA_DISP++, 0x0c, sEffectSsStickCullBackDL);
+
+    if (drawSwordShard) {
+        gSPSegment(POLY_OPA_DISP++, 0x0a, obj);
+        gSPDisplayList(POLY_OPA_DISP++, CUSTOM_OBJECT_EQ_BIGGORON_SWORD_BROKEN_1);
+    } else {
+        gSPSegment(POLY_OPA_DISP++, 0x06, play->objectCtx.slots[this->regs[0]].segment);
+        gSPDisplayList(POLY_OPA_DISP++, gDekuStickDL);
+    }
+
+    CLOSE_DISPS();
+}
+
+PATCH_FUNC(0x8097B924, EffectSsStick_Draw_Custom);
 
 static AttackAnimInfo sHammerAttackAnimInfo[] = {
     /* PLAYER_MWA_HAMMER_FORWARD */
@@ -1926,12 +3254,20 @@ AttackAnimInfo* Player_GetMeleeAttackAnimInfo(void* a0, Player* player, PlayerMe
     return ret;
 }
 
-s32 Player_IsHoldingTwoHandedWeapon(Player* player) {
-    if (((player->heldItemAction >= PLAYER_IA_SWORD_TWO_HANDED) && (player->heldItemAction <= PLAYER_IA_DEKU_STICK)) || (player->heldItemAction == PLAYER_CUSTOM_IA_HAMMER)) {
-        return 1;
+s32 Player_IsHoldingTwoHandedWeapon(Player* player)
+{
+    switch (player->heldItemAction)
+    {
+        case PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE:
+        case PLAYER_CUSTOM_IA_SWORD_BIGGORON:
+        case PLAYER_CUSTOM_IA_HAMMER:
+            return 1;
+
+        default:
+            break;
     }
 
-    return 0;
+    return player->heldItemAction >= PLAYER_IA_SWORD_TWO_HANDED && player->heldItemAction <= PLAYER_IA_DEKU_STICK;
 }
 
 PATCH_FUNC(0x801241b4, Player_IsHoldingTwoHandedWeapon)
@@ -1964,7 +3300,9 @@ s32 Player_CanQuickspin(Player* this) {
     s8 temp2;
     s32 i;
 
-    if (this->heldItemAction == PLAYER_IA_DEKU_STICK || this->heldItemAction == PLAYER_CUSTOM_IA_HAMMER) {
+    if (this->heldItemAction == PLAYER_IA_DEKU_STICK || this->heldItemAction == PLAYER_CUSTOM_IA_HAMMER ||
+    (this->heldItemAction == PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE && MmSword_GetGiantsKnifeHealth() == 0))
+    {
         return 0;
     }
 
@@ -1994,6 +3332,16 @@ s32 Player_CanQuickspin(Player* this) {
 }
 
 PATCH_FUNC(0x808333CC, Player_CanQuickspin)
+
+PlayerMeleeWeapon Player_GetMeleeWeaponHeldForCharge(Player* player)
+{
+    PlayerMeleeWeapon (*Player_GetMeleeWeaponHeld)(Player*) = (void*)0x80124190;
+    if (player->heldItemAction == PLAYER_CUSTOM_IA_HAMMER || (player->heldItemAction == PLAYER_CUSTOM_IA_SWORD_GIANTS_KNIFE && MmSword_GetGiantsKnifeHealth() == 0))
+        return PLAYER_MELEEWEAPON_NONE;
+    return Player_GetMeleeWeaponHeld(player);
+}
+
+PATCH_CALL(0x8083A5C4, Player_GetMeleeWeaponHeldForCharge);
 
 Actor* Player_FindGrottoNearPos(PlayState* play, Vec3f* refPos, f32 distanceXZ, f32 distanceY) {
     Actor* actor = play->actorCtx.actors[ACTORCAT_ITEMACTION].first;
@@ -2260,7 +3608,7 @@ s32 Player_ShowItem(PlayState* play, Player* this, PlayerAnimationHeader* anim)
 {
     if (this->exchangeItemAction == PLAYER_CUSTOM_IA_BOTTLE_RUTO_LETTER)
     {
-        this->csId = play->playerActorCsIds[2]; /* PLAYER_CS_ID_ITEM_BOTTLE */
+        this->csId = play->playerCsIds[2]; /* PLAYER_CS_ID_ITEM_BOTTLE */
         PlayerAnimation_PlayOnce(play, &this->skelAnime, (PlayerAnimationHeader*)0x0400d4e0); /* &gPlayerAnim_link_bottle_read */
     }
     else
@@ -2361,3 +3709,34 @@ s32 Player_ItemExchangeAnimate(PlayState* play, SkelAnime* skelAnime)
 }
 
 PATCH_CALL(0x80853a9c, Player_ItemExchangeAnimate)
+
+void Player_ExitTelescopeER(void)
+{
+    gPlay->nextEntrance = gSaveContext.respawn[RESPAWN_MODE_DOWN].entrance;
+    gPlay->transitionTrigger = TRANS_TRIGGER_START;
+    gIsEntranceOverride = 1;
+}
+
+s32 Player_ShouldSetCsAction(PlayState *play, Actor *csActor, u8 csAction)
+{
+    s32 shouldSetCsAction = true;
+    if (!play || !csActor)
+        return shouldSetCsAction;
+
+    switch (csActor->id)
+    {
+    case ACTOR_EN_BIGOKUTA:
+        shouldSetCsAction = false;
+    default:
+        break;
+    }
+
+    return shouldSetCsAction;
+}
+
+s32 Player_SetCsActionHook(PlayState *play, Actor *csActor, u8 csAction)
+{
+    if (!Player_ShouldSetCsAction(play, csActor, csAction))
+        return false;
+    return _Player_SetCsAction(play, csActor, csAction);
+}

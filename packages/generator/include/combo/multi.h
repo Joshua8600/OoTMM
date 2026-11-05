@@ -3,27 +3,21 @@
 
 #include <combo/types.h>
 
-extern u32 gMultiMarkChests;
-extern u32 gMultiMarkCollectibles;
-extern u32 gMultiMarkSwitch0;
-extern u32 gMultiMarkSwitch1;
-
-#if defined(GAME_OOT)
-# define Multi_IsMarked Multi_IsMarkedOot
-#endif
-
-#if defined(GAME_MM)
-# define Multi_IsMarked Multi_IsMarkedMm
-#endif
+#define MULTI_EVENT_TYPE_BOSS   0x01
+#define MULTI_EVENT_BOSS(id)    ((MULTI_EVENT_TYPE_BOSS << 24) | (id))
 
 typedef struct PlayState PlayState;
 
 void    Multi_DrawWisps(PlayState* play);
 void    Multi_ResetWisps(void);
-void    Multi_SetMarkedOot(PlayState* play, u8 ovType, u8 sceneId, u8 roomId, u8 id);
-void    Multi_SetMarkedMm(PlayState* play, u8 ovType, u8 sceneId, u8 roomId, u8 id);
-int     Multi_IsMarkedOot(PlayState* play, u8 ovType, u8 sceneId, u8 roomId, u8 id);
-int     Multi_IsMarkedMm(PlayState* play, u8 ovType, u8 sceneId, u8 roomId, u8 id);
 void    Multi_Update(PlayState* play);
+void    Multi_Disconnect(void);
+
+u8      Multi_WorldID(void);
+void    Multi_SendItem(u8 to, s16 gi, s16 flags, u32 key);
+void    Multi_SendSelfItem(s16 gi, s16 flags, u32 key);
+void    Multi_SendEvent(u32 eventId);
+void    Multi_InfoItem(u32 ovKey, s16 gi, u8 flags);
+void    Multi_InfoEntrance(u32 original, u32 entrance, u8 age);
 
 #endif

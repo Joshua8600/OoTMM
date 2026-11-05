@@ -9,6 +9,7 @@
 
 #if defined(GAME_OOT)
 # include "assets/oot/objects/gameplay_field_keep.h"
+# include "actors/Custom_En_Bom/Custom_En_Bom.h"
 # define FLAGS 0
 # define DAMAGE DMG_HAMMER
 # define SILVER_ROCK_FRAGMENTS_DL gSilverRockFragmentsDL
@@ -77,90 +78,36 @@ static InitChainEntry sInitChain[] = {
     ICHAIN_F32(cullingVolumeDownward, 500, ICHAIN_STOP),
 };
 
-static void ObjHamishi_Alias(Actor_ObjHamishi* this)
-{
-    Xflag* xflag;
-
-    xflag = &this->xflag;
-
-    switch(xflag->sceneId)
-    {
-#if defined(GAME_OOT)
-    case SCE_OOT_GORON_CITY:
-        if(xflag->setupId == 2)
-        {
-            xflag->setupId = 0;
-            switch(xflag->id)
-            {
-            case 1: xflag->id = 41; break;
-            case 4: xflag->id = 45; break;
-            case 2: xflag->id = 42; break;
-            case 5: xflag->id = 46; break;
-            case 3: xflag->id = 43; break;
-            }
-        }
-        break;
-    case SCE_OOT_DEATH_MOUNTAIN_CRATER:
-        if(xflag->setupId == 2)
-        {
-            xflag->setupId = 0;
-            switch(xflag->id)
-            {
-            case 4: xflag->id = 12; break;
-            case 5: xflag->id = 13; break;
-            case 6: xflag->id = 11; break;
-            case 7: xflag->id = 14; break;
-            }
-        }
-        break;
-#endif
-    }
-}
-
 static int ObjHamishi_IsShuffled(Actor_ObjHamishi* this)
 {
-    return !!(this->isExtended && !comboXflagsGet(&this->xflag));
+    return !!(this->isExtended && !Xflag_GetIndirect(&this->xflag));
 }
 
 static int ObjHamishi_DropCustom(Actor_ObjHamishi* this, PlayState* play)
 {
+    Vec3f pos;
+
     if (!ObjHamishi_IsShuffled(this))
         return 0;
-    if(this->xflag.sceneId == SCE_OOT_DEATH_MOUNTAIN_CRATER && this->xflag.id == 14)
-    {
-        Player* player;
-        player = GET_PLAYER(play);
-        EnItem00_DropCustom(play, &player->actor.world.pos, &this->xflag);
-    }
-    else
-    {
-        EnItem00_DropCustom(play, &this->actor.world.pos, &this->xflag);
-    }
+
+    pos = GET_PLAYER(play)->actor.world.pos;
+    pos.y += 20.0f;
+    EnItem00_DropCustomNoInertia(play, &pos, &this->xflag);
     return 1;
 }
 
 static void ObjHamishi_InitXflag(Actor_ObjHamishi* this, PlayState* play)
 {
-    #if defined(GAME_OOT)
+#if defined(GAME_OOT)
     // prevent init of boulders in child gerudo valley
-    if(play->sceneId == SCE_OOT_GERUDO_VALLEY && g.sceneSetupId == 0) return;
-    #endif
-    
+    if (play->sceneId == SCE_OOT_GERUDO_VALLEY && g.sceneSetupId == 0) return;
+#endif
+
     ComboItemOverride   o;
-    Xflag*              xflag;
 
-    /* Set the extended properties */
-    xflag = &this->xflag;
-    xflag->sceneId = play->sceneId;
-    xflag->setupId = g.sceneSetupId;
-    xflag->roomId = this->actor.room;
-    xflag->sliceId = 0;
-    xflag->id = this->actor.actorIndex;
-
-    ObjHamishi_Alias(this);
-
+    Xflag_Init(&this->xflag, &this->actor, play);
     comboXflagItemOverride(&o, &this->xflag, 0);
-    this->isExtended = !!(o.gi && !comboXflagsGet(&this->xflag));
+    this->isExtended = !!(o.gi && !Xflag_GetIndirect(&this->xflag));
 }
 
 void ObjHamishi_InitCollision(Actor_ObjHamishi* this, PlayState* play) {
@@ -330,6 +277,15 @@ void ObjHamishi_Update(Actor_ObjHamishi* this, PlayState* play) {
             if(this->collider.elem.acHitElem->atDmgInfo.dmgFlags & DMG_POWDER_KEG)
             {
                 this->hitCount = 1;
+            }
+#else
+            if (this->collider.base.ac != NULL && this->collider.base.ac->id == ACTOR_CUSTOM_EN_BOM)
+            {
+                EnBomMM* bomb = (EnBomMM*) this->collider.base.ac;
+                if (bomb->isPowderKeg)
+                {
+                    this->hitCount = 1;
+                }
             }
 #endif
             this->hitCount++;

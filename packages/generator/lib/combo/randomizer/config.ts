@@ -1,15 +1,93 @@
-import type { Game, Settings, Region } from '@ootmm/core';
+import type { Game } from '@ootmm/data';
+import type { Settings, Region } from '@ootmm/core';
 import type { LogicResult, LogicResultWorld } from '@ootmm/logic';
 
 import { concatUint8Arrays } from 'uint8array-extras';
-import { SETTINGS, SPECIAL_CONDS, SPECIAL_CONDS_FIELDS, Items, regionData, ENTRANCES, REGIONS } from '@ootmm/core';
-import { DUNGEONS, DUNGEON_ENTRANCES, makeLocation } from '@ootmm/logic';
+import { ENTRANCES, REGIONS } from '@ootmm/data';
+import { SETTINGS, SPECIAL_CONDS, SPECIAL_CONDS_FIELDS, MM_AGE_REQ_ITEMS, regionData } from '@ootmm/core';
+import { DUNGEONS, DUNGEON_ENTRANCES, makeLocation, Items } from '@ootmm/logic';
 
 import { toI8Buffer, toU16Buffer, toU32Buffer, toU8Buffer } from '../util';
 import { bufWriteU16BE, bufWriteU32BE } from '../util/buffer';
 import { worldConfig } from './world-config';
 import { CONFVARS_VALUES } from '../confvars';
 import { gi } from './util';
+
+const MM_AGE_REQ_VALUES = { none: 0, child: 1, adult: 2 } as const;
+
+const MM_AGE_REQ_ITEM_IDS: Record<string, readonly number[]> = {
+  hookshot: [0x0f],
+  hookshotShort: [0x11],
+  bow: [0x01],
+  ocarinaOfTime: [0x00],
+  ocarinaFairy: [0x05],
+  bomb: [0x06],
+  bombchu: [0x07],
+  arrowFire: [0x02],
+  arrowIce: [0x03],
+  arrowLight: [0x04],
+  hammer: [0xb5],
+  spellWind: [0xae],
+  spellLove: [0xaf],
+  spellFire: [0xb0],
+  bootsIron: [0xb1],
+  bootsHover: [0xb2],
+  tunicGoron: [0xb3],
+  tunicZora: [0xb4],
+  greatFairySword: [0x10],
+  boomerang: [0xb6],
+  slingshot: [0xb7],
+  stick: [0x08],
+  maskDeku: [0x32],
+  nut: [0x09],
+  magicBean: [0x0a],
+  powderKeg: [0x0c],
+  pictographBox: [0x0d],
+  lensOfTruth: [0x0e],
+  maskGoron: [0x33],
+  maskZora: [0x34],
+  maskFierceDeity: [0x35],
+  maskPostman: [0x3e],
+  maskAllNight: [0x38],
+  maskBlast: [0x47],
+  maskStone: [0x45],
+  maskGreatFairy: [0x40],
+  maskKeaton: [0x3a],
+  maskBremen: [0x46],
+  maskBunny: [0x39],
+  maskDonGero: [0x42],
+  maskScents: [0x48],
+  maskRomani: [0x3c],
+  maskTroupeLeader: [0x3d],
+  maskKafei: [0x37],
+  maskCouple: [0x3f],
+  maskTruth: [0x36],
+  maskKamaro: [0x43],
+  maskGibdo: [0x41],
+  maskGaro: [0x3b],
+  maskCaptain: [0x44],
+  maskGiant: [0x49],
+  maskGerudo: [0xb9],
+  maskSkull: [0xba],
+  maskSpooky: [0xbb],
+  moonTear: [0x28],
+  deedLand: [0x29],
+  deedSwamp: [0x2a],
+  deedMountain: [0x2b],
+  deedOcean: [0x2c],
+  letterToMama: [0x2e],
+  letterToKafei: [0x2f],
+  pendantOfMemories: [0x30],
+  swordKokiri: [0x4d],
+  swordRazor: [0x4e],
+  swordGilded: [0x4f],
+  swordMaster: [0xc1],
+  swordGoron: [0xc2, 0xc3],
+  shieldDeku: [0xc5],
+  shieldHero: [0x51],
+  shieldHylian: [0xc4],
+  shieldMirror: [0x52],
+};
 
 const BOMBCHU_BEHAVIORS = {
   free: 0,
@@ -95,7 +173,6 @@ export class RandomizerPatcherConfig {
 
   private execute() {
     const buffers = [];
-    buffers.push(toU8Buffer([this.ctx.worldId + 1, 0, 0, 0]));
     buffers.push(this.dungeonWarpsBuffer());
     buffers.push(this.dungeonEntrancesBuffer());
     buffers.push(this.randomizerDungeonsBits());
@@ -106,13 +183,20 @@ export class RandomizerPatcherConfig {
     buffers.push(toU16Buffer(this.world.prices));
     buffers.push(toU16Buffer([this.ctx.settings.triforcePieces, this.ctx.settings.triforceGoal]));
     buffers.push(this.randomizerHints());
-    buffers.push(toI8Buffer(this.ctx.logic.hints[this.ctx.worldId].staticHintsImportances));
     buffers.push(this.zoraSapphireBuffer());
+    buffers.push(toI8Buffer(this.ctx.logic.hints[this.ctx.worldId].staticHintsImportances));
     buffers.push(toU8Buffer(this.world.bossIds));
     buffers.push(toU8Buffer([this.ctx.settings.strayFairyRewardCount]));
     buffers.push(toU8Buffer([BOMBCHU_BEHAVIORS[this.ctx.settings.bombchuBehaviorOot]]));
     buffers.push(toU8Buffer([BOMBCHU_BEHAVIORS[this.ctx.settings.bombchuBehaviorMm]]));
-    buffers.push(toU8Buffer(this.world.songEvents));
+    buffers.push(toU8Buffer(this.world.songEventsOot));
+    buffers.push(toU8Buffer(this.world.songEventsMm));
+    buffers.push(toU8Buffer([
+      this.ctx.settings.giantsKnifeDurabilityOot,
+      this.ctx.settings.giantsKnifeDurabilityMm,
+    ]));
+    buffers.push(toU8Buffer([MM_AGE_REQ_VALUES[this.ctx.settings.mmAgeReqStrength]]));
+    buffers.push(this.mmAgeRequirementsBuffer());
     return concatUint8Arrays(buffers);
   }
 
@@ -231,6 +315,28 @@ export class RandomizerPatcherConfig {
       block[byte] |= mask;
     }
     return block;
+  }
+
+  private mmAgeRequirementsBuffer(): Uint8Array {
+    const result = new Uint8Array(0x40);
+    for (const item of MM_AGE_REQ_ITEMS) {
+      if (item.id === 'strength') {
+        continue;
+      }
+      const age = this.ctx.settings[item.setting];
+      const value = MM_AGE_REQ_VALUES[age];
+      if (value === undefined) {
+        throw new Error(`Unknown age requirement ${age} for ${item.id}`);
+      }
+      const ids = MM_AGE_REQ_ITEM_IDS[item.id];
+      if (!ids || ids.length === 0) {
+        throw new Error(`Missing numeric MM item IDs for ${item.id}`);
+      }
+      for (const id of ids) {
+        result[id >> 2] |= value << ((id & 3) * 2);
+      }
+    }
+    return result;
   }
 
   private specialConds() {

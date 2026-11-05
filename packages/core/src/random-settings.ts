@@ -1,6 +1,7 @@
 import type { Settings } from './settings';
 import { Random, randString, randomInt } from './random';
 import { makeSettings, validateSettings } from './settings';
+import { MM_AGE_REQ_ITEMS, isMmAgeReqItemInPool, randomizeMmAgeRequirements } from './mm-age-requirements';
 
 export const DEFAULT_RANDOM_SETTINGS = {
   mq: false,
@@ -298,7 +299,7 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
     base.openDungeonsMm = { type: 'all' };
     base.openDungeonsOot = { type: 'all' };
     base.openMaskShop = true;
-    base.clearStateDungeonsMm = 'both';
+    base.clearStateDungeonsMm = { type: 'all' };
     base.doorOfTime = 'open';
     base.dekuTree = 'open';
     base.kakarikoGate = 'open';
@@ -313,7 +314,7 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
     base.ganonTrials = { type: 'all' };
     base.openDungeonsMm = { type: 'none' };
     base.openDungeonsOot = { type: 'none' };
-    base.clearStateDungeonsMm = 'none';
+    base.clearStateDungeonsMm = { type: 'none' };
     base.openMaskShop = false;
     base.doorOfTime = 'closed';
     base.dekuTree = 'closed';
@@ -330,7 +331,7 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
     base.openDungeonsMm = { type: 'random' };
     base.openDungeonsOot = { type: 'random' };
     base.openMaskShop = booleanWeighted(random, 0.3);
-    base.clearStateDungeonsMm = sampleWeighted(random, { none: 5, WF: 1, GB: 1, both: 2 });
+    base.clearStateDungeonsMm = { type: 'random' };
     base.doorOfTime = sampleWeighted(random, { closed: 10, open: 7 });
     base.dekuTree = sampleWeighted(random, { open: 10, closed: 7 });
     base.kakarikoGate = sampleWeighted(random, { vanilla: 10, open: 5, closed: 5 });
@@ -340,8 +341,8 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
     base.openZdShortcut = booleanWeighted(random, 0.5);
   }
 
-  base.startingAge = sampleWeighted(random, { child: 10, adult: 10 });
-  base.swordlessAdult = booleanWeighted(random, 0.5);
+  base.startingAgeOot = sampleWeighted(random, { child: 10, adult: 10 });
+  base.startingAgeMm = sampleWeighted(random, { child: 10, adult: 10 });
   base.timeTravelSword = booleanWeighted(random, 0.5);
   base.ageChange = sampleWeighted(random, { none: 10, always: 5, oot: 5 });
   base.moonCrash = sampleWeighted(random, { cycle: 3, reset: 10 });
@@ -352,26 +353,32 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
   base.strayFairyRewardCount = randomInt(random, 16);
   base.crossAge = booleanWeighted(random, 0.5);
 
-  /* Cross warp & FW - 25% disabled, 25% enabled, 50% individual */
+  /* Cross FW - 25% disabled, 25% enabled, 50% individual */
   switch (randomInt(random, 4)) {
   case 0:
-    base.crossWarpOot = false;
-    base.crossWarpMm = 'none';
     base.crossGameFw = false;
     break;
   case 1:
-    base.crossWarpOot = true;
-    base.crossWarpMm = 'full';
     base.crossGameFw = true;
     break;
   default:
-    base.crossWarpOot = booleanWeighted(random, 0.5);
-    base.crossWarpMm = sampleWeighted(random, { none: 10, full: 7, childOnly: 3 });
     base.crossGameFw = booleanWeighted(random, 0.5);
   }
 
-  base.sunSongMm = booleanWeighted(random, 0.5);
+  base.songSunMm = booleanWeighted(random, 0.5);
   base.elegyOot = booleanWeighted(random, 0.5);
+  base.songHealingOot = booleanWeighted(random, 0.5);
+  base.songSoaringOot = booleanWeighted(random, 0.5);
+  base.songAwakeningOot = booleanWeighted(random, 0.5);
+  base.songGoronOot = booleanWeighted(random, 0.5);
+  base.songZoraOot = booleanWeighted(random, 0.5);
+  base.songOrderOot = booleanWeighted(random, 0.5);
+  base.songMinuetMm = booleanWeighted(random, 0.5);
+  base.songBoleroMm = booleanWeighted(random, 0.5);
+  base.songSerenadeMm = booleanWeighted(random, 0.5);
+  base.songRequiemMm = booleanWeighted(random, 0.5);
+  base.songNocturneMm = booleanWeighted(random, 0.5);
+  base.songPreludeMm = booleanWeighted(random, 0.5);
   base.csmc = sampleWeighted(random, { always: 18, agony: 1, never: 1 });
   if (base.csmc !== 'never') {
     base.csmcHearts = booleanWeighted(random, 0.75);
@@ -389,21 +396,25 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
     base.agelessBoomerang = true;
     base.agelessSticks = true;
     base.agelessHammer = true;
+    base.agelessGFS = true;
     base.agelessHookshot = true;
     base.agelessTunics = true;
     base.agelessSwords = true;
     base.agelessShields = true;
     base.agelessBoots = true;
+    base.agelessSoaring = true;
     break;
   default:
     base.agelessBoomerang = booleanWeighted(random, 0.1);
     base.agelessSticks = booleanWeighted(random, 0.1);
     base.agelessHammer = booleanWeighted(random, 0.1);
+    base.agelessGFS = booleanWeighted(random, 0.1);
     base.agelessHookshot = booleanWeighted(random, 0.1);
     base.agelessTunics = booleanWeighted(random, 0.1);
     base.agelessSwords = booleanWeighted(random, 0.1);
     base.agelessShields = booleanWeighted(random, 0.1);
     base.agelessBoots = booleanWeighted(random, 0.1);
+    base.agelessSoaring = booleanWeighted(random, 0.1);
   }
 
   base.blastMaskCooldown = sampleWeighted(random, { default: 10, instant: 2, veryshort: 3, short: 3, long: 2, verylong: 2 });
@@ -417,19 +428,22 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
     base.progressiveShieldsOot = 'separate';
     base.progressiveSwordsOot = 'separate';
     base.progressiveShieldsMm = 'separate';
-    base.progressiveGoronLullaby = 'single';
+    base.progressiveGoronLullabyMm = 'single';
+    base.progressiveGoronLullabyOot = 'single';
     break;
   case 1:
     base.progressiveShieldsOot = 'progressive';
     base.progressiveSwordsOot = 'progressive';
     base.progressiveShieldsMm = 'progressive';
-    base.progressiveGoronLullaby = 'progressive';
+    base.progressiveGoronLullabyMm = 'progressive';
+    base.progressiveGoronLullabyOot = 'progressive';
     break;
   default:
     base.progressiveShieldsOot = sampleWeighted(random, { separate: 10, progressive: 10 });
     base.progressiveSwordsOot = sampleWeighted(random, { separate: 10, progressive: 10, goron: 5 });
     base.progressiveShieldsMm = sampleWeighted(random, { separate: 10, progressive: 10 });
-    base.progressiveGoronLullaby = sampleWeighted(random, { progressive: 10, single: 10 });
+    base.progressiveGoronLullabyMm = sampleWeighted(random, { progressive: 10, single: 10 });
+    base.progressiveGoronLullabyOot = sampleWeighted(random, { progressive: 10, single: 10 });
   }
 
   /* Shared items - 25% disabled, 25% enabled, 50% individual */
@@ -451,6 +465,18 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
     base.sharedSongTime = true;
     base.sharedSongSun = true;
     base.sharedSongElegy = true;
+    base.sharedSongHealing = true;
+    base.sharedSongSoaring = true;
+    base.sharedSongAwakening = true;
+    base.sharedSongGoron = true;
+    base.sharedSongZora = true;
+    base.sharedSongOrder = true;
+    base.sharedSongMinuet = true;
+    base.sharedSongBolero = true;
+    base.sharedSongSerenade = true;
+    base.sharedSongRequiem = true;
+    base.sharedSongNocturne = true;
+    base.sharedSongPrelude = true;
     base.sharedHookshot = true;
     base.sharedLens = true;
     base.sharedOcarina = true;
@@ -462,6 +488,7 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
     base.sharedMaskBlast = true;
     base.sharedMaskStone = true;
     base.sharedMaskKamaro = true;
+    base.sharedPowderKeg = true;
     base.sharedWallets = true;
     base.sharedHealth = true;
     base.sharedSoulsEnemy = true;
@@ -475,14 +502,21 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
     base.sharedTunicGoron = true;
     base.sharedTunicZora = true;
     base.sharedHammer = true;
+    base.sharedBoomerang = true;
+    base.sharedGFS = true;
+    base.sharedSlingshot = true;
     base.sharedStoneAgony = true;
     base.sharedSpinUpgrade = true;
+    base.sharedMaskGerudo = true;
+    base.sharedMaskSkull = true;
+    base.sharedMaskSpooky = true;
     break;
   default:
     base.sharedNutsSticks = booleanWeighted(random, 0.5);
     base.sharedBows = booleanWeighted(random, 0.5);
     base.sharedBombBags = booleanWeighted(random, 0.5);
     base.sharedBombchu = booleanWeighted(random, 0.5);
+    base.sharedPowderKeg = booleanWeighted(random, 0.5);
     base.sharedMagic = booleanWeighted(random, 0.5);
     base.sharedHookshot = booleanWeighted(random, 0.5);
     base.sharedLens = booleanWeighted(random, 0.5);
@@ -493,8 +527,14 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
     base.sharedSkeletonKey = booleanWeighted(random, 0.5);
     base.sharedPlatinumToken = booleanWeighted(random, 0.5);
     base.sharedHammer = booleanWeighted(random, 0.5);
+    base.sharedBoomerang = booleanWeighted(random, 0.5);
+    base.sharedGFS = booleanWeighted(random, 0.5);
+    base.sharedSlingshot = booleanWeighted(random, 0.5);
     base.sharedStoneAgony = booleanWeighted(random, 0.5);
     base.sharedSpinUpgrade = booleanWeighted(random, 0.5);
+    base.sharedMaskGerudo = booleanWeighted(random, 0.5);
+    base.sharedMaskSkull = booleanWeighted(random, 0.5);
+    base.sharedMaskSpooky = booleanWeighted(random, 0.5);
 
     /* Boots - grouping */
     switch (randomInt(random, 4)) {
@@ -553,6 +593,9 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
       base.sharedMaskBlast = true;
       base.sharedMaskStone = true;
       base.sharedMaskKamaro = true;
+      base.sharedMaskGerudo = true;
+      base.sharedMaskSkull = true;
+      base.sharedMaskSpooky = true;
       break;
     default:
       base.sharedMaskGoron = booleanWeighted(random, 0.5);
@@ -563,6 +606,9 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
       base.sharedMaskBlast = booleanWeighted(random, 0.5);
       base.sharedMaskStone = booleanWeighted(random, 0.5);
       base.sharedMaskKamaro = booleanWeighted(random, 0.5);
+      base.sharedMaskGerudo = booleanWeighted(random, 0.5);
+      base.sharedMaskSkull = booleanWeighted(random, 0.5);
+      base.sharedMaskSpooky = booleanWeighted(random, 0.5);
       break;
     }
 
@@ -576,6 +622,18 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
       base.sharedSongTime = true;
       base.sharedSongSun = true;
       base.sharedSongElegy = true;
+      base.sharedSongHealing = true;
+      base.sharedSongSoaring = true;
+      base.sharedSongAwakening = true;
+      base.sharedSongGoron = true;
+      base.sharedSongZora = true;
+      base.sharedSongOrder = true;
+      base.sharedSongMinuet = true;
+      base.sharedSongBolero = true;
+      base.sharedSongSerenade = true;
+      base.sharedSongRequiem = true;
+      base.sharedSongNocturne = true;
+      base.sharedSongPrelude = true;
       break;
     default:
       base.sharedSongEpona = booleanWeighted(random, 0.5);
@@ -583,6 +641,18 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
       base.sharedSongTime = booleanWeighted(random, 0.5);
       base.sharedSongSun = booleanWeighted(random, 0.5);
       base.sharedSongElegy = booleanWeighted(random, 0.5);
+      base.sharedSongHealing = booleanWeighted(random, 0.5);
+      base.sharedSongSoaring = booleanWeighted(random, 0.5);
+      base.sharedSongAwakening = booleanWeighted(random, 0.5);
+      base.sharedSongGoron = booleanWeighted(random, 0.5);
+      base.sharedSongZora = booleanWeighted(random, 0.5);
+      base.sharedSongOrder = booleanWeighted(random, 0.5);
+      base.sharedSongMinuet = booleanWeighted(random, 0.5);
+      base.sharedSongBolero = booleanWeighted(random, 0.5);
+      base.sharedSongSerenade = booleanWeighted(random, 0.5);
+      base.sharedSongRequiem = booleanWeighted(random, 0.5);
+      base.sharedSongNocturne = booleanWeighted(random, 0.5);
+      base.sharedSongPrelude = booleanWeighted(random, 0.5);
       break;
     }
 
@@ -608,7 +678,15 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
   base.blastMaskOot = booleanWeighted(random, 0.25);
   base.stoneMaskOot = booleanWeighted(random, 0.25);
   base.kamaroMaskOot = booleanWeighted(random, 0.25);
+  base.powderKegOot = booleanWeighted(random, 0.25);
+  base.gfsOot = booleanWeighted(random, 0.25);
   base.hammerMm = booleanWeighted(random, 0.25);
+  base.boomerangMm = booleanWeighted(random, 0.25);
+  base.slingshotMm = booleanWeighted(random, 0.25);
+  base.gerudoMaskMm = booleanWeighted(random, 0.25);
+  base.skullMaskMm = booleanWeighted(random, 0.25);
+  base.spookyMaskMm = booleanWeighted(random, 0.25);
+  base.adultMaskMm = booleanWeighted(random, 0.25);
   base.sticksNutsUpgradesMm = booleanWeighted(random, 0.5);
   base.stoneAgonyMm = booleanWeighted(random, 0.5);
   base.spinUpgradeOot = booleanWeighted(random, 0.33);
@@ -675,6 +753,19 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
     base.spellFireMm = booleanWeighted(random, 0.25);
     base.spellWindMm = booleanWeighted(random, 0.25);
     base.spellLoveMm = booleanWeighted(random, 0.25);
+  }
+
+  /* MM Age Requirements - 50% none, 50% age-locked */
+  if (base.games !== 'oot' && booleanWeighted(random, 0.5)) {
+    if (!base.crossAge && !base.adultMaskMm) {
+      base.adultMaskMm = true;
+    }
+
+    const ageReqItemIds = MM_AGE_REQ_ITEMS
+        .filter(item => isMmAgeReqItemInPool(base, item))
+        .map(item => item.id);
+
+    randomizeMmAgeRequirements(base, random, ageReqItemIds);
   }
 
   /* Extra Wallets - 25% none, 25% all, 50% individual */
@@ -840,12 +931,19 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
       base.shuffleHivesOot = true;
       base.shuffleHivesMm = true;
       base.shuffleSnowballsMm = 'all';
+      base.shuffleGossipFairiesOot = 'all';
+      base.shuffleGossipBigFairiesOot = 'all';
+      base.shuffleGossipFairiesMm = 'all';
+      base.shuffleGossipBigFairiesMm = 'all';
       base.shuffleWonderItemsOot = 'all';
       base.shuffleWonderItemsMm = true;
       base.shuffleButterfliesOot = true;
       base.shuffleButterfliesMm = true;
+      base.shuffleBouldersOot = 'all';
+      base.shuffleBouldersMm = 'all';
       base.shuffleRedBouldersOot = true;
       base.shuffleRedBouldersMm = true;
+      base.shuffleSilverBouldersOot = true;
       base.shuffleIciclesOot = true;
       base.shuffleIciclesMm = true;
       break;
@@ -872,12 +970,19 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
       base.shuffleHivesOot = true;
       base.shuffleHivesMm = true;
       base.shuffleSnowballsMm = 'overworld';
+      base.shuffleGossipFairiesOot = 'overworld';
+      base.shuffleGossipBigFairiesOot = 'overworld';
+      base.shuffleGossipFairiesMm = 'overworld';
+      base.shuffleGossipBigFairiesMm = 'overworld';
       base.shuffleWonderItemsOot = 'overworld';
       base.shuffleWonderItemsMm = true;
       base.shuffleButterfliesOot = true;
       base.shuffleButterfliesMm = true;
+      base.shuffleBouldersOot = 'overworld';
+      base.shuffleBouldersMm = 'overworld';
       base.shuffleRedBouldersOot = true;
       base.shuffleRedBouldersMm = true;
+      base.shuffleSilverBouldersOot = true;
       base.shuffleIciclesOot = true;
       base.shuffleIciclesMm = true;
       break;
@@ -898,7 +1003,13 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
       base.shuffleFreeRupeesMm = 'dungeons';
       base.shuffleBarrelsMm = 'dungeons';
       base.shuffleSnowballsMm = 'dungeons';
+      base.shuffleGossipFairiesOot = 'dungeons';
+      base.shuffleGossipBigFairiesOot = 'dungeons';
+      base.shuffleGossipFairiesMm = 'dungeons';
+      base.shuffleGossipBigFairiesMm = 'dungeons';
       base.shuffleWonderItemsOot = 'dungeons';
+      base.shuffleBouldersOot = 'dungeons';
+      base.shuffleBouldersMm = 'dungeons';
       break;
     default:
       base.shufflePotsOot = sampleWeighted(random, { none: 10, overworld: 10, dungeons: 10, all: 10 });
@@ -924,12 +1035,19 @@ export async function applyRandomSettings(rnd: OptionRandomSettings, oldSettings
       base.shuffleHivesOot = booleanWeighted(random, 0.5);
       base.shuffleHivesMm = booleanWeighted(random, 0.5);
       base.shuffleSnowballsMm = sampleWeighted(random, { none: 10, overworld: 10, dungeons: 10, all: 10 });
+      base.shuffleGossipFairiesOot = sampleWeighted(random, { none: 10, overworld: 10, dungeons: 10, all: 10 });
+      base.shuffleGossipBigFairiesOot = sampleWeighted(random, { none: 10, overworld: 10, dungeons: 10, all: 10 });
+      base.shuffleGossipFairiesMm = sampleWeighted(random, { none: 10, overworld: 10, dungeons: 10, all: 10 });
+      base.shuffleGossipBigFairiesMm = sampleWeighted(random, { none: 10, overworld: 10, dungeons: 10, all: 10 });
       base.shuffleWonderItemsOot = sampleWeighted(random, { none: 10, overworld: 10, dungeons: 10, all: 10 });
       base.shuffleWonderItemsMm = booleanWeighted(random, 0.5);
       base.shuffleButterfliesOot = booleanWeighted(random, 0.5);
       base.shuffleButterfliesMm = booleanWeighted(random, 0.5);
+      base.shuffleBouldersOot = sampleWeighted(random, { none: 10, overworld: 10, dungeons: 10, all: 10 });
+      base.shuffleBouldersMm = sampleWeighted(random, { none: 10, overworld: 10, dungeons: 10, all: 10 });
       base.shuffleRedBouldersOot = booleanWeighted(random, 0.5);
       base.shuffleRedBouldersMm = booleanWeighted(random, 0.5);
+      base.shuffleSilverBouldersOot = booleanWeighted(random, 0.5);
       base.shuffleIciclesOot = booleanWeighted(random, 0.5);
       base.shuffleIciclesMm = booleanWeighted(random, 0.5);
       break;

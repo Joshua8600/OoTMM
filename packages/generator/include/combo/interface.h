@@ -14,6 +14,17 @@ void Interface_SetSubTimerToFinalSecond(PlayState* play);
 void Interface_NewDay(PlayState* play, int day);
 void Interface_SetHudVisibility(u16 hudVisibility);
 void Interface_SkipMoonCrash(PlayState* play);
+void Rupees_ChangeBy(s16 rupeeChange);
+
 #endif
+
+typedef enum {
+    /* -1 */ EQUIP_SLOT_NONE = -1,
+    /*  0 */ EQUIP_SLOT_B,
+    /*  1 */ EQUIP_SLOT_C_LEFT,
+    /*  2 */ EQUIP_SLOT_C_DOWN,
+    /*  3 */ EQUIP_SLOT_C_RIGHT,
+    /*  4 */ EQUIP_SLOT_A
+} EquipSlot;
 
 #endif

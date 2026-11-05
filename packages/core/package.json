@@ -2,38 +2,26 @@
   "name": "@ootmm/core",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "src/index.ts",
+  "sideEffects": false,
   "scripts": {
-    "build": "tsx ./build/index.ts",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ootmm/data": "workspace:*",
     "lodash-es": "catalog:",
-    "pako": "^2.1.0",
+    "pako": "^3.0.2",
     "uint8array-extras": "^1.5.0"
   },
   "devDependencies": {
     "@types/lodash-es": "catalog:",
-    "@types/pako": "^2.0.4",
-    "csv": "^6.5.1",
+    "csv": "^6.6.3",
+    "fast-xml-parser": "catalog:",
     "type-fest": "catalog:",
     "yaml": "catalog:"
-  },
-  "nx": {
-    "targets": {
-      "build": {
-        "inputs": [
-          "{workspaceRoot}/data/**/*",
-          "{projectRoot}/src/**/*",
-          "{projectRoot}/build/**/*"
-        ],
-        "outputs": [
-          "{projectRoot}/dist/**/*"
-        ]
-      }
-    }
   }
 }

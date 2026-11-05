@@ -2,6 +2,7 @@
 #define OOT_PLAY_H
 
 #include <combo/util.h>
+#include <combo/age.h>
 #include <combo/game_state.h>
 #include <combo/actor.h>
 #include <combo/oot/regs.h>
@@ -18,9 +19,6 @@
 #include <combo/oot/environment.h>
 #include <combo/oot/sram.h>
 #include <combo/oot/skybox.h>
-
-#define AGE_ADULT 0
-#define AGE_CHILD 1
 
 typedef struct Player Player;
 
@@ -44,12 +42,32 @@ typedef struct
 }
 GameOverContext;
 
+typedef enum GameOverState
+{
+    /* 00 */ GAMEOVER_INACTIVE,
+    /* 01 */ GAMEOVER_DEATH_START,
+    /* 02 */ GAMEOVER_DEATH_WAIT_GROUND, // wait for link to fall and hit the ground
+    /* 03 */ GAMEOVER_DEATH_DELAY_MENU,  // wait for 1 second before showing the game over menu
+    /* 04 */ GAMEOVER_DEATH_MENU,        // do nothing while kaleidoscope handles the game over menu
+    /* 20 */ GAMEOVER_REVIVE_START = 20,
+    /* 21 */ GAMEOVER_REVIVE_RUMBLE,
+    /* 22 */ GAMEOVER_REVIVE_WAIT_GROUND, // wait for link to fall and hit the ground
+    /* 23 */ GAMEOVER_REVIVE_WAIT_FAIRY,  // wait for the fairy to rise all the way up out of links body
+    /* 24 */ GAMEOVER_REVIVE_FADE_OUT     // fade out the game over lights as link is revived and gets back up
+} GameOverState;
+
 ASSERT_SIZE(GameOverContext, 0x4);
 
 typedef struct SceneSequences {
     /* 0x00 */ u8 seqId;
     /* 0x01 */ u8 natureAmbienceId;
 } SceneSequences; // size = 0x2
+
+typedef struct FrameAdvanceContext
+{
+    /* 0x0 */ s32 enabled;
+    /* 0x4 */ s32 timer;
+} FrameAdvanceContext; // size = 0x8
 
 typedef struct PlayState
 {
@@ -65,7 +83,7 @@ typedef struct PlayState
     s16                    nextCamId;
     SceneSequences         sceneSequences;
     LightContext           lightCtx;
-    char                   unk_007b8[0x08];
+    FrameAdvanceContext    frameAdvCtx;
     CollisionContext       colCtx;
     ActorContext           actorCtx;
     CutsceneContext        csCtx;
@@ -112,13 +130,24 @@ typedef struct PlayState
     s8                      transitionTrigger; /* "fade_direction" */
     s16                     unk_11E16;
     s16                     bgCoverAlpha;
-    u16                     nextEntranceIndex;
+    u16                     nextEntrance;
     char                    unk_11E1C[0x40];
     s8                      shootingGalleryStatus;
     s8                      bombchuBowlingStatus; /* "bombchu_game_flag" */
     u8                      transitionType;
     CollisionCheckContext   colChkCtx;
-    char                    unk_120fc[0x41c];
+    /* 0x120FC */ u16 cutsceneFlags[20];
+    /* 0x12124 PreRender pauseBgPreRender; */ u8 unk_12124[0x12174 - 0x12124];
+    /* 0x12174 */ char unk_12174[0x53];
+    /* 0x121C7 */ s8 unk_121C7;
+    /* 0x121C8 TransitionContext transitionCtx; */ u8 unk_121c8[0x12418 - 0x121c8];
+    /* 0x12418 */ char unk_12418[0x3];
+    /* 0x1241B */ u8 transitionMode;                  // "fbdemo_wipe_modem"
+    /* 0x1241C TransitionFade transitionFadeFlash; */ u8 unk_1241c[0x12428 - 0x1241c];
+    /* 0x12428 */ char unk_12428[0x3];
+    /* 0x1242B */ u8 viewpoint; // toggleable camera setting by shops or player. Is also equal to the bgCamIndex + 1
+    /* 0x1242C SceneTableEntry *loadedScene; */ char unk_1242c[0x12430 - 0x1242c];
+    /* 0x12430 */ char unk_12430[0xE8];
 }
 PlayState;
 
@@ -137,7 +166,7 @@ ASSERT_OFFSET(PlayState, objectCtx,                0x117a4);
 ASSERT_OFFSET(PlayState, roomCtx,                  0x11cbc);
 ASSERT_OFFSET(PlayState, transiActorCtx,           0x11d34);
 ASSERT_OFFSET(PlayState, transitionTrigger,        0x11e15);
-ASSERT_OFFSET(PlayState, nextEntranceIndex,        0x11e1a);
+ASSERT_OFFSET(PlayState, nextEntrance,             0x11e1a);
 ASSERT_OFFSET(PlayState, playerInit,               0x11d3c);
 ASSERT_OFFSET(PlayState, playerUpdate,             0x11d40);
 ASSERT_OFFSET(PlayState, isPlayerDroppingFish,     0x11d44);
@@ -169,7 +198,7 @@ ASSERT_OFFSET(PlayState, skyboxId,                 0x11e14);
 ASSERT_OFFSET(PlayState, transitionTrigger,        0x11e15);
 ASSERT_OFFSET(PlayState, unk_11E16,                0x11e16);
 ASSERT_OFFSET(PlayState, bgCoverAlpha,             0x11e18);
-ASSERT_OFFSET(PlayState, nextEntranceIndex,        0x11e1a);
+ASSERT_OFFSET(PlayState, nextEntrance,             0x11e1a);
 ASSERT_OFFSET(PlayState, unk_11E1C,                0x11e1c);
 ASSERT_OFFSET(PlayState, shootingGalleryStatus,    0x11e5c);
 ASSERT_OFFSET(PlayState, bombchuBowlingStatus,     0x11e5d);

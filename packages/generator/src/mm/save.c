@@ -1,5 +1,4 @@
 #include <combo.h>
-#include <combo/net.h>
 #include <combo/config.h>
 #include <combo/inventory.h>
 #include <combo/entrance.h>
@@ -81,6 +80,7 @@ void Sram_SaveEndOfCycle(PlayState* play)
         /* Reset ammo */
         for (int i = 0; i < 24; ++i)
             gSave.info.inventory.ammo[i] = 0;
+        gMmExtraAmmo.slingshotSeeds = 0;
 
         /* Reset rupees */
         gSave.info.playerData.rupees = 0;
@@ -126,6 +126,9 @@ void Sram_SaveEndOfCycle(PlayState* play)
             break;
         }
     }
+
+    if (Config_Flag(CFG_MM_CYCLE_REPAIR_GIANTS_KNIFE) && gSharedCustomSave.mm.swords.giantSword == 1)
+        MmSword_SetGiantsKnifeHealth(gComboConfig.giantsKnifeDurabilityMm);
 
     /* Reload bottles */
     for (int i = 1; i <= 3; ++i)
@@ -179,9 +182,6 @@ PATCH_CALL(0x80146f10, PrepareSaveAndSave);
 
 void Save_DoSave(PlayState* play, int saveFlags)
 {
-    /* Wait for net */
-    netWaitSave();
-
     /* Mark the save as owl */
     if (saveFlags & SF_OWL)
         gSave.isOwlSave = 1;

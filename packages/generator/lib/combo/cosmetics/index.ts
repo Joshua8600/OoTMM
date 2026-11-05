@@ -1,7 +1,9 @@
-import type { Game, ColorArg, BufferPath, Options } from '@ootmm/core';
+import type { Game } from '@ootmm/data';
+import type { ColorArg, BufferPath, Options } from '@ootmm/core';
 
 import fs from 'node:fs';
-import { COLORS, Monitor, GAMES, Random, randString, sample } from '@ootmm/core';
+import { GAMES } from '@ootmm/data';
+import { COLORS, Monitor, Random, randString, sample } from '@ootmm/core';
 import { recolorImage } from '../image';
 import { RomBuilder } from '../rom-builder';
 import { png } from '../util/png';
@@ -431,6 +433,10 @@ class CosmeticsPass {
 
     if(c.noLowHealthBeep) {
       this.patchSymbol('NO_LOW_HEALTH_BEEP', new Uint8Array([0x01]));
+    }
+
+    if (c.gerudoTunic) {
+      this.patchSymbol('GERUDO_TUNIC', new Uint8Array([0x01]));
     }
 
     const log = this.logWriter.emit();

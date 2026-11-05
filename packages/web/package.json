@@ -6,20 +6,19 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "./deploy.sh",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/typography": "^0.5.20",
     "preact": "catalog:",
-    "preact-iso": "^2.11.1",
+    "preact-iso": "^2.12.2",
     "react-icons": "catalog:",
     "reset-css": "^5.0.2",
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
     "@mdx-js/rollup": "^3.1.1",
-    "@ootmm/web-components": "*",
+    "@ootmm/web-components": "workspace:*",
     "@preact/preset-vite": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "vite-multiple-assets": "^2.2.6"

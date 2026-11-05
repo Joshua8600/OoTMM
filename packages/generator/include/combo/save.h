@@ -17,13 +17,33 @@
 # include <combo/oot/save.h>
 # include <combo/mm/save.h>
 # include <combo/notes.h>
+# include <combo/doors.h>
+# include <combo/save_flags.h>
+# include <combo/sr.h>
+# include <combo/xflags.h>
+# include <combo/data/xflags.h>
+
+typedef struct
+{
+    u32     walIndex;
+    u32     ackToken;
+    char    sendBuffer[32];
+    u32     sendBufferToken;
+    u8      sendBufferSize;
+    s16     giSkip[16];
+}
+MultiSave;
 
 typedef struct ALIGNED(16)
 {
     OotCustomSave   oot;
     MmCustomSave    mm;
-    s16             netGiSkip[16];
+    MultiSave       multi;
+    u8              xflags[(XFLAGS_COUNT + 7) / 8];
+    u32             cows;
     u16             coins[4];
+    u16             triforcePieces;
+    u8              silverRupees[(SR_MAX + 1) / 2];
     u16             ocarinaButtonMaskOot;
     u16             ocarinaButtonMaskMm;
     u8              soulsEnemyOot[8];
@@ -42,15 +62,18 @@ typedef struct ALIGNED(16)
     RespawnData     respawn[1];
     u8              foundMasterSword:1;
     u8              storedSirloin:1;
-    u8              extraSwordsOot:2;
+    u8              extraSwordsOot:3;
+    u8              ootChildShields:2;
     u8              bombchuBagOot:2;
     u8              bombchuBagMm:2;
-    u8              mmShieldIsDeku:1;
     u8              mmProgressiveShields:2;
     u8              bronzeScaleOot:1;
     u8              bronzeScaleMm:1;
     u8              traps[TRAP_MAX];
     u8              notes[NOTES_MAX];
+    u8              rustyKeysOot[(DOORID_OOT_MAX + 7) / 8];
+    u8              rustyKeysMm[(DOORID_MM_MAX + 7) / 8];
+    u8              saveFlags[(SAVE_FLAG_MAX + 7) / 8];
 #if defined(DEBUG)
     u8              cheats[4];
 #endif
@@ -73,6 +96,16 @@ void Save_OnLoad(void);
 void Save_DoSave(PlayState* play, int saveFlags);
 
 void Flash_ReadWrite(u32 devAddr, void* dramAddr, u32 size, s32 direction);
+
+inline static void SaveFlag_Set(int saveFlag)
+{
+    BITMAP8_SET(gSharedCustomSave.saveFlags, saveFlag);
+}
+
+inline static int SaveFlag_Get(int saveFlag)
+{
+    return BITMAP8_GET(gSharedCustomSave.saveFlags, saveFlag);
+}
 
 # if defined(GAME_OOT)
 #  define gCustomSave gSharedCustomSave.oot
@@ -97,18 +130,24 @@ void Flash_ReadWrite(u32 devAddr, void* dramAddr, u32 size, s32 direction);
 # define SAVE_EXTRA_RECORD(type, index) (gOotSave + 0xd4 + 0x1c * (index) + 0x10)
 #else
 # define SAVE_EXTRA_RECORD(type, index) (*((type*)(gOotSave.info.perm[index].raw + 0x10)))
-typedef struct
-{
-    u32 wispMmSwamp:1;
-    u32 wispMmMountain:1;
-    u32 wispMmOcean:1;
-    u32 wispMmValley:1;
-    u32 wispOotLake:1;
-    u32 unused:27;
-}
-MiscFlags;
 #endif
 
+#if !defined(__ASSEMBLER__)
+ASSERT_SIZE(OotExtraTrade,  sizeof(u32));
+ASSERT_SIZE(OotExtraItems,  sizeof(u32));
+ASSERT_SIZE(OotExtraFlags,  sizeof(u32));
+ASSERT_SIZE(MmExtraBoss,    sizeof(u32));
+ASSERT_SIZE(MmExtraItems,   sizeof(u32));
+ASSERT_SIZE(MmExtraTrade,   sizeof(u32));
+ASSERT_SIZE(MmExtraFlags,   sizeof(u32));
+ASSERT_SIZE(MmExtraFlags2,  sizeof(u32));
+ASSERT_SIZE(OotExtraTrade,  sizeof(u32));
+ASSERT_SIZE(MmExtraFlags3,  sizeof(u32));
+ASSERT_SIZE(OotExtraAmmo,   sizeof(u32));
+ASSERT_SIZE(MmExtraAmmo,    sizeof(u32));
+#endif
+
+/* Deprecated, use gSharedCustomSave instead */
 #define gOotExtraTrade              SAVE_EXTRA_RECORD(OotExtraTrade,     0)
 #define gOotExtraItems              SAVE_EXTRA_RECORD(OotExtraItems,     1)
 #define gOotExtraFlags              SAVE_EXTRA_RECORD(OotExtraFlags,     2)
@@ -117,17 +156,10 @@ MiscFlags;
 #define gMmExtraTrade               SAVE_EXTRA_RECORD(MmExtraTrade,      5)
 #define gMmExtraFlags               SAVE_EXTRA_RECORD(MmExtraFlags,      6)
 #define gMmExtraFlags2              SAVE_EXTRA_RECORD(MmExtraFlags2,     7)
-#define gMiscFlags                  SAVE_EXTRA_RECORD(MiscFlags,         8)
-#define gCowFlags                   SAVE_EXTRA_RECORD(u32,               9)
-#define gOotExtraTradeSave          SAVE_EXTRA_RECORD(OotExtraTrade,    10)
-#define gMmOwlFlags                 SAVE_EXTRA_RECORD(u32,              11)
-#define gSaveLedgerBase             SAVE_EXTRA_RECORD(u32,              12)
-#define gMmExtraFlags3              SAVE_EXTRA_RECORD(MmExtraFlags3,    13)
-#define gOotSilverRupeeCounts1      SAVE_EXTRA_RECORD(u32,              14)
-#define gOotSilverRupeeCounts2      SAVE_EXTRA_RECORD(u32,              15)
-#define gOotSilverRupeeCounts3      SAVE_EXTRA_RECORD(u32,              16)
-#define gOotSilverRupeeCounts4      SAVE_EXTRA_RECORD(u32,              17)
-#define gOotSilverRupeeCounts5      SAVE_EXTRA_RECORD(u32,              18)
-#define gTriforceCount              SAVE_EXTRA_RECORD(u32,              19)
+#define gOotExtraTradeSave          SAVE_EXTRA_RECORD(OotExtraTrade,     8)
+#define gMmOwlFlags                 SAVE_EXTRA_RECORD(u32,               9)
+#define gMmExtraFlags3              SAVE_EXTRA_RECORD(MmExtraFlags3,    10)
+#define gOotExtraAmmo               SAVE_EXTRA_RECORD(OotExtraAmmo,     11)
+#define gMmExtraAmmo                SAVE_EXTRA_RECORD(MmExtraAmmo,      12)
 
 #endif

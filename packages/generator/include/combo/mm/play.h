@@ -40,15 +40,27 @@ _Static_assert(sizeof(SramContext) == 0x28, "MM SramContext size is wrong");
 
 typedef struct
 {
-    char    unk_000[0x190];
+    View view;
+    u8* iconItemSegment;
+    u8* iconItem24Segment;
+    u8* iconItemAltSegment;
+    u8* iconItemLangSegment;
+    u8* nameSegment;
+    /* 0x17C */ u8 *iconItemVtxSegment;
+    /* 0x180 */ Vtx *itemPageVtx;
+    /* 0x184 */ Vtx *mapPageVtx;
+    /* 0x188 */ Vtx *questPageVtx;
+    /* 0x18C */ Vtx *maskPageVtx;
     /* 0x190 */ Vtx* vtxBuf;
     char    unk_194[0x58];
     u16     state;
-    char    unk_1ee[0x12];
+    u16     debugEditor;
+    u8      bombersNotebookOpen;
+    Vec3f   eye;
     u16     mainState;
     u16     nextPageMode;
-    u16     screenIndex;
-    u16     switchPageTimer;
+    u16     pageIndex;
+    u16     pageSwitchTimer;
     u16     savePromptState;
     /* 0x20C */ f32 unk20C;
     /* 0x210 */ f32 unk210;
@@ -73,17 +85,30 @@ typedef struct
 }
 PauseContext;
 
-ASSERT_OFFSET(PauseContext, unk_000,            0x000);
+ASSERT_OFFSET(PauseContext, view,               0x000);
 ASSERT_OFFSET(PauseContext, state,              0x1ec);
 ASSERT_OFFSET(PauseContext, mainState,          0x200);
-ASSERT_OFFSET(PauseContext, screenIndex,        0x204);
+ASSERT_OFFSET(PauseContext, pageIndex,          0x204);
 ASSERT_OFFSET(PauseContext, savePromptState,    0x208);
 ASSERT_OFFSET(PauseContext, itemDescriptionOn,  0x2b9);
 _Static_assert(sizeof(PauseContext) == 0x2d0, "MM PauseContext size is wrong");
 
+typedef enum GameOverState
+{
+    /*  0 */ GAMEOVER_INACTIVE,
+    /*  1 */ GAMEOVER_DEATH_START,
+    /*  2 */ GAMEOVER_DEATH_WAIT_GROUND, // wait for player to fall and hit the ground
+    /*  3 */ GAMEOVER_DEATH_FADE_OUT,    // wait before fading out
+    /* 20 */ GAMEOVER_REVIVE_START = 20,
+    /* 21 */ GAMEOVER_REVIVE_RUMBLE,
+    /* 22 */ GAMEOVER_REVIVE_WAIT_GROUND, // wait for player to fall and hit the ground
+    /* 23 */ GAMEOVER_REVIVE_WAIT_FAIRY,  // wait for the fairy to rise all the way up out of player's body
+    /* 24 */ GAMEOVER_REVIVE_FADE_OUT     // fade out the game over lights as player is revived and gets back up
+} GameOverState;
+
 typedef struct
 {
-    int unk;
+    u16 state;
 }
 GameOverContext;
 
@@ -125,20 +150,18 @@ typedef struct ActorContext
     /* 0x1E4 */ TitleCardContext titleCtx;
     /* 0x1F4 */ PlayerImpact playerImpact;
     char        unk_208[0x4c];
-    Actor*      elegyStatues[4];
-    char        unk_264[0x4];
-    u8          unk_268;
+    Actor*      elegyStatues[5];
+    u8          isOverrideInputOn;
     char        unk_269[0x1b];
 }
 ActorContext;
 
-ASSERT_OFFSET(ActorContext, actors,         0x010);
-ASSERT_OFFSET(ActorContext, unk_120,        0x120);
-ASSERT_OFFSET(ActorContext, titleCtx,       0x1e4);
-ASSERT_OFFSET(ActorContext, elegyStatues,   0x254);
-ASSERT_OFFSET(ActorContext, unk_264,        0x264);
-ASSERT_OFFSET(ActorContext, unk_268,        0x268);
-ASSERT_OFFSET(ActorContext, unk_269,        0x269);
+ASSERT_OFFSET(ActorContext, actors,            0x010);
+ASSERT_OFFSET(ActorContext, unk_120,           0x120);
+ASSERT_OFFSET(ActorContext, titleCtx,          0x1e4);
+ASSERT_OFFSET(ActorContext, elegyStatues,      0x254);
+ASSERT_OFFSET(ActorContext, isOverrideInputOn, 0x268);
+ASSERT_OFFSET(ActorContext, unk_269,           0x269);
 
 _Static_assert(sizeof(ActorContext) == 0x284,       "MM ActorContext size is wrong");
 
@@ -276,7 +299,7 @@ typedef struct MessageContext
     s16                         unk_1203e;
     struct Actor*               unkActor;
     s16                         unk_12044;
-    s16                         unk_12046;
+    s16                         blockSunsSong;
     u8                          unk_12048; /* EnKakasi */
     char                        unk_12049[0x1];
     s16                         unk_1204a[0x5];
@@ -407,6 +430,12 @@ _Static_assert(sizeof(DayTelopState) == 0x248, "MM DayTelopState Size is wrong")
         (state)->nextGameStateSize = nextSize;                        \
     } while (0)
 
+typedef struct FrameAdvanceContext
+{
+    /* 0x0 */ s32 enabled;
+    /* 0x4 */ s32 timer;
+} FrameAdvanceContext; // size = 0x8
+
 typedef struct PlayState
 {
     GameState           state;
@@ -423,7 +452,7 @@ typedef struct PlayState
     s16                 nextCamera;
     SceneSequences      sceneSequences;
     LightContext        lightCtx;
-    char                unk_00828[0x08];
+    FrameAdvanceContext frameAdvCtx;
     CollisionContext    colCtx;
     ActorContext        actorCtx;
     /* 0x01F24 */ CutsceneContext csCtx;
@@ -438,8 +467,21 @@ typedef struct PlayState
     char                unk_17104[0xc84];
     ObjectContext       objectCtx;
     RoomContext         roomCtx;
-    char                unk_18760[0x3c];
-    s16                 playerActorCsIds[10];
+    char                unk_18760[8];
+    /* 0x18768 */ void (*playerInit)(Player* player, struct PlayState* play, FlexSkeletonHeader* skelHeader);
+    /* 0x1876C */ void (*playerUpdate)(Player* player, struct PlayState* play, Input* input);
+    /* 0x18770 */ void (*unk_18770)(struct PlayState* play, Player* player);
+    /* 0x18774 */ s32 (*startPlayerFishing)(struct PlayState* play);
+    /* 0x18778 */ s32 (*grabPlayer)(struct PlayState* play, Player* player);
+    /* 0x1877C */ s32 (*tryPlayerCsAction)(struct PlayState* play, Player* player, PlayerCsAction csAction);
+    /* 0x18780 */ void (*func_18780)(Player* player, struct PlayState* play);
+    /* 0x18784 */ s32 (*damagePlayer)(struct PlayState* play, s32 damage);
+    /* 0x18788 */ void (*talkWithPlayer)(struct PlayState* play, Actor* actor);
+    /* 0x1878C */ void (*unk_1878C)(struct PlayState* play);
+    /* 0x18790 */ void (*unk_18790)(struct PlayState* play, s16 arg1);
+    /* 0x18794 */ PlayerItemAction (*unk_18794)(struct PlayState* play, Player* player, u8 itemId);
+    /* 0x18798 */ s32 (*setPlayerTalkAnim)(struct PlayState* play, PlayerAnimationHeader* talkAnim, AnimationMode animMode);
+    s16                 playerCsIds[10];
     MtxF                viewProjectionMtxF;
     Vec3f               projectionMtxFDiagonal;
     MtxF                billboardMtxF;
@@ -495,6 +537,7 @@ ASSERT_OFFSET(PlayState, transitionMode,           0x18b4a);
 #define TRANS_TRIGGER_START        0x14
 #define TRANS_TRIGGER_END         -0x14
 
+
 _Static_assert(sizeof(PlayState) == 0x19258, "MM PlayState size is wrong");
 
 typedef struct RegEditor {
@@ -509,6 +552,9 @@ typedef struct RegEditor {
 
 void Play_EnableMotionBlur(u32 alpha);
 s32 Play_SetCameraFov(PlayState* this, s16 camId, f32 fov);
+s32 _Play_SetCameraFov(PlayState* this, s16 camId, f32 fov);
 void Play_DisableMotionBlur(void);
+void Play_FillScreen(PlayState* this, s16 fillScreenOn, u8 red, u8 green, u8 blue, u8 alpha);
+void Play_SetMotionBlurAlpha(u32 alpha);
 
 #endif

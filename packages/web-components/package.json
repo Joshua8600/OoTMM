@@ -2,14 +2,14 @@
   "name": "@ootmm/web-components",
   "version": "0.0.1",
   "description": "",
+  "type": "module",
   "scripts": {
-    "build": "tsx ./build.ts",
-    "deploy": "./deploy.sh"
+    "build": "tsx ./build.ts"
   },
   "author": "Nax",
   "license": "MIT",
   "dependencies": {
-    "@ootmm/gui": "*"
+    "@ootmm/gui": "workspace:*"
   },
   "nx": {
     "targets": {

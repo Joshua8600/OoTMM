@@ -2,7 +2,6 @@
 #define MM_SAVE_H
 
 #include <combo/types.h>
-#include <combo/xflags.h>
 
 typedef struct
 {
@@ -43,7 +42,7 @@ typedef struct
     u32     unused:9;
     u32     dekuNut:3;
     u32     dekuStick:3;
-    u32     unused2:3; /* bullet bag */
+    u32     bulletBag:3;
     u32     wallet:2;
     u32     scale:3;
     u32     strength:3;
@@ -198,15 +197,15 @@ typedef struct
     u32                     pictoFlags1;
     u32                     unk_E80;
     u32                     unk_E84;
-    u32                     unk_E88[7];
+    u32                     alienInfo[7];
     u32                     scenesVisible[7];
     u16                     skullCountSwamp;
     u16                     skullCountOcean;
-    u32                     unk_EC4;
-    u32                     unk_EC8;
-    u32                     unk_ECC[2];
+    u32                     unk_EA0;
+    u32                     unk_EA4;
+    u32                     unk_EA8[2];
     u32                     stolenItems;
-    u32                     unk_ED8;
+    u32                     unk_EB4;
     u32                     bankRupees;
     u32                     unk_ee0;
     u32                     unk_ee4;
@@ -219,7 +218,7 @@ typedef struct
     u32                     mapsVisited;
     u32                     worldMapCloudVisibility;
     u8                      unk_F64;
-    u8                      unk_F65;
+    u8                      scarecrowSpawnSongSet;
     u8                      scarecrowSpawnSong[128];
     s8                      bombersCaughtNum;
     s8                      bombersCaughtOrder[5];
@@ -449,10 +448,10 @@ extern s8 gPlayerFormItemRestrictions[5][0x72];
 /* Custom */
 typedef struct
 {
-    u8 boss;
+    u8 dungeon;
     u8 bossCycle;
+    u8 boss;
     u8 items;
-    u8 unused;
 }
 MmExtraBoss;
 
@@ -462,9 +461,23 @@ typedef struct
     u32 ocarina:2;
     u32 goldDust:1;
     u32 hammerGFS:2;
-    u32 unused:25;
+    u32 boomPicto:2;
+    u32 bowSlingshot:2;
+    u32 stoneGerudoSkull:3;
+    u32 gibdoSpooky:2;
+    u32 fierceDeityAdult:2;
+    u32 unused:14;
 }
 MmExtraItems;
+
+typedef struct
+{
+    s8 slingshotSeeds;
+    s8 unused1;
+    s8 unused2;
+    s8 unused3;
+}
+MmExtraAmmo;
 
 typedef struct
 {
@@ -563,18 +576,75 @@ MmExtraFlags3;
 #define MM_PLAYER_FORM_DEKU         3
 #define MM_PLAYER_FORM_HUMAN        4
 
+typedef struct
+{
+    u8 buttonItems[4];
+    u8 cButtonSlots[4];
+
+    u8 boots;
+    u8 tunic;
+    u8 shield;
+    u8 sword;
+}
+MmHumanAgeLoadout;
+
+typedef union
+{
+    struct
+    {
+        u8 sword:3;
+        u8 giantSword:2;
+        u8 masterSword:1;
+        u8 unused:2;
+    };
+    u8 value;
+}
+MmSwordInventory;
+
 typedef struct ALIGNED(16)
 {
-    u8 xflags[XFLAGS_COUNT_MM];
     u8 npc[32];
     u8 shops[4];
     u8 halfDays;
     RespawnData fw[2];
     RespawnData fwRespawnTop[2];
     RespawnData fwRespawnDungeonEntrance[2];
+    union
+    {
+        struct {
+            u8 songSaria:1;
+            u8 songZelda:1;
+            u8 songTpLight:1;
+            u8 songTpShadow:1;
+            u8 songTpSpirit:1;
+            u8 songTpWater:1;
+            u8 songTpFire:1;
+            u8 songTpForest:1;
+        };
+        u8 value;
+    } ootSongs;
+    u8 customMask;
+    MmSwordInventory swords;
+    u8 shieldsOwned;
+    u8 mmGiantsKnifeHealth;
+    MmHumanAgeLoadout humanAgeLoadouts[2];
 }
 MmCustomSave;
 
+#define MM_SONG_OOT_TP_FOREST    0
+#define MM_SONG_OOT_TP_FIRE      1
+#define MM_SONG_OOT_TP_WATER     2
+#define MM_SONG_OOT_TP_SPIRIT    3
+#define MM_SONG_OOT_TP_SHADOW    4
+#define MM_SONG_OOT_TP_LIGHT     5
+#define MM_SONG_OOT_ZELDA        6
+#define MM_SONG_OOT_SARIA        7
+
 #define CURRENT_DAY (((void)0, gSaveContext.save.day) % 5)
+#define CUR_FORM ((gSaveContext.save.playerForm == MM_PLAYER_FORM_HUMAN) ? 0 : gSaveContext.save.playerForm)
+#define BUTTON_ITEM_EQUIP(form, button) (gSaveContext.save.info.itemEquips.buttonItems[form][button])
+#define C_SLOT_EQUIP(form, button) (gSaveContext.save.info.itemEquips.cButtonSlots[form][button])
+#define GET_CUR_FORM_BTN_ITEM(btn) ((u8)((btn) == EQUIP_SLOT_B ? BUTTON_ITEM_EQUIP(CUR_FORM, btn) : BUTTON_ITEM_EQUIP(0, btn)))
+#define GET_CUR_FORM_BTN_SLOT(btn) ((u8)((btn) == EQUIP_SLOT_B ? C_SLOT_EQUIP(CUR_FORM, btn) : C_SLOT_EQUIP(0, btn)))
 
 #endif /* MM_SAVE_H */

@@ -3,6 +3,7 @@
 
 #define SET_HANDLER(a, h) do { *(void**)(((char*)(a)) + 0x25c) = (h); } while (0)
 #define PRICE (gComboConfig.prices[PRICES_OOT_MERCHANTS + 0x00])
+#define PRICE_KEG 50
 
 static void EnGm_ItemQuery(ComboItemQuery* q)
 {
@@ -11,6 +12,13 @@ static void EnGm_ItemQuery(ComboItemQuery* q)
     q->ovType = OV_NPC;
     q->gi = GI_OOT_SWORD_KNIFE;
     q->id = NPC_OOT_MEDIGORON;
+
+    if (BITMAP16_GET(gSave.info.eventsMisc, EV_OOT_INF_MEDIGORON))
+    {
+        q->ovType = OV_NONE;
+        q->id = 0;
+        q->gi = GI_OOT_POWDER_KEG;
+    }
 }
 
 static void EnGm_Reset(Actor* this, u32 addr)
@@ -26,6 +34,7 @@ static void EnGm_GiveItemHandler2(Actor* this, PlayState* play)
     if (Actor_HasParentZ(this))
     {
         BITMAP16_SET(gSave.info.eventsMisc, EV_OOT_INF_MEDIGORON);
+        this->parent = NULL;
         EnGm_Reset(this, 0x80a9fd5c);
         return;
     }
@@ -39,26 +48,54 @@ static void EnGm_GiveItemHandler2(Actor* this, PlayState* play)
 
 static void EnGm_GiveItemHandler(Actor* this, PlayState* play)
 {
-    if (gSave.info.playerData.rupees < PRICE)
+    u16 price = BITMAP16_GET(gSave.info.eventsMisc, EV_OOT_INF_MEDIGORON) ? PRICE_KEG : PRICE;
+    if (gSave.info.playerData.rupees < price)
     {
         DisplayTextBox2(play, 200);
         EnGm_Reset(this, 0x80a9fe98);
         return;
     }
 
-    AddRupeesRaw(-PRICE);
+    AddRupeesRaw(-price);
     SET_HANDLER(this, EnGm_GiveItemHandler2);
     EnGm_GiveItemHandler2(this, play);
 }
 
 PATCH_FUNC(0x80aa0020, EnGm_GiveItemHandler);
 
+#define PRICE (gComboConfig.prices[PRICES_OOT_MERCHANTS + 0x00])
+#define PRICE_KEG 50
+#define PRICE_KNIFE 200
+
+static int EnGm_HasBrokenGiantsKnife(void)
+{
+    return
+        (gOotSave.info.inventory.equipment.swords & EQ_OOT_SWORD_KNIFE) &&
+        (gOotSave.info.inventory.equipment.swords & EQ_OOT_SWORD_KNIFE_BROKEN);
+}
+
+static int EnGm_CanTalkKnife(void)
+{
+    return gSave.age != AGE_CHILD || Config_Flag(CFG_OOT_AGELESS_SWORDS);
+}
+
+static int EnGm_CanTalkKeg(void)
+{
+    return gSave.age != AGE_CHILD || Config_Flag(CFG_OOT_AGELESS_STRENGTH);
+}
+
 int EnGm_GetState(void)
 {
-    if (gSave.age == AGE_CHILD)
+    if (!BITMAP16_GET(gSave.info.eventsMisc, EV_OOT_INF_MEDIGORON))
+        return gSave.age == AGE_CHILD ? 0 : 1;
+
+    if (EnGm_HasBrokenGiantsKnife() && EnGm_CanTalkKnife())
+        return 2;
+
+    if (!EnGm_CanTalkKeg())
         return 0;
 
-    if (BITMAP16_GET(gSave.info.eventsMisc, EV_OOT_INF_MEDIGORON))
+    if (!Config_Flag(CFG_OOT_POWDER_KEG))
         return 3;
 
     return 1;
@@ -87,8 +124,297 @@ static void hintMedigoron(PlayState* play)
     comboTextAutoLineBreaks(start);
 }
 
+static void textIntroKeg(char** b)
+{
+    comboTextAppendStr(b, "Hullo. Did ya come to buy a" TEXT_NL);
+    comboTextAppendStr(b, TEXT_COLOR_RED "Powder Keg" TEXT_CZ "?");
+    comboTextAppendStr(b, TEXT_BB);
+}
+
+static void textIntroBrag(char** b)
+{
+    comboTextAppendStr(b, "...This is just between us, but I" TEXT_NL);
+    comboTextAppendStr(b, "have a huge bomb that is out" TEXT_NL);
+    comboTextAppendStr(b, "of this world!");
+    comboTextAppendStr(b, TEXT_BB);
+}
+
+static void textFinalKegSale(char** b)
+{
+    comboTextAppendStr(b, "How 'bout it?" TEXT_NL);
+    comboTextAppendStr(b, TEXT_NL);
+    comboTextAppendStr(b, TEXT_COLOR_GREEN TEXT_CHOICE2 "I'll buy one" TEXT_NL "No thanks" TEXT_END);
+}
+
+static void textOneKeg(char** b)
+{
+    comboTextAppendStr(b, TEXT_COLOR_RED "Powder Kegs" TEXT_CZ " are dangerous" TEXT_NL);
+    comboTextAppendStr(b, "explosives, so you can carry only" TEXT_NL);
+    comboTextAppendStr(b, "one at a time!" TEXT_END);
+}
+
+static void textTooHeavy(char** b)
+{
+    comboTextAppendStr(b, "Oh! But my product is so " TEXT_COLOR_RED "heavy" TEXT_CZ ", I" TEXT_NL);
+    comboTextAppendStr(b, "don't think you can carry it." TEXT_BB);
+    comboTextAppendStr(b, "I'm sorry I even brought it up..." TEXT_END);
+}
+
+static void textTooHeavyNoIntro(char** b)
+{
+    comboTextAppendStr(b, "Look, I'd like you to buy my bomb," TEXT_NL);
+    comboTextAppendStr(b, "but it's just " TEXT_COLOR_RED "too heavy" TEXT_CZ " for you" TEXT_NL);
+    comboTextAppendStr(b, "to carry." TEXT_NL);
+    comboTextAppendStr(b, "Sorry." TEXT_END);
+}
+
+static void textKegSaleConversation(Actor* this, PlayState* play)
+{
+    char* b;
+
+    b = play->msgCtx.font.msgBuf;
+
+    u8* kegIntroSeen = ((u8*)this) + 0x2ad;
+
+    comboTextAppendHeader(&b);
+
+    s32 kegSale = 0;
+    if (gOotExtraItems.bombSlot & 2)
+    {
+        if (gOotExtraAmmo.kegAmmo == 0)
+        {
+            if (*kegIntroSeen)
+            {
+                comboTextAppendStr(&b, "If you don't have a " TEXT_COLOR_RED "Powder Keg" TEXT_CZ "," TEXT_NL);
+                comboTextAppendStr(&b, "I'll sell you one for " TEXT_COLOR_RED);
+                comboTextAppendNum(&b, PRICE_KEG);
+                comboTextAppendStr(&b, " Rupees" TEXT_CZ "!");
+                comboTextAppendStr(&b, TEXT_BB);
+                textFinalKegSale(&b);
+                kegSale = 1;
+            }
+            else
+            {
+                textIntroKeg(&b);
+                textIntroBrag(&b);
+                comboTextAppendStr(&b, "So, won't ya buy a " TEXT_COLOR_RED "Powder Keg" TEXT_CZ TEXT_NL);
+                comboTextAppendStr(&b, "for " TEXT_COLOR_RED);
+                comboTextAppendNum(&b, PRICE_KEG);
+                comboTextAppendStr(&b, " Rupees" TEXT_CZ "?");
+                comboTextAppendStr(&b, TEXT_BB);
+                textFinalKegSale(&b);
+                kegSale = 1;
+                *kegIntroSeen = 1;
+            }
+        }
+        else
+        {
+            if (Player_GetStrength() == 3)
+            {
+                if (*kegIntroSeen)
+                {
+                    textOneKeg(&b);
+                }
+                else
+                {
+                    textIntroKeg(&b);
+                    textIntroBrag(&b);
+                    comboTextAppendStr(&b, "Oh, but you already have one.");
+                    comboTextAppendStr(&b, TEXT_BB);
+                    textOneKeg(&b);
+                    *kegIntroSeen = 1;
+                }
+            }
+            else
+            {
+                if (*kegIntroSeen)
+                {
+                    textTooHeavyNoIntro(&b);
+                }
+                else
+                {
+                    textIntroKeg(&b);
+                    textIntroBrag(&b);
+                    textTooHeavy(&b);
+                    *kegIntroSeen = 1;
+                }
+            }
+        }
+    }
+    else
+    {
+        if (Player_GetStrength() == 3)
+        {
+            if (*kegIntroSeen)
+            {
+                comboTextAppendStr(&b, "Look, I'd like you to buy my bomb," TEXT_NL);
+                comboTextAppendStr(&b, "but it'd be irresponsible of me" TEXT_NL);
+                comboTextAppendStr(&b, "to sell you one if you don't know" TEXT_NL);
+                comboTextAppendStr(&b, "how to use it..." TEXT_END);
+            }
+            else
+            {
+                textIntroBrag(&b);
+                comboTextAppendStr(&b, "Huh? Do you mean you don't know" TEXT_NL);
+                comboTextAppendStr(&b, "how to use it, yet?");
+                comboTextAppendStr(&b, TEXT_BB);
+                comboTextAppendStr(&b, "Too bad! And I was hoping I could " TEXT_NL);
+                comboTextAppendStr(&b, "sell one to you..." TEXT_END);
+                *kegIntroSeen = 1;
+            }
+        }
+        else
+        {
+            if (*kegIntroSeen)
+            {
+                textTooHeavyNoIntro(&b);
+            }
+            else
+            {
+                textIntroBrag(&b);
+                textTooHeavy(&b);
+                *kegIntroSeen = 1;
+            }
+        }
+    }
+    if (!kegSale)
+    {
+        EnGm_Reset(this, 0x80a9fe98);
+    }
+}
+
+static void EnGm_KegChoiceHandler(Actor* this, PlayState* play)
+{
+    if (Message_GetState(&play->msgCtx) != TEXT_STATE_CHOICE)
+        return;
+
+    if (!Message_ShouldAdvance(play))
+        return;
+
+    switch (play->msgCtx.choiceIndex)
+    {
+    case 0: /* Yes */
+        SET_HANDLER(this, EnGm_GiveItemHandler);
+        break;
+
+    case 1: /* No */
+        Message_ContinueTextbox(play, 0x3050);
+        EnGm_Reset(this, 0x80a9fe98);
+        break;
+    }
+}
+
+static void EnGm_StartKegAfterKnife(Actor* this, PlayState* play)
+{
+    if (!Config_Flag(CFG_OOT_POWDER_KEG) || !EnGm_CanTalkKeg())
+    {
+        EnGm_Reset(this, 0x80a9fd5c);
+        return;
+    }
+
+    SET_HANDLER(this, EnGm_KegChoiceHandler);
+    this->messageId = 0x304f;
+    Message_ContinueTextbox(play, 0x304f);
+    textKegSaleConversation(this, play);
+}
+
+static void EnGm_KnifeResultHandler(Actor* this, PlayState* play)
+{
+    u8 state;
+
+    state = Message_GetState(&play->msgCtx);
+
+    if (state != TEXT_STATE_DONE && state != TEXT_STATE_EVENT)
+        return;
+
+    if (!Message_ShouldAdvance(play))
+        return;
+
+    if (!Config_Flag(CFG_OOT_POWDER_KEG) || !EnGm_CanTalkKeg())
+    {
+        if (state == TEXT_STATE_EVENT)
+        {
+            play->msgCtx.msgMode = MSGMODE_TEXT_CLOSING;
+            play->msgCtx.stateTimer = 4;
+        }
+
+        EnGm_Reset(this, 0x80a9fd5c);
+        return;
+    }
+
+    EnGm_StartKegAfterKnife(this, play);
+}
+
+static void EnGm_RepairGiantsKnife(Actor* this, PlayState* play)
+{
+    gOotSave.info.playerData.swordHealth = gComboConfig.giantsKnifeDurabilityOot;
+    gOotSave.info.inventory.equipment.swords &= ~EQ_OOT_SWORD_KNIFE_BROKEN;
+    if (gOotSave.info.equips.buttonItems[0] == ITEM_OOT_SWORD_KNIFE_BROKEN)
+    {
+        gOotSave.info.equips.buttonItems[0] = ITEM_OOT_SWORD_KNIFE_BIGGORON;
+        Interface_LoadItemIconImpl(play, 0);
+    }
+    if (gOotSave.info.childEquips.buttonItems[0] == ITEM_OOT_SWORD_KNIFE_BROKEN)
+        gOotSave.info.childEquips.buttonItems[0] = ITEM_OOT_SWORD_KNIFE_BIGGORON;
+
+    if (gOotSave.info.adultEquips.buttonItems[0] == ITEM_OOT_SWORD_KNIFE_BROKEN)
+        gOotSave.info.adultEquips.buttonItems[0] = ITEM_OOT_SWORD_KNIFE_BIGGORON;
+}
+
+static void EnGm_KnifeChoiceHandler(Actor* this, PlayState* play)
+{
+    if (Message_GetState(&play->msgCtx) != TEXT_STATE_CHOICE)
+        return;
+
+    if (!Message_ShouldAdvance(play))
+        return;
+
+    switch (play->msgCtx.choiceIndex)
+    {
+    case 0: /* Yes */
+        if (gSave.info.playerData.rupees < PRICE_KNIFE)
+        {
+            Message_ContinueTextbox(play, 0x00c8);
+            SET_HANDLER(this, EnGm_KnifeResultHandler);
+        }
+        else
+        {
+            AddRupeesRaw(-PRICE_KNIFE);
+            EnGm_RepairGiantsKnife(this, play);
+            Message_ContinueTextbox(play, 0x3050);
+            SET_HANDLER(this, EnGm_KnifeResultHandler);
+        }
+        break;
+
+    case 1: /* No */
+        Message_ContinueTextbox(play, 0x3050);
+        SET_HANDLER(this, EnGm_KnifeResultHandler);
+        break;
+    }
+}
+
 void EnGm_TalkedTo(Actor* this, PlayState* play)
 {
+    if (this->messageId == 0x304e)
+    {
+        if (BITMAP16_GET(gSave.info.eventsMisc, EV_OOT_INF_MEDIGORON) &&
+            EnGm_HasBrokenGiantsKnife())
+        {
+            SET_HANDLER(this, EnGm_KnifeChoiceHandler);
+        }
+
+        return;
+    }
+
     if (this->messageId == 0x304f)
-        hintMedigoron(play);
+    {
+        if (BITMAP16_GET(gSave.info.eventsMisc, EV_OOT_INF_MEDIGORON))
+        {
+            textKegSaleConversation(this, play);
+        }
+        else
+        {
+            hintMedigoron(play);
+        }
+    }
 }

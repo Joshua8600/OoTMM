@@ -1,70 +1,7 @@
 #include <combo.h>
 #include <combo/item.h>
 #include <combo/config.h>
-
-static int hasFreeBottleOot(void)
-{
-    for (int i = 0; i < 4; ++i)
-    {
-        if (gOotSave.info.inventory.items[ITS_OOT_BOTTLE + i] == ITEM_OOT_BOTTLE_EMPTY)
-            return 1;
-    }
-    if ((gOotExtraTrade.adult & (1 << XITEM_OOT_ADULT_BOTTLE)) && gOotExtraItems.bottleAdultSlot == ITEM_OOT_BOTTLE_EMPTY)
-    {
-        return 1;
-    }
-    if ((gOotExtraTrade.child & (1 << XITEM_OOT_CHILD_BOTTLE)) && gOotExtraItems.bottleChildSlot == ITEM_OOT_BOTTLE_EMPTY)
-    {
-        return 1;
-    }
-    return 0;
-}
-
-static int hasFreeBottleMm(void)
-{
-    for (int i = 0; i < 6; ++i)
-    {
-        if (gMmSave.info.inventory.items[ITS_MM_BOTTLE + i] == ITEM_MM_BOTTLE_EMPTY)
-            return 1;
-    }
-    return 0;
-}
-
-static int canBuyShieldOotRaw(int level)
-{
-    switch (level)
-    {
-    case 0:
-        return !(gOotSave.info.inventory.equipment.shields & EQ_OOT_SHIELD_DEKU);
-    case 1:
-        return !(gOotSave.info.inventory.equipment.shields & EQ_OOT_SHIELD_HYLIAN);
-    default:
-        return 1;
-    }
-}
-
-static int canBuyShieldMmRaw(int level)
-{
-    switch (level)
-    {
-    case 0:
-        return gMmSave.info.itemEquips.shield == 0;
-    case 1:
-        return gMmSave.info.itemEquips.shield == 0 || gSharedCustomSave.mmShieldIsDeku;
-    default:
-        return 1;
-    }
-}
-
-static int canBuyShieldOot(int level)
-{
-    return canBuyShieldOotRaw(level) || (Config_Flag(CFG_SHARED_SHIELDS) && canBuyShieldMmRaw(level));
-}
-
-static int canBuyShieldMm(int level)
-{
-    return canBuyShieldMmRaw(level) || (Config_Flag(CFG_SHARED_SHIELDS) && canBuyShieldOotRaw(level));
-}
+#include <combo/inventory.h>
 
 int isItemBuyable(s16 gi)
 {
@@ -82,11 +19,11 @@ int isItemBuyable(s16 gi)
     case GI_OOT_STICK:
     case GI_OOT_STICKS_5:
     case GI_OOT_STICKS_10:
-        return (gOotSave.info.inventory.upgrades.dekuStick == 0) || (gOotSave.info.inventory.ammo[ITS_OOT_STICKS] < kMaxSticks[gOotSave.info.inventory.upgrades.dekuStick]);
+        return gOotSave.info.inventory.ammo[ITS_OOT_STICKS] < kMaxSticks[gOotSave.info.inventory.upgrades.dekuStick];
     case GI_OOT_NUTS_5:
     case GI_OOT_NUTS_5_ALT:
     case GI_OOT_NUTS_10:
-        return (gOotSave.info.inventory.upgrades.dekuNut == 0) || (gOotSave.info.inventory.ammo[ITS_OOT_NUTS] < kMaxNuts[gOotSave.info.inventory.upgrades.dekuNut]);
+        return gOotSave.info.inventory.ammo[ITS_OOT_NUTS] < kMaxNuts[gOotSave.info.inventory.upgrades.dekuNut];
     case GI_OOT_BOMB:
     case GI_OOT_BOMBS_5:
     case GI_OOT_BOMBS_10:
@@ -121,22 +58,22 @@ int isItemBuyable(s16 gi)
     case GI_OOT_FAIRY:
     case GI_OOT_MILK:
     case GI_OOT_CHATEAU:
-        return hasFreeBottleOot();
+        return comboHasFreeBottleOot();
     case GI_OOT_SHIELD_DEKU:
-        return canBuyShieldOot(0);
+        return !(gOotSave.info.inventory.equipment.shields & EQ_OOT_SHIELD_DEKU) || (Config_Flag(CFG_SHARED_DEKU_SHIELD) && !MmShield_IsOwned(MM_SHIELD_DEKU));
     case GI_OOT_SHIELD_HYLIAN:
-        return canBuyShieldOot(1);
+        return !(gOotSave.info.inventory.equipment.shields & EQ_OOT_SHIELD_HYLIAN) || (Config_Flag(CFG_SHARED_HYLIAN_SHIELD) && !MmShield_IsOwned(MM_SHIELD_HYLIAN));
     case GI_MM_RECOVERY_HEART:
         return gMmSave.info.playerData.health < gMmSave.info.playerData.healthCapacity;
     case GI_MM_MAGIC_JAR_SMALL:
     case GI_MM_MAGIC_JAR_LARGE:
         return (gMmSave.info.playerData.isMagicAcquired && (gMmSave.info.playerData.magic < (gMmSave.info.playerData.isDoubleMagicAcquired ? 0x60 : 0x30)));
     case GI_MM_STICK:
-        return (gMmSave.info.inventory.upgrades.dekuStick == 0) || (gMmSave.info.inventory.ammo[ITS_MM_STICKS] < kMaxSticks[gMmSave.info.inventory.upgrades.dekuStick]);
+        return gMmSave.info.inventory.ammo[ITS_MM_STICKS] < kMaxSticks[gMmSave.info.inventory.upgrades.dekuStick];
     case GI_MM_NUT:
     case GI_MM_NUTS_5:
     case GI_MM_NUTS_10:
-        return (gMmSave.info.inventory.upgrades.dekuNut == 0) || (gMmSave.info.inventory.ammo[ITS_MM_NUTS] < kMaxNuts[gMmSave.info.inventory.upgrades.dekuNut]);
+        return gMmSave.info.inventory.ammo[ITS_MM_NUTS] < kMaxNuts[gMmSave.info.inventory.upgrades.dekuNut];
     case GI_MM_BOMB:
     case GI_MM_BOMBS_5:
     case GI_MM_BOMBS_10:
@@ -172,11 +109,14 @@ int isItemBuyable(s16 gi)
     case GI_MM_POE:
     case GI_MM_BIG_POE:
     case GI_MM_BLUE_FIRE:
-        return hasFreeBottleMm();
+        return comboHasFreeBottleMm();
     case GI_MM_SHIELD_DEKU:
-        return canBuyShieldMm(0);
+        return !MmShield_IsOwned(MM_SHIELD_DEKU) || (Config_Flag(CFG_SHARED_DEKU_SHIELD) && !(gOotSave.info.inventory.equipment.shields & EQ_OOT_SHIELD_DEKU));
     case GI_MM_SHIELD_HERO:
-        return canBuyShieldMm(1);
+        return !MmShield_IsOwned(MM_SHIELD_HERO);
+    case GI_MM_DEKU_SEEDS_5:
+    case GI_MM_DEKU_SEEDS_30:
+        return (gMmSave.info.inventory.upgrades.bulletBag > 0) && (gMmExtraAmmo.slingshotSeeds < kMaxSeeds[gMmSave.info.inventory.upgrades.bulletBag]);
     default:
         return 1;
     }

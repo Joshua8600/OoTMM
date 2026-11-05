@@ -1,8 +1,10 @@
-import type { Settings, PlayerItem } from '@ootmm/core';
+import type { Settings } from '@ootmm/core';
+import type { PlayerItem } from './items';
 import type { ItemPlacement, Location } from './types';
 import type { ResolvedWorldFlags, World } from './world';
 
-import { ItemHelpers } from '@ootmm/core';
+import { CHECKS, CHECKS_BY_LOCATION } from '@ootmm/data';
+import { ItemHelpers } from './items';
 
 type LocationDescriptor = {
   id: string;
@@ -68,13 +70,30 @@ export const OOT_FROGS = [
   'OOT Zora River Frogs Sarias Song',
   'OOT Zora River Frogs Suns Song',
   'OOT Zora River Frogs Song of Time'
-]
+];
 
 export const MM_LOTTERY = [
   'MM Lottery Prize Night 1',
   'MM Lottery Prize Night 2',
   'MM Lottery Prize Night 3',
-]
+];
+
+const MM_TINGLE = [
+  'MM Tingle Map Clock Town',
+  'MM Tingle Map Woodfall',
+  'MM Tingle Map Snowhead',
+  'MM Tingle Map Ranch',
+  'MM Tingle Map Great Bay',
+  'MM Tingle Map Ikana',
+];
+
+const RENEWABLE_LOCATIONS = new Set([
+  ...MM_SCRUBS,
+  ...MM_MERCHANTS,
+  ...MM_TINGLE,
+  ...OOT_MERCHANTS,
+  ...CHECKS.filter(x => ['shop', 'cow', 'scrub', 'fairy', 'fish', 'fairy-spot', 'gossip', 'gossip-big'].includes(x.type) && !ONE_TIME_SHOP_CHECKS.includes(x.location)).map(x => x.location),
+]);
 
 export function locationsZelda(settings: Settings) {
   const locs = ['OOT Zelda\'s Letter', 'OOT Zelda\'s Song'];
@@ -84,21 +103,9 @@ export function locationsZelda(settings: Settings) {
   return locs;
 }
 
-export function isLocationRenewable(world: World, loc: Location) {
+export function isLocationRenewable(loc: Location) {
   const locationId = locationData(loc).id;
-  if (MM_SCRUBS.includes(locationId) || MM_MERCHANTS.includes(locationId) || OOT_MERCHANTS.includes(locationId))
-    return true;
-  if (ONE_TIME_SHOP_CHECKS.includes(locationId))
-    return false;
-  const check = world.checks[locationId];
-  if (!check) {
-    throw new Error(`Unknown location ${locationId}@${locationData(loc).world}`);
-  }
-  if (['shop', 'cow', 'scrub', 'fairy', 'fish', 'fairy_spot'].includes(check.type))
-    return true;
-  if (ItemHelpers.isTingleMap(check.item))
-    return true;
-  return false;
+  return RENEWABLE_LOCATIONS.has(locationId);
 }
 
 export function isLocationLicenseGranting(world: World, loc: Location) {
@@ -106,24 +113,26 @@ export function isLocationLicenseGranting(world: World, loc: Location) {
   if (ONE_TIME_SHOP_CHECKS.includes(locationId) || MM_MERCHANTS.includes(locationId) || OOT_MERCHANTS.includes(locationId)) {
     return false;
   }
-  const check = world.checks[locationId];
+  const check = CHECKS_BY_LOCATION[locationId];
   if (['cow'].includes(check.type))
     return true;
-  if (isLocationRenewable(world, loc))
+  if (isLocationRenewable(loc))
     return false;
   return true;
 }
 
 export function isLocationChestFairy(world: World, loc: Location) {
   const locD = locationData(loc);
-  const check = world.checks[locD.id];
-  return check.type !== 'sf' && ItemHelpers.isDungeonStrayFairy(check.item);
+  const check = CHECKS_BY_LOCATION[locD.id];
+  const item = world.checkItems.get(locD.id)!;
+  return check.type !== 'sf' && ItemHelpers.isDungeonStrayFairy(item);
 }
 
 export function isLocationOtherFairy(world: World, loc: Location) {
   const locD = locationData(loc);
-  const check = world.checks[locD.id];
-  return (check.type === 'sf') && ItemHelpers.isDungeonStrayFairy(check.item);
+  const check = CHECKS_BY_LOCATION[locD.id];
+  const item = world.checkItems.get(locD.id)!;
+  return (check.type === 'sf') && ItemHelpers.isDungeonStrayFairy(item);
 }
 
 type IsLocationFullyShuffledOptions = {
@@ -133,28 +142,29 @@ type IsLocationFullyShuffledOptions = {
 };
 
 const DUNGEON_SCENES = [
-  'DEKU_TREE',              'LAIR_GOHMA',
-  'DODONGO_CAVERN',         'LAIR_KING_DODONGO',
-  'INSIDE_JABU_JABU',       'LAIR_BARINADE',
-  'TEMPLE_FOREST',          'LAIR_PHANTOM_GANON',
-  'TEMPLE_FIRE',            'LAIR_VOLVAGIA',
-  'TEMPLE_WATER',           'LAIR_MORPHA',
-  'TEMPLE_SPIRIT',          'LAIR_TWINROVA',
-  'TEMPLE_SHADOW',          'LAIR_BONGO_BONGO',
-  'GANON_TOWER',            'LAIR_GANONDORF',
-  'BOTTOM_OF_THE_WELL',     'ICE_CAVERN',
-  'GERUDO_TRAINING_GROUND', 'THIEVES_HIDEOUT',
-  'INSIDE_GANON_CASTLE',
+  'OOT_DEKU_TREE', 'OOT_DEKU_TREE_MQ', 'OOT_LAIR_GOHMA',
+  'OOT_DODONGO_CAVERN', 'OOT_DODONGO_CAVERN_MQ', 'OOT_LAIR_KING_DODONGO',
+  'OOT_INSIDE_JABU_JABU', 'OOT_INSIDE_JABU_JABU_MQ', 'OOT_LAIR_BARINADE',
+  'OOT_TEMPLE_FOREST', 'OOT_TEMPLE_FOREST_MQ', 'OOT_LAIR_PHANTOM_GANON',
+  'OOT_TEMPLE_FIRE', 'OOT_TEMPLE_FIRE_MQ', 'OOT_LAIR_VOLVAGIA',
+  'OOT_TEMPLE_WATER', 'OOT_TEMPLE_WATER_MQ', 'OOT_LAIR_MORPHA',
+  'OOT_TEMPLE_SPIRIT', 'OOT_TEMPLE_SPIRIT_MQ', 'OOT_LAIR_TWINROVA',
+  'OOT_TEMPLE_SHADOW', 'OOT_TEMPLE_SHADOW_MQ', 'OOT_LAIR_BONGO_BONGO',
+  'OOT_GANON_TOWER', 'OOT_LAIR_GANONDORF',
+  'OOT_BOTTOM_OF_THE_WELL', 'OOT_BOTTOM_OF_THE_WELL_MQ',
+  'OOT_ICE_CAVERN', 'OOT_ICE_CAVERN_MQ',
+  'OOT_GERUDO_TRAINING_GROUND', 'OOT_GERUDO_TRAINING_GROUND_MQ', 'OOT_THIEVES_HIDEOUT',
+  'OOT_INSIDE_GANON_CASTLE', 'OOT_INSIDE_GANON_CASTLE_MQ',
 
-  'PIRATE_FORTRESS_EXTERIOR', 'PIRATE_FORTRESS_INTERIOR',    'PIRATE_FORTRESS_ENTRANCE',
-  'TEMPLE_STONE_TOWER',       'TEMPLE_STONE_TOWER_INVERTED', 'LAIR_TWINMOLD',
-  'TEMPLE_WOODFALL',          'LAIR_ODOLWA',
-  'CASTLE_IKANA',             'LAIR_IKANA',
-  'TEMPLE_SNOWHEAD',          'LAIR_GOHT',
-  'SPIDER_HOUSE_SWAMP',       'SPIDER_HOUSE_OCEAN',
-  'MOON', 'LAIR_MAJORA',      'MOON_DEKU', 'MOON_GORON', 'MOON_ZORA', 'MOON_LINK',
-  'TEMPLE_GREAT_BAY',         'LAIR_GYORG',
-  'BENEATH_THE_WELL',         'SECRET_SHRINE',
+  'MM_PIRATE_FORTRESS_EXTERIOR', 'MM_PIRATE_FORTRESS_INTERIOR', 'MM_PIRATE_FORTRESS_ENTRANCE',
+  'MM_TEMPLE_STONE_TOWER', 'MM_TEMPLE_STONE_TOWER_INVERTED', 'MM_LAIR_TWINMOLD',
+  'MM_TEMPLE_WOODFALL', 'MM_LAIR_ODOLWA',
+  'MM_CASTLE_IKANA', 'MM_LAIR_IKANA',
+  'MM_TEMPLE_SNOWHEAD', 'MM_LAIR_GOHT',
+  'MM_SPIDER_HOUSE_SWAMP', 'MM_SPIDER_HOUSE_OCEAN',
+  'MM_MOON', 'MM_LAIR_MAJORA', 'MM_MOON_DEKU', 'MM_MOON_GORON', 'MM_MOON_ZORA', 'MM_MOON_LINK',
+  'MM_TEMPLE_GREAT_BAY', 'MM_LAIR_GYORG',
+  'MM_BENEATH_THE_WELL', 'MM_SECRET_SHRINE',
 ]
 
 export function isLocationInDungeon(scene: string) {

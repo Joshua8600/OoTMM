@@ -23,6 +23,8 @@
 #define FILENAME_PERIOD                     0xEA
 #define FILENAME_SLASH                      0xEB
 
+typedef struct PlayState PlayState;
+
 typedef struct Font
 {
     u32 msgOffset;
@@ -252,17 +254,29 @@ ASSERT_SIZE(MessageContext, 0xe418);
 #define OCARINA_SONG_SCARECROW_SPAWN    0xc
 #define OCARINA_SONG_MEMORY_GAME        0xd
 
-void Message_UpdateOcarinaMemoryGame(struct PlayState* play);
-// u8 Message_ShouldAdvance(struct PlayState* play); // currently in api.h
-void Message_CloseTextbox(struct PlayState*);
-void Message_StartTextbox(struct PlayState* play, u16 textId, struct Actor* actor);
-void Message_ContinueTextbox(struct PlayState* play, u16 textId);
-void Message_StartOcarina(struct PlayState* play, u16 ocarinaActionId);
-void Message_StartOcarinaSunsSongDisabled(struct PlayState* play, u16 ocarinaActionId);
+#define OCARINA_SONG_CUSTOM_START       0x15
+#define OCARINA_SONG_SOARING            0x16
+#define OCARINA_SONG_CUSTOM_TIME        0x17
+#define OCARINA_SONG_ELEGY              0x18
+#define OCARINA_SONG_DOUBLE_TIME        0x19
+#define OCARINA_SONG_HEALING            0x1a
+#define OCARINA_SONG_AWAKENING          0x1b
+#define OCARINA_SONG_GORON_HALF         0x1c
+#define OCARINA_SONG_GORON              0x1d
+#define OCARINA_SONG_ZORA               0x1e
+#define OCARINA_SONG_ORDER              0x1f
+
+void Message_UpdateOcarinaMemoryGame(PlayState* play);
+// u8 Message_ShouldAdvance(PlayState* play); // currently in api.h
+void Message_CloseTextbox(PlayState*);
+void Message_StartTextbox(PlayState* play, u16 textId, struct Actor* actor);
+void Message_ContinueTextbox(PlayState* play, u16 textId);
+void Message_StartOcarina(PlayState* play, u16 ocarinaActionId);
+void Message_StartOcarinaSunsSongDisabled(PlayState* play, u16 ocarinaActionId);
 // u8 Message_GetState(MessageContext* msgCtx); // currently in api.h
-void Message_Draw(struct PlayState* play);
-void Message_Update(struct PlayState* play);
+void Message_Draw(PlayState* play);
+void Message_Update(PlayState* play);
 void Message_SetTables(void);
-void Message_Init(struct PlayState* play);
+void Message_Init(PlayState* play);
 
 #endif

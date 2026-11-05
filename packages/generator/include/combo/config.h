@@ -36,7 +36,6 @@ SpecialCond;
 
 typedef struct
 {
-    u8              playerId;
     u32             dungeonWarps[12];
     u32             dungeonEntrances[26];
     u32             mq;
@@ -51,13 +50,18 @@ typedef struct
     u16             triforcePieces;
     u16             triforceGoal;
     ComboDataHints  hints;
-    s8              staticHintsImportance[20];
     u16             giZoraSapphire;
+    s8              staticHintsImportance[21];
     u8              boss[12];
     u8              strayFairyRewardCount;
     u8              bombchuBehaviorOot;
     u8              bombchuBehaviorMm;
-    u8              songEvents[0x12];
+    u8              songEventsOot[0x12];
+    u8              songEventsMm[0xd];
+    u8              giantsKnifeDurabilityOot;
+    u8              giantsKnifeDurabilityMm;
+    u8              mmStrengthAgeRequirement;
+    u8              mmAgeRequirements[0x40];
 }
 ComboConfig;
 

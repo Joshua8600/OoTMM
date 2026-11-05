@@ -6,6 +6,9 @@
 #include <combo/magic.h>
 #include <combo/config.h>
 #include <combo/global.h>
+#include "combo/age.h"
+
+#include "combo/inventory.h"
 
 #if defined(GAME_OOT)
 # define addRupeesRaw  addRupeesRawOot
@@ -26,7 +29,13 @@ const u8 kMaxSongNotes[] = {
     6, // NOTES_SONG_OOT_SUN
     6, // NOTES_SONG_OOT_TIME
     6, // NOTES_SONG_OOT_STORMS
+    6, // NOTES_SONG_OOT_HEALING
+    6, // NOTES_SONG_OOT_SOARING
+    7, // NOTES_SONG_OOT_AWAKENING
+    8, // NOTES_SONG_OOT_GORON
+    7, // NOTES_SONG_OOT_ZORA
     7, // NOTES_SONG_OOT_EMPTINESS
+    6, // NOTES_SONG_OOT_ORDER
     7, // NOTES_SONG_MM_AWAKENING
     8, // NOTES_SONG_MM_GORON
     7, // NOTES_SONG_MM_ZORA
@@ -37,6 +46,14 @@ const u8 kMaxSongNotes[] = {
     6, // NOTES_SONG_MM_EPONA
     6, // NOTES_SONG_MM_SOARING
     6, // NOTES_SONG_MM_STORMS
+    6, // NOTES_SONG_MM_TP_FOREST
+    8, // NOTES_SONG_MM_TP_FIRE
+    5, // NOTES_SONG_MM_TP_WATER
+    6, // NOTES_SONG_MM_TP_SPIRIT
+    7, // NOTES_SONG_MM_TP_SHADOW
+    6, // NOTES_SONG_MM_TP_LIGHT
+    6, // NOTES_SONG_MM_ZELDA
+    6, // NOTES_SONG_MM_SARIA
     6, // NOTES_SONG_MM_SUN
 };
 
@@ -46,13 +63,6 @@ static const u16 kButtonMasks[] = {
     L_CBUTTONS,
     U_CBUTTONS,
     D_CBUTTONS,
-};
-
-static const u8 kMmSwords[] = {
-    ITEM_NONE,
-    ITEM_MM_SWORD_KOKIRI,
-    ITEM_MM_SWORD_RAZOR,
-    ITEM_MM_SWORD_GILDED,
 };
 
 static const u8 kItemSlotsOot[] = {
@@ -160,6 +170,8 @@ static void reloadSlotEquipsOot(OotItemEquips* equips, int slot)
 void reloadSlotRawOot(int slot)
 {
     reloadSlotEquipsOot(&gOotSave.info.equips, slot);
+    if (slot == ITS_OOT_HAMMER)
+        return;
     reloadSlotEquipsOot(&gOotSave.info.childEquips, slot);
     reloadSlotEquipsOot(&gOotSave.info.adultEquips, slot);
 }
@@ -358,6 +370,9 @@ static int addItemWalletMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 
 static void addAmmoOot(u8 slot, u16 item, u8 max, u8 count)
 {
+    if (max == 0)
+        return;
+
     gOotSave.info.inventory.items[slot] = item;
     gOotSave.info.inventory.ammo[slot] += count;
     if (gOotSave.info.inventory.ammo[slot] > max)
@@ -366,6 +381,9 @@ static void addAmmoOot(u8 slot, u16 item, u8 max, u8 count)
 
 static void addAmmoMm(u8 slot, u16 item, u8 max, u8 count)
 {
+    if (max == 0)
+        return;
+
     gMmSave.info.inventory.items[slot] = item;
     gMmSave.info.inventory.ammo[slot] += count;
     if (gMmSave.info.inventory.ammo[slot] > max)
@@ -421,10 +439,6 @@ static int addItemBombsMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 void addNutsRawOot(int count)
 {
     u8 max;
-
-    if (gOotSave.info.inventory.upgrades.dekuNut == 0)
-        gOotSave.info.inventory.upgrades.dekuNut = 1;
-
     max = kMaxNuts[gOotSave.info.inventory.upgrades.dekuNut];
     addAmmoOot(ITS_OOT_NUTS, ITEM_OOT_NUT, max, count);
 }
@@ -432,22 +446,18 @@ void addNutsRawOot(int count)
 void addNutsRawMm(int count)
 {
     u8 max;
-
-    if (gMmSave.info.inventory.upgrades.dekuNut == 0)
-        gMmSave.info.inventory.upgrades.dekuNut = 1;
-
     max = kMaxNuts[gMmSave.info.inventory.upgrades.dekuNut];
     addAmmoMm(ITS_MM_NUTS, ITEM_MM_NUT, max, count);
 }
 
-void addNutsOot(int count)
+void Item_AddNutsOot(int count)
 {
     addNutsRawOot(count);
     if (Config_Flag(CFG_SHARED_NUTS_STICKS))
         addNutsRawMm(count);
 }
 
-void addNutsMm(int count)
+void Item_AddNutsMm(int count)
 {
     addNutsRawMm(count);
     if (Config_Flag(CFG_SHARED_NUTS_STICKS))
@@ -456,13 +466,13 @@ void addNutsMm(int count)
 
 static int addItemNutsOot(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
-    addNutsOot(param);
+    Item_AddNutsOot(param);
     return 0;
 }
 
 static int addItemNutsMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
-    addNutsMm(param);
+    Item_AddNutsMm(param);
     return 0;
 }
 
@@ -470,7 +480,7 @@ static int addItemNutsUpgradeOot(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
     if (gOotSave.info.inventory.upgrades.dekuNut < param)
         gOotSave.info.inventory.upgrades.dekuNut = param;
-    addNutsOot(kMaxNuts[param]);
+    Item_AddNutsOot(kMaxNuts[param]);
     return 0;
 }
 
@@ -478,7 +488,7 @@ static int addItemNutsUpgradeMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
     if (gMmSave.info.inventory.upgrades.dekuNut < param)
         gMmSave.info.inventory.upgrades.dekuNut = param;
-    addNutsMm(kMaxNuts[param]);
+    Item_AddNutsMm(kMaxNuts[param]);
     return 0;
 }
 
@@ -524,6 +534,116 @@ static int addItemBombchuMm(PlayState* play, u8 itemId, s16 gi, u16 param)
     return 0;
 }
 
+static void addSeedsRawOot(u8 count)
+{
+    u8 max;
+
+    if (gOotSave.info.inventory.upgrades.bulletBag == 0)
+        return;
+    max = kMaxSeeds[gOotSave.info.inventory.upgrades.bulletBag];
+    addAmmoOot(ITS_OOT_SLINGSHOT, ITEM_OOT_SLINGSHOT, max, count);
+    BITMAP16_SET(gOotSave.info.eventsItem, EV_OOT_ITEM_DEKU_SEEDS);
+}
+
+static void addSeedsRawMm(u8 count)
+{
+    u8 max;
+    s32 seeds;
+
+    if (gMmSave.info.inventory.upgrades.bulletBag == 0)
+        return;
+
+    max = kMaxSeeds[gMmSave.info.inventory.upgrades.bulletBag];
+
+    seeds = gMmExtraAmmo.slingshotSeeds + count;
+
+    if (seeds > max)
+        seeds = max;
+
+    gMmExtraAmmo.slingshotSeeds = seeds;
+}
+
+static void addSeedsOot(u8 count)
+{
+    addSeedsRawOot(count);
+    if (Config_Flag(CFG_SHARED_SLINGSHOT))
+        addSeedsRawMm(count);
+}
+
+static void addSeedsMm(u8 count)
+{
+    addSeedsRawMm(count);
+    if (Config_Flag(CFG_SHARED_SLINGSHOT))
+        addSeedsRawOot(count);
+}
+
+static int addItemSeedsOot(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    addSeedsOot(param);
+    return 0;
+}
+
+static int addItemSeedsMm(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    addSeedsMm(param);
+    return 0;
+}
+
+static void addBowItemRawMm(PlayState* play)
+{
+    gMmExtraItems.bowSlingshot |= 1 << 0;
+    if (comboCheckItemAgeReqMm(ITEM_MM_BOW))
+    {
+        gMmSave.info.inventory.items[ITS_MM_BOW] = ITEM_MM_BOW;
+        reloadSlotMm(play, ITS_MM_BOW);
+    }
+    else if (gMmSave.info.inventory.items[ITS_MM_BOW] == ITEM_NONE)
+    {
+        gMmSave.info.inventory.items[ITS_MM_BOW] = ITEM_MM_BOW;
+    }
+}
+
+static void addSlingshotItemRawMm(PlayState* play)
+{
+    gMmExtraItems.bowSlingshot |= 1 << 1;
+    if (comboCheckItemAgeReqMm(ITEM_MM_SLINGSHOT))
+    {
+        gMmSave.info.inventory.items[ITS_MM_BOW] = ITEM_MM_SLINGSHOT;
+        reloadSlotMm(play, ITS_MM_BOW);
+    }
+    else if (gMmSave.info.inventory.items[ITS_MM_BOW] == ITEM_NONE)
+    {
+        gMmSave.info.inventory.items[ITS_MM_BOW] = ITEM_MM_SLINGSHOT;
+    }
+}
+
+static void addSlingshotRawOot(u8 index)
+{
+    if (index > gOotSave.info.inventory.upgrades.bulletBag)
+        gOotSave.info.inventory.upgrades.bulletBag = index;
+    addSeedsRawOot(kMaxSeeds[index]);
+}
+
+static void addSlingshotRawMm(PlayState* play, u8 index)
+{
+    if (index > gMmSave.info.inventory.upgrades.bulletBag)
+        gMmSave.info.inventory.upgrades.bulletBag = index;
+    addSlingshotItemRawMm(play);
+    addSeedsRawMm(kMaxSeeds[index]);
+}
+
+static int addItemSlingshotOot(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    addSlingshotRawOot(param);
+    return 0;
+}
+
+static int addItemSlingshotMm(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    addSlingshotRawMm(play, param);
+    return 0;
+}
+
 static void addArrowsRawOot(u8 count)
 {
     u8 max;
@@ -537,11 +657,18 @@ static void addArrowsRawOot(u8 count)
 static void addArrowsRawMm(u8 count)
 {
     u8 max;
+    s32 arrows;
 
     if (gMmSave.info.inventory.upgrades.quiver == 0)
         return;
+
     max = kMaxArrows[gMmSave.info.inventory.upgrades.quiver];
-    addAmmoMm(ITS_MM_BOW, ITEM_MM_BOW, max, count);
+
+    arrows = gMmSave.info.inventory.ammo[ITS_MM_BOW] + count;
+    if (arrows > max)
+        arrows = max;
+
+    gMmSave.info.inventory.ammo[ITS_MM_BOW] = arrows;
 }
 
 static void addArrowsOot(u8 count)
@@ -577,51 +704,27 @@ static void addBowRawOot(u8 index)
     addArrowsRawOot(kMaxArrows[index]);
 }
 
-static void addBowRawMm(u8 index)
+static void addBowRawMm(PlayState* play, u8 index)
 {
+    if (index == 0)
+        index = 1;
+
     if (index > gMmSave.info.inventory.upgrades.quiver)
         gMmSave.info.inventory.upgrades.quiver = index;
+
+    addBowItemRawMm(play);
     addArrowsRawMm(kMaxArrows[index]);
 }
 
 static int addItemBowOot(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
     addBowRawOot(param);
-    if (Config_Flag(CFG_SHARED_BOWS))
-        addBowRawMm(param);
     return 0;
 }
 
 static int addItemBowMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
-    addBowRawMm(param);
-    if (Config_Flag(CFG_SHARED_BOWS))
-        addBowRawOot(param);
-    return 0;
-}
-
-static void addSeeds(u8 count)
-{
-    u8 max;
-
-    if (gOotSave.info.inventory.upgrades.bulletBag == 0)
-        return;
-    max = kMaxSeeds[gOotSave.info.inventory.upgrades.bulletBag];
-    addAmmoOot(ITS_OOT_SLINGSHOT, ITEM_OOT_SLINGSHOT, max, count);
-    BITMAP16_SET(gOotSave.info.eventsItem, EV_OOT_ITEM_DEKU_SEEDS);
-}
-
-static int addItemSeeds(PlayState* play, u8 itemId, s16 gi, u16 param)
-{
-    addSeeds(param);
-    return 0;
-}
-
-static int addItemSlingshot(PlayState* play, u8 itemId, s16 gi, u16 param)
-{
-    if (gOotSave.info.inventory.upgrades.bulletBag < param)
-        gOotSave.info.inventory.upgrades.bulletBag = param;
-    addSeeds(kMaxSeeds[param]);
+    addBowRawMm(play, param);
     return 0;
 }
 
@@ -653,10 +756,6 @@ static int addItemNormalMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 void addSticksRawOot(int count)
 {
     u8 max;
-
-    if (gOotSave.info.inventory.upgrades.dekuStick == 0)
-        gOotSave.info.inventory.upgrades.dekuStick = 1;
-
     max = kMaxSticks[gOotSave.info.inventory.upgrades.dekuStick];
     addAmmoOot(ITS_OOT_STICKS, ITEM_OOT_STICK, max, count);
 }
@@ -664,22 +763,18 @@ void addSticksRawOot(int count)
 void addSticksRawMm(int count)
 {
     u8 max;
-
-    if (gMmSave.info.inventory.upgrades.dekuStick == 0)
-        gMmSave.info.inventory.upgrades.dekuStick = 1;
-
     max = kMaxSticks[gMmSave.info.inventory.upgrades.dekuStick];
     addAmmoMm(ITS_MM_STICKS, ITEM_MM_STICK, max, count);
 }
 
-void addSticksOot(int count)
+void Item_AddSticksOot(int count)
 {
     addSticksRawOot(count);
     if (Config_Flag(CFG_SHARED_NUTS_STICKS))
         addSticksRawMm(count);
 }
 
-void addSticksMm(int count)
+void Item_AddSticksMm(int count)
 {
     addSticksRawMm(count);
     if (Config_Flag(CFG_SHARED_NUTS_STICKS))
@@ -688,13 +783,13 @@ void addSticksMm(int count)
 
 static int addItemSticksOot(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
-    addSticksOot(param);
+    Item_AddSticksOot(param);
     return 0;
 }
 
 static int addItemSticksMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
-    addSticksMm(param);
+    Item_AddSticksMm(param);
     return 0;
 }
 
@@ -702,7 +797,7 @@ static int addItemSticksUpgradeOot(PlayState* play, u8 itemId, s16 gi, u16 param
 {
     if (gOotSave.info.inventory.upgrades.dekuStick < param)
         gOotSave.info.inventory.upgrades.dekuStick = param;
-    addSticksOot(kMaxSticks[param]);
+    Item_AddSticksOot(kMaxSticks[param]);
     return 0;
 }
 
@@ -710,7 +805,7 @@ static int addItemSticksUpgradeMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
     if (gMmSave.info.inventory.upgrades.dekuStick < param)
         gMmSave.info.inventory.upgrades.dekuStick = param;
-    addSticksMm(kMaxSticks[param]);
+    Item_AddSticksMm(kMaxSticks[param]);
     return 0;
 }
 
@@ -730,18 +825,33 @@ static void addHookshotRawOot(PlayState* play, int level)
 static void addHookshotRawMm(PlayState* play, int level)
 {
     u8 itemId;
+    u8 ageItemId;
 
     if (level >= 2)
+    {
         itemId = ITEM_MM_HOOKSHOT;
+        ageItemId = ITEM_MM_HOOKSHOT;
+    }
     else
+    {
         itemId = 0x11; /* ITEM_MM_BOTTLE_POTION_RED but that enum is wrong */
-    gMmSave.info.inventory.items[ITS_MM_HOOKSHOT] = itemId;
+        ageItemId = ITEM_MM_HOOKSHOT_SHORT;
+    }
     gMmExtraItems.hookshot |= (1 << (level - 1));
-    reloadSlotMm(play, ITS_MM_HOOKSHOT);
+
+    if (comboCheckItemAgeReqMm(ageItemId))
+    {
+        gMmSave.info.inventory.items[ITS_MM_HOOKSHOT] = itemId;
+        reloadSlotMm(play, ITS_MM_HOOKSHOT);
 #if defined(GAME_MM)
-    if (Config_Flag(CFG_MM_HOOKSHOT_SHORT) && level >= 2)
-        reloadHookshot(play);
+        if (Config_Flag(CFG_MM_HOOKSHOT_SHORT) && level >= 2)
+            reloadHookshot(play);
 #endif
+    }
+    else if (gMmSave.info.inventory.items[ITS_MM_HOOKSHOT] == ITEM_NONE)
+    {
+        gMmSave.info.inventory.items[ITS_MM_HOOKSHOT] = itemId;
+    }
 }
 
 static void addHookshotOot(PlayState* play, int level)
@@ -861,9 +971,16 @@ static void addOcarinaRawMm(PlayState* play, int level)
         itemId = ITEM_MM_OCARINA_OF_TIME;
     else
         itemId = ITEM_MM_OCARINA_FAIRY;
-    gMmSave.info.inventory.items[ITS_MM_OCARINA] = itemId;
     gMmExtraItems.ocarina |= (1 << (level - 1));
-    reloadSlotMm(play, ITS_MM_OCARINA);
+    if (comboCheckItemAgeReqMm(itemId))
+    {
+        gMmSave.info.inventory.items[ITS_MM_OCARINA] = itemId;
+        reloadSlotMm(play, ITS_MM_OCARINA);
+    }
+    else if (gMmSave.info.inventory.items[ITS_MM_OCARINA] == ITEM_NONE)
+    {
+        gMmSave.info.inventory.items[ITS_MM_OCARINA] = itemId;
+    }
 }
 
 static int addItemOcarinaOot(PlayState* play, u8 itemId, s16 gi, u16 param)
@@ -899,17 +1016,32 @@ static int addItemBottleNewOot(PlayState* play, u8 itemId, s16 gi, u16 param)
         }
     }
 
+    if (!Config_Flag(CFG_OOT_EXTRA_BOTTLES))
+        return 0;
+
     if (!(gOotExtraTrade.adult & (1 << XITEM_OOT_ADULT_BOTTLE)))
     {
+        int slotWasEmpty = gOotSave.info.inventory.items[ITS_OOT_TRADE_ADULT] == ITEM_NONE;
         gOotExtraItems.bottleAdultSlot = itemId;
         addItemTradeOotAdult(play, itemId, gi, XITEM_OOT_ADULT_BOTTLE);
+        if (slotWasEmpty)
+        {
+            gOotSave.info.inventory.items[ITS_OOT_TRADE_ADULT] = itemId;
+            reloadSlotOot(play, ITS_OOT_TRADE_ADULT);
+        }
         return 0;
     }
 
     if (!(gOotExtraTrade.child & (1 << XITEM_OOT_CHILD_BOTTLE)))
     {
+        int slotWasEmpty = gOotSave.info.inventory.items[ITS_OOT_TRADE_CHILD] == ITEM_NONE;
         gOotExtraItems.bottleChildSlot = itemId;
         addItemTradeOotChild(play, itemId, gi, XITEM_OOT_CHILD_BOTTLE);
+        if (slotWasEmpty)
+        {
+            gOotSave.info.inventory.items[ITS_OOT_TRADE_CHILD] = itemId;
+            reloadSlotOot(play, ITS_OOT_TRADE_CHILD);
+        }
         return 0;
     }
 
@@ -1000,14 +1132,18 @@ static int addItemBeansMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 static int addItemSwordOot(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
     int base;
+    int newMaster;
 
+    newMaster = param == 2 && !(gOotSave.info.inventory.equipment.swords & EQ_OOT_SWORD_MASTER);
     base = param;
     if (base > 3)
         base = 3;
     gOotSave.info.inventory.equipment.swords |= (1 << (base - 1));
+    if (param == 1)
+        gSharedCustomSave.extraSwordsOot |= 0x01;
     if (param >= 3)
     {
-        gOotSave.info.playerData.swordHealth = 8;
+        gOotSave.info.playerData.swordHealth = gComboConfig.giantsKnifeDurabilityOot;
         gOotSave.info.inventory.equipment.swords &= ~EQ_OOT_SWORD_KNIFE_BROKEN;
     }
     if (param == 2)
@@ -1036,36 +1172,130 @@ static int addItemSwordOot(PlayState* play, u8 itemId, s16 gi, u16 param)
     return 0;
 }
 
-static int addItemSwordMm(PlayState* play, u8 itemId, s16 gi, u16 param)
+static int mmSwordCanAutoEquipAtAge(u8 itemId, s32 age)
 {
-    int shouldChangeBtn;
+    ComboAgeReq req = comboGetItemAgeReqMm(itemId);
 
-    shouldChangeBtn = 1;
-#if defined(GAME_MM)
-    if (gSave.playerForm == MM_PLAYER_FORM_FIERCE_DEITY)
-        shouldChangeBtn = 0;
-#endif
+    switch (req)
+    {
+    case COMBO_AGE_REQ_CHILD:
+        return age == AGE_CHILD;
 
-    if (shouldChangeBtn)
-        gMmSave.info.itemEquips.buttonItems[0][0] = kMmSwords[param];
-    gMmSave.info.itemEquips.sword = param;
+    case COMBO_AGE_REQ_ADULT:
+        return age == AGE_ADULT;
 
-    if (param == 2)
+    default:
+        return 1;
+    }
+}
+
+static int addItemChildSwordMm(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    MmSwordId sword = (MmSwordId)param;
+    s32 refresh = 0;
+    u8 ownedBefore = 0;
+    if (sword >= MM_SWORD_KOKIRI && sword <= MM_SWORD_GILDED)
+    {
+        u8 bit = 1u << (sword - MM_SWORD_KOKIRI);
+        ownedBefore = gSharedCustomSave.mm.swords.sword & bit;
+        gSharedCustomSave.mm.swords.sword |= bit;
+
+        if (!Config_Flag(CFG_MM_PROGRESSIVE_CHILD_SWORDS))
+        {
+            if (sword == MM_SWORD_RAZOR)
+                gMmSave.info.playerData.swordHealth = 100;
+            return 0;
+        }
+    }
+
+    switch (sword)
+    {
+    case MM_SWORD_KOKIRI:
+        break;
+
+    case MM_SWORD_RAZOR:
+        if (!ownedBefore)
+        {
+            for (s32 age = 0; age < 2; age++)
+            {
+                if (!mmSwordCanAutoEquipAtAge(ITEM_MM_SWORD_RAZOR, age))
+                    continue;
+                if (gSharedCustomSave.mm.humanAgeLoadouts[age].sword == MM_SWORD_KOKIRI)
+                {
+                    gSharedCustomSave.mm.humanAgeLoadouts[age].sword = MM_SWORD_RAZOR;
+
+                    if (age == gMmSave.linkAge)
+                        refresh = 1;
+                }
+            }
+        }
         gMmSave.info.playerData.swordHealth = 100;
+        break;
 
-#if defined(GAME_MM)
-    if (play)
-        Interface_LoadItemIconImpl(play, 0);
-#endif
+    case MM_SWORD_GILDED:
+        if (!ownedBefore)
+        {
+            for (s32 age = 0; age < 2; age++)
+            {
+                if (!mmSwordCanAutoEquipAtAge(ITEM_MM_SWORD_GILDED, age))
+                    continue;
+                if (gSharedCustomSave.mm.humanAgeLoadouts[age].sword == MM_SWORD_KOKIRI || gSharedCustomSave.mm.humanAgeLoadouts[age].sword == MM_SWORD_RAZOR)
+                {
+                    gSharedCustomSave.mm.humanAgeLoadouts[age].sword = MM_SWORD_GILDED;
+
+                    if (age == gMmSave.linkAge)
+                        refresh = 1;
+                }
+            }
+        }
+        break;
+
+    case MM_SWORD_MASTER:
+        gSharedCustomSave.mm.swords.masterSword = 1;
+        break;
+
+    case MM_SWORD_GIANTS_KNIFE:
+        if (gSharedCustomSave.mm.swords.giantSword < 1)
+            gSharedCustomSave.mm.swords.giantSword = 1;
+
+        if (gSharedCustomSave.mm.swords.giantSword == 1)
+            MmSword_SetGiantsKnifeHealth(gComboConfig.giantsKnifeDurabilityMm);
+        break;
+
+    case MM_SWORD_BIGGORON:
+        if (gSharedCustomSave.mm.swords.giantSword < 2)
+        {
+            gSharedCustomSave.mm.swords.giantSword = 2;
+
+            for (s32 age = 0; age < 2; age++)
+            {
+                if (gSharedCustomSave.mm.humanAgeLoadouts[age].sword == MM_SWORD_GIANTS_KNIFE)
+                {
+                    gSharedCustomSave.mm.humanAgeLoadouts[age].sword = MM_SWORD_BIGGORON;
+
+                    if (age == gMmSave.linkAge)
+                        refresh = 1;
+                }
+            }
+        }
+        break;
+
+    default:
+        break;
+    }
+    if (refresh)
+        MmSword_RefreshNativeEquip(play);
 
     return 0;
 }
 
-static void addBombBagRawOot(u8 index)
+static void addBombBagRawOot(PlayState* play, u8 index)
 {
     if (index > gOotSave.info.inventory.upgrades.bombBag)
         gOotSave.info.inventory.upgrades.bombBag = index;
+    gOotExtraItems.bombSlot |= 1;
     addBombsRawOot(kMaxBombs[index]);
+    reloadSlotOot(play, ITS_OOT_BOMBS);
 }
 
 static void addBombBagRawMm(u8 index)
@@ -1077,7 +1307,7 @@ static void addBombBagRawMm(u8 index)
 
 static int addItemBombBagOot(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
-    addBombBagRawOot(param);
+    addBombBagRawOot(play, param);
     if (Config_Flag(CFG_SHARED_BOMB_BAGS))
         addBombBagRawMm(param);
     return 0;
@@ -1087,49 +1317,224 @@ static int addItemBombBagMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
     addBombBagRawMm(param);
     if (Config_Flag(CFG_SHARED_BOMB_BAGS))
-        addBombBagRawOot(param);
+        addBombBagRawOot(play, param);
     return 0;
+}
+
+static void addShieldOotRaw(u8 shield, s32 progressive)
+{
+    u8 mask = 1 << (shield - 1);
+
+    gOotSave.info.inventory.equipment.shields |= mask;
+
+    if (shield == 1)
+    {
+        gSharedCustomSave.ootChildShields |=
+            1u << OOT_CHILD_SHIELD_DEKU;
+    }
+
+    if (progressive && shield != 3)
+        gOotExtraItems.shield |= mask;
+}
+
+static void addShieldMmRaw(MmShieldId shield, s32 progressive)
+{
+    gSharedCustomSave.mm.shieldsOwned |= 1u << (shield - 1);
+
+    if (!progressive)
+        return;
+
+    if (shield == MM_SHIELD_DEKU)
+        gSharedCustomSave.mmProgressiveShields |= 1;
+
+    if (shield == MM_SHIELD_HERO)
+        gSharedCustomSave.mmProgressiveShields |= 2;
+}
+
+static s32 allShieldsShared(void)
+{
+    return
+        Config_Flag(CFG_SHARED_DEKU_SHIELD) && Config_Flag(CFG_SHARED_HYLIAN_SHIELD) &&
+        Config_Flag(CFG_SHARED_MIRROR_SHIELD) && (!Config_Flag(CFG_OOT_HERO_SHIELD) || Config_Flag(CFG_SHARED_HERO_SHIELD));
+}
+
+static s32 sharedShieldAdvancesOot(s32 sourceProgressive)
+{
+    if (!Config_Flag(CFG_OOT_PROGRESSIVE_SHIELDS))
+        return 0;
+    if (!Config_Flag(CFG_MM_PROGRESSIVE_SHIELDS))
+        return 1;
+    return sourceProgressive && allShieldsShared();
+}
+
+static s32 sharedShieldAdvancesMm(s32 sourceProgressive)
+{
+    if (!Config_Flag(CFG_MM_PROGRESSIVE_SHIELDS))
+        return 0;
+    if (!Config_Flag(CFG_OOT_PROGRESSIVE_SHIELDS))
+        return 1;
+    return sourceProgressive && allShieldsShared();
+}
+
+static void addShieldHeroOotRaw(void)
+{
+    gSharedCustomSave.ootChildShields |=
+        1u << OOT_CHILD_SHIELD_HERO;
+
+    gOotSave.info.inventory.equipment.shields |=
+        EQ_OOT_SHIELD_DEKU;
+
+#if defined(GAME_OOT)
+    gOotChildShieldVariant = OOT_CHILD_SHIELD_HERO;
+#endif
+}
+
+
+static void addSharedProgressiveShield(u8 stage)
+{
+    switch (stage)
+    {
+    case 1:
+        addShieldOotRaw(1, 1);
+        addShieldMmRaw(MM_SHIELD_DEKU, 1);
+        break;
+
+    case 2:
+        addShieldOotRaw(2, 1);
+        addShieldHeroOotRaw();
+
+        addShieldMmRaw(MM_SHIELD_HERO, 1);
+        addShieldMmRaw(MM_SHIELD_HYLIAN, 0);
+        break;
+
+    case 3:
+        addShieldOotRaw(3, 0);
+        addShieldMmRaw(MM_SHIELD_MIRROR, 0);
+        break;
+
+    default:
+        break;
+    }
 }
 
 static int addItemShieldOot(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
-    u8 shieldType;
-    u8 isProgressive;
-    u8 mask;
+    u8 shield = param & 0xff;
+    s32 progressive = !!(param & 0x100);
+    s32 hero = !!(param & 0x200);
+    if (Config_Flag(CFG_SHARED_PROGRESSIVE_SHIELDS) && (progressive || gi == GI_OOT_SHIELD_MIRROR))
+    {
+        addSharedProgressiveShield(hero ? 2 : shield);
+        return 0;
+    }
+    if (hero)
+    {
+        if (!Config_Flag(CFG_OOT_HERO_SHIELD))
+            return 0;
 
-    shieldType = (param & 0xff);
-    isProgressive = !!((param >> 8) & 0xff);
-    mask = 1 << (shieldType - 1);
-    gOotSave.info.inventory.equipment.shields |= mask;
-    if (isProgressive)
-        gOotExtraItems.shield |= mask;
+        addShieldHeroOotRaw();
+
+        if (Config_Flag(CFG_SHARED_HERO_SHIELD))
+            addShieldMmRaw(MM_SHIELD_HERO, 0);
+
+        return 0;
+    }
+    addShieldOotRaw(shield, progressive);
+    if (progressive && shield == 2 &&
+        Config_Flag(CFG_OOT_HERO_SHIELD))
+    {
+        addShieldHeroOotRaw();
+    }
+    switch (shield)
+    {
+    case 1:
+        if (Config_Flag(CFG_SHARED_DEKU_SHIELD) && Config_Flag(CFG_MM_DEKU_SHIELD))
+            addShieldMmRaw(MM_SHIELD_DEKU, 0);
+        break;
+
+    case 2:
+        if (Config_Flag(CFG_SHARED_HYLIAN_SHIELD) && Config_Flag(CFG_MM_HYLIAN_SHIELD))
+            addShieldMmRaw(MM_SHIELD_HYLIAN, 0);
+
+        if (progressive && Config_Flag(CFG_OOT_HERO_SHIELD) && Config_Flag(CFG_SHARED_HERO_SHIELD))
+            addShieldMmRaw(MM_SHIELD_HERO, 0);
+        break;
+
+    case 3:
+        if (Config_Flag(CFG_SHARED_MIRROR_SHIELD))
+            addShieldMmRaw(MM_SHIELD_MIRROR, 0);
+        break;
+
+    default:
+        break;
+    }
+
     return 0;
 }
 
 static int addItemShieldMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
-    u8 shieldVal;
-    u8 shieldType;
-    u8 isProgressive;
+    MmShieldId shield = (MmShieldId)(param & 0xff);
+    s32 progressive = !!(param & 0x100);
+    if (Config_Flag(CFG_SHARED_PROGRESSIVE_SHIELDS) && (progressive || gi == GI_MM_SHIELD_MIRROR))
+    {
+        switch (shield)
+        {
+        case MM_SHIELD_DEKU:
+            addSharedProgressiveShield(1);
+            break;
 
-    shieldType = (param & 0xff);
-    isProgressive = !!((param >> 8) & 0xff);
-    shieldVal = (shieldType == 3) ? 2 : 1;
+        case MM_SHIELD_HERO:
+        case MM_SHIELD_HYLIAN:
+            addSharedProgressiveShield(2);
+            break;
 
-    if (isProgressive)
-        gSharedCustomSave.mmProgressiveShields |= (1 << (shieldType - 1));
-    if (!Config_Flag(CFG_MM_DEKU_SHIELD) && shieldType == 1)
+        case MM_SHIELD_MIRROR:
+            addSharedProgressiveShield(3);
+            break;
+
+        default:
+            break;
+        }
+
+        return 0;
+    }
+    if (shield == MM_SHIELD_DEKU && !Config_Flag(CFG_MM_DEKU_SHIELD))
         return 0;
 
-    if (shieldVal > gMmSave.info.itemEquips.shield)
-        gMmSave.info.itemEquips.shield = shieldVal;
-    if (shieldType >= 2)
-        gSharedCustomSave.mmShieldIsDeku = 0;
+    if (shield == MM_SHIELD_HYLIAN && !Config_Flag(CFG_MM_HYLIAN_SHIELD))
+        return 0;
+    addShieldMmRaw(shield, progressive);
+    if (progressive && shield == MM_SHIELD_HERO && Config_Flag(CFG_MM_HYLIAN_SHIELD))
+        addShieldMmRaw(MM_SHIELD_HYLIAN, 0);
+    switch (shield)
+    {
+    case MM_SHIELD_DEKU:
+        if (Config_Flag(CFG_SHARED_DEKU_SHIELD))
+            addShieldOotRaw(1, 0);
+        break;
 
-#if defined(GAME_MM)
-    if (play)
-        UpdateEquipment(play, GET_PLAYER(play));
-#endif
+    case MM_SHIELD_HERO:
+        if (Config_Flag(CFG_SHARED_HERO_SHIELD) && Config_Flag(CFG_OOT_HERO_SHIELD))
+            addShieldHeroOotRaw();
+
+        if (progressive && Config_Flag(CFG_MM_HYLIAN_SHIELD) && Config_Flag(CFG_SHARED_HYLIAN_SHIELD))
+            addShieldOotRaw(2, 0);
+        break;
+
+    case MM_SHIELD_HYLIAN:
+        if (Config_Flag(CFG_SHARED_HYLIAN_SHIELD))
+            addShieldOotRaw(2, 0);
+        break;
+
+    case MM_SHIELD_MIRROR:
+        if (Config_Flag(CFG_SHARED_MIRROR_SHIELD))
+            addShieldOotRaw(3, 0);
+        break;
+
+    default:
+        break;
+    }
 
     return 0;
 }
@@ -1157,13 +1562,6 @@ static int addItemStrengthMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
     if (param > gMmSave.info.inventory.upgrades.strength)
         gMmSave.info.inventory.upgrades.strength = param;
-
-#if defined(GAME_MM)
-    if (gPlayerFormItemRestrictions[MM_PLAYER_FORM_HUMAN][ITEM_MM_POWDER_KEG] == 0 && Config_Flag(CFG_MM_KEG_STRENGTH_3) && gSave.info.inventory.upgrades.strength >= 3)
-    {
-        gPlayerFormItemRestrictions[MM_PLAYER_FORM_HUMAN][ITEM_MM_POWDER_KEG] = 1;
-    }
-#endif
 
     return 0;
 }
@@ -1517,7 +1915,7 @@ static int addItemMapMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 static int addSilverRupee(PlayState* play, int id)
 {
     addRupeesOot(play, 5);
-    return comboSilverRupeesIncCount(play, id);
+    return SilverRupees_IncCount(play, id);
 }
 
 static void addSilverPouch(PlayState* play, int id)
@@ -1550,7 +1948,7 @@ static int addItemMagicalRupee(PlayState* play, u8 itemId, s16 gi, u16 param)
 static int addItemGsToken(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
     gOotSave.info.inventory.quest.goldToken = 1;
-    if(gOotSave.info.inventory.goldTokens >= 100)
+    if (gOotSave.info.inventory.goldTokens >= 100)
         return 0;
     return ++gOotSave.info.inventory.goldTokens;
 }
@@ -1675,7 +2073,7 @@ static int addItemStrayFairy(PlayState* play, u8 itemId, s16 gi, u16 param)
 
 static int addItemTriforce(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
-    return ++gTriforceCount;
+    return ++gSharedCustomSave.triforcePieces;
 }
 
 static int addItemCoin(PlayState* play, u8 itemId, s16 gi, u16 param)
@@ -1692,12 +2090,6 @@ static int addItemButtonOot(PlayState* play, u8 itemId, s16 gi, u16 param)
 static int addItemButtonMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
     gSharedCustomSave.ocarinaButtonMaskMm |= kButtonMasks[param];
-    return 0;
-}
-
-static int addItemKeg(PlayState* play, u8 itemId, s16 gi, u16 param)
-{
-    addAmmoMm(ITS_MM_KEG, ITEM_MM_POWDER_KEG, 1, param);
     return 0;
 }
 
@@ -1927,7 +2319,7 @@ static int addItemBigFairyMm(PlayState* play, u8 itemId, s16 gi, u16 param)
     return 0;
 }
 
-static int addItemClock(PlayState* play, u8 itemId, s16 gi, u16 param)
+static int addItemClockMm(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
     gSharedCustomSave.mm.halfDays |= (1 << param);
     return 0;
@@ -1957,12 +2349,80 @@ static int addElegyOot(PlayState* play, u8 itemId, s16 gi, u16 param)
     return 0;
 }
 
+static int addSongHealingOot(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    gSharedCustomSave.oot.hasSongHealing = 1;
+    return 0;
+}
+
+static int addSongSoaringOot(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    gSharedCustomSave.oot.hasSongSoaring = 1;
+    return 0;
+}
+
+static int addSongAwakeningOot(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    gSharedCustomSave.oot.hasSongAwakening = 1;
+    return 0;
+}
+
+static int addSongGoronHalfOot(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    gSharedCustomSave.oot.hasSongGoronHalf = 1;
+    return 0;
+}
+
+static int addSongGoronOot(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    gSharedCustomSave.oot.hasSongGoron = 1;
+    return 0;
+}
+
+static int addSongZoraOot(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    gSharedCustomSave.oot.hasSongZora = 1;
+    return 0;
+}
+
+static int addSongOrderOot(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    gSharedCustomSave.oot.hasSongOrder = 1;
+    return 0;
+}
+
+static int addSongOotMm(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    gSharedCustomSave.mm.ootSongs.value |= (1 << param);
+    return 0;
+}
+
+u8 OotChildSword_GetOwnedMask(void)
+{
+    u8 owned;
+    owned = gSharedCustomSave.extraSwordsOot & 0x07;
+    if (!owned && (gOotSave.info.inventory.equipment.swords & EQ_OOT_SWORD_KOKIRI))
+        return 0x01;
+    return owned;
+}
+
 static int addItemSwordExtraOot(PlayState* play, u8 itemId, s16 gi, u16 param)
 {
-    if (gSharedCustomSave.extraSwordsOot < param)
-        gSharedCustomSave.extraSwordsOot = (u8)param;
+    u8 oldOwned;
+
+    if (param >= 3)
+        return 0;
+
+    oldOwned = gSharedCustomSave.extraSwordsOot & 0x07;
+    gSharedCustomSave.extraSwordsOot |= 1u << param;
+    gOotSave.info.inventory.equipment.swords |= EQ_OOT_SWORD_KOKIRI;
 
 #if defined(GAME_OOT)
+    if (oldOwned == 0)
+    {
+        gOotChildSwordVariant = (u8)param;
+        gOotChildSwordEquippedVariant = (u8)param;
+    }
     if (play)
         Interface_LoadItemIconImpl(play, 0);
 #endif
@@ -1975,6 +2435,63 @@ static int addItemGFSHammer(PlayState* play, u8 itemId, s16 gi, u16 param)
     if (gMmSave.info.inventory.items[ITS_MM_GREAT_FAIRY_SWORD] == ITEM_NONE)
         gMmSave.info.inventory.items[ITS_MM_GREAT_FAIRY_SWORD] = itemId;
     gMmExtraItems.hammerGFS |= (1 << (u8)param);
+    return 0;
+}
+
+static int addItemPictoBoom(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    itemId = kMmPictoBoom[param];
+    if (gMmSave.info.inventory.items[ITS_MM_PICTOBOX] == ITEM_NONE)
+        gMmSave.info.inventory.items[ITS_MM_PICTOBOX] = itemId;
+    gMmExtraItems.boomPicto |= (1 << (u8)param);
+    return 0;
+}
+
+static int addItemHammerGFS(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    itemId = kOotHammerGFS[param];
+    if (gOotSave.info.inventory.items[ITS_OOT_HAMMER] == ITEM_NONE)
+        gOotSave.info.inventory.items[ITS_OOT_HAMMER] = itemId;
+    gOotExtraItems.gfsHammer |= (1 << (u8)param);
+    return 0;
+}
+
+static int addItemFierceDeityAdult(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    itemId = kMmFierceDeityAdult[param];
+    if (gMmSave.info.inventory.items[ITS_MM_MASK_FIERCE_DEITY] == ITEM_NONE)
+        gMmSave.info.inventory.items[ITS_MM_MASK_FIERCE_DEITY] = itemId;
+    gMmExtraItems.fierceDeityAdult |= (1 << (u8)param);
+    return 0;
+}
+
+static int addItemOotRustyKey(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    BITMAP8_SET(gSharedCustomSave.rustyKeysOot, param);
+    return 0;
+}
+
+static int addItemMmRustyKey(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    BITMAP8_SET(gSharedCustomSave.rustyKeysMm, param);
+    return 0;
+}
+
+static int addItemStoneGerudoSkullMm(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    itemId = kMmStoneGerudoSkull[param];
+    if (gMmSave.info.inventory.items[ITS_MM_MASK_STONE] == ITEM_NONE)
+        gMmSave.info.inventory.items[ITS_MM_MASK_STONE] = itemId;
+    gMmExtraItems.stoneGerudoSkull |= (1 << (u8)param);
+    return 0;
+}
+
+static int addItemGibdoSpookyMm(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    itemId = kMmGibdoSpooky[param];
+    if (gMmSave.info.inventory.items[ITS_MM_MASK_GIBDO] == ITEM_NONE)
+        gMmSave.info.inventory.items[ITS_MM_MASK_GIBDO] = itemId;
+    gMmExtraItems.gibdoSpooky |= (1 << (u8)param);
     return 0;
 }
 
@@ -2015,6 +2532,41 @@ static int addItemGsTokenPlatinumMm(PlayState* play, u8 itemId, s16 gi, u16 para
     return 0;
 }
 
+static void addPowderKegRawOot(PlayState* play)
+{
+    gOotSave.info.inventory.items[ITS_OOT_BOMBS] = ITEM_OOT_POWDER_KEG; // TODO
+    gOotExtraItems.bombSlot |= 2;
+    gOotExtraAmmo.kegAmmo = 1;
+    reloadSlotOot(play, ITS_OOT_BOMBS);
+}
+
+static void addPowderKegRawMm(u16 param)
+{
+    addAmmoMm(ITS_MM_KEG, ITEM_MM_POWDER_KEG, 1, param);
+}
+
+static int addItemKegOot(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    addPowderKegRawOot(play);
+    if (Config_Flag(CFG_SHARED_POWDER_KEG))
+        addPowderKegRawMm(param);
+    return 0;
+}
+
+static int addItemKegMm(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    addPowderKegRawMm(param);
+    if (Config_Flag(CFG_SHARED_POWDER_KEG))
+        addPowderKegRawOot(play);
+    return 0;
+}
+
+static int addItemSaveFlag(PlayState* play, u8 itemId, s16 gi, u16 param)
+{
+    SaveFlag_Set(param);
+    return 0;
+}
+
 static const AddItemFunc kAddItemHandlers[] = {
     addItemRupeesOot,
     addItemRupeesMm,
@@ -2031,8 +2583,8 @@ static const AddItemFunc kAddItemHandlers[] = {
     addItemArrowsMm,
     addItemBowOot,
     addItemBowMm,
-    addItemSeeds,
-    addItemSlingshot,
+    addItemSeedsOot,
+    addItemSlingshotOot,
     addItemNormalOot,
     addItemNormalMm,
     addItemSticksOot,
@@ -2054,7 +2606,7 @@ static const AddItemFunc kAddItemHandlers[] = {
     addItemBeansOot,
     addItemBeansMm,
     addItemSwordOot,
-    addItemSwordMm,
+    addItemChildSwordMm,
     addItemBombBagOot,
     addItemBombBagMm,
     addItemShieldOot,
@@ -2096,7 +2648,7 @@ static const AddItemFunc kAddItemHandlers[] = {
     addItemCoin,
     addItemButtonOot,
     addItemButtonMm,
-    addItemKeg,
+    addItemKegMm,
     addItemSpinUpgradeMm,
     addItemSoulOot,
     addItemSoulMm,
@@ -2111,11 +2663,12 @@ static const AddItemFunc kAddItemHandlers[] = {
     addItemBigFairyMm,
     addItemScaleMm,
     addItemStrengthMm,
-    addItemClock,
+    addItemClockMm,
     addItemEndgame,
     addElegyOot,
     addItemSwordExtraOot,
     addItemGFSHammer,
+    addItemPictoBoom,
     addItemSticksUpgradeMm,
     addItemNutsUpgradeMm,
     addItemStoneAgonyMm,
@@ -2123,9 +2676,29 @@ static const AddItemFunc kAddItemHandlers[] = {
     addItemTrap,
     addItemSongNote,
     addItemTranscendentFairy,
+    addSongHealingOot,
+    addSongSoaringOot,
+    addSongAwakeningOot,
+    addSongGoronHalfOot,
+    addSongGoronOot,
+    addSongZoraOot,
+    addSongOrderOot,
+    addSongOotMm,
     addItemGsTokenPlatinumOot,
     addItemGsTokenPlatinumMm,
+    addItemKegOot,
+    addItemHammerGFS,
+    addItemOotRustyKey,
+    addItemMmRustyKey,
+    addItemSlingshotMm,
+    addItemSeedsMm,
+    addItemStoneGerudoSkullMm,
+    addItemGibdoSpookyMm,
+    addItemFierceDeityAdult,
+    addItemSaveFlag,
 };
+
+_Static_assert(ARRAY_COUNT(kAddItemHandlers) == IA_MAX, "kAddItemHandlers length is wrong");
 
 extern const u8 kAddItemFuncs[];
 extern const u16 kAddItemParams[];
@@ -2155,10 +2728,39 @@ static const SharedItem kSimpleSharedItems[] = {
     { CFG_SHARED_SONG_TIME, GI_OOT_SONG_NOTE_TIME, GI_MM_SONG_NOTE_TIME },
     { CFG_SHARED_SONG_STORMS, GI_OOT_SONG_STORMS, GI_MM_SONG_STORMS },
     { CFG_SHARED_SONG_STORMS, GI_OOT_SONG_NOTE_STORMS, GI_MM_SONG_NOTE_STORMS },
-    { CFG_SHARED_SONG_SUN, GI_OOT_SONG_SUN, GI_MM_SONG_SUN },
-    { CFG_SHARED_SONG_SUN, GI_OOT_SONG_NOTE_SUN, GI_MM_SONG_NOTE_SUN },
     { CFG_SHARED_SONG_EMPTINESS, GI_OOT_SONG_EMPTINESS, GI_MM_SONG_EMPTINESS },
     { CFG_SHARED_SONG_EMPTINESS, GI_OOT_SONG_NOTE_EMPTINESS, GI_MM_SONG_NOTE_EMPTINESS },
+    { CFG_SHARED_SONG_HEALING, GI_OOT_SONG_HEALING, GI_MM_SONG_HEALING },
+    { CFG_SHARED_SONG_HEALING, GI_OOT_SONG_NOTE_HEALING, GI_MM_SONG_NOTE_HEALING },
+    { CFG_SHARED_SONG_SOARING, GI_OOT_SONG_SOARING, GI_MM_SONG_SOARING },
+    { CFG_SHARED_SONG_SOARING, GI_OOT_SONG_NOTE_SOARING, GI_MM_SONG_NOTE_SOARING },
+    { CFG_SHARED_SONG_AWAKENING, GI_OOT_SONG_AWAKENING, GI_MM_SONG_AWAKENING },
+    { CFG_SHARED_SONG_AWAKENING, GI_OOT_SONG_NOTE_AWAKENING, GI_MM_SONG_NOTE_AWAKENING },
+    { CFG_SHARED_SONG_GORON, GI_OOT_SONG_GORON, GI_MM_SONG_GORON },
+    { CFG_SHARED_SONG_GORON, GI_OOT_SONG_GORON_HALF, GI_MM_SONG_GORON_HALF },
+    { CFG_SHARED_SONG_GORON, GI_OOT_SONG_NOTE_GORON, GI_MM_SONG_NOTE_GORON },
+    { CFG_SHARED_SONG_ZORA, GI_OOT_SONG_ZORA, GI_MM_SONG_ZORA },
+    { CFG_SHARED_SONG_ZORA, GI_OOT_SONG_NOTE_ZORA, GI_MM_SONG_NOTE_ZORA },
+    { CFG_SHARED_SONG_ORDER, GI_OOT_SONG_ORDER, GI_MM_SONG_ORDER },
+    { CFG_SHARED_SONG_ORDER, GI_OOT_SONG_NOTE_ORDER, GI_MM_SONG_NOTE_ORDER },
+    { CFG_SHARED_SONG_ZELDA, GI_OOT_SONG_ZELDA, GI_MM_SONG_ZELDA },
+    { CFG_SHARED_SONG_ZELDA, GI_OOT_SONG_NOTE_ZELDA, GI_MM_SONG_NOTE_ZELDA },
+    { CFG_SHARED_SONG_SARIA, GI_OOT_SONG_SARIA, GI_MM_SONG_SARIA },
+    { CFG_SHARED_SONG_SARIA, GI_OOT_SONG_NOTE_SARIA, GI_MM_SONG_NOTE_SARIA },
+    { CFG_SHARED_SONG_SUN, GI_OOT_SONG_SUN, GI_MM_SONG_SUN },
+    { CFG_SHARED_SONG_SUN, GI_OOT_SONG_NOTE_SUN, GI_MM_SONG_NOTE_SUN },
+    { CFG_SHARED_SONG_TP_FIRE, GI_OOT_SONG_TP_FIRE, GI_MM_SONG_TP_FIRE },
+    { CFG_SHARED_SONG_TP_FIRE, GI_OOT_SONG_NOTE_TP_FIRE, GI_MM_SONG_NOTE_TP_FIRE },
+    { CFG_SHARED_SONG_TP_FOREST, GI_OOT_SONG_TP_FOREST, GI_MM_SONG_TP_FOREST },
+    { CFG_SHARED_SONG_TP_FOREST, GI_OOT_SONG_NOTE_TP_FOREST, GI_MM_SONG_NOTE_TP_FOREST },
+    { CFG_SHARED_SONG_TP_LIGHT, GI_OOT_SONG_TP_LIGHT, GI_MM_SONG_TP_LIGHT },
+    { CFG_SHARED_SONG_TP_LIGHT, GI_OOT_SONG_NOTE_TP_LIGHT, GI_MM_SONG_NOTE_TP_LIGHT },
+    { CFG_SHARED_SONG_TP_SHADOW, GI_OOT_SONG_TP_SHADOW, GI_MM_SONG_TP_SHADOW },
+    { CFG_SHARED_SONG_TP_SHADOW, GI_OOT_SONG_NOTE_TP_SHADOW, GI_MM_SONG_NOTE_TP_SHADOW },
+    { CFG_SHARED_SONG_TP_SPIRIT, GI_OOT_SONG_TP_SPIRIT, GI_MM_SONG_TP_SPIRIT },
+    { CFG_SHARED_SONG_TP_SPIRIT, GI_OOT_SONG_NOTE_TP_SPIRIT, GI_MM_SONG_NOTE_TP_SPIRIT },
+    { CFG_SHARED_SONG_TP_WATER, GI_OOT_SONG_TP_WATER, GI_MM_SONG_TP_WATER },
+    { CFG_SHARED_SONG_TP_WATER, GI_OOT_SONG_NOTE_TP_WATER, GI_MM_SONG_NOTE_TP_WATER },
     { CFG_SHARED_SKELETON_KEY, GI_OOT_SKELETON_KEY, GI_MM_SKELETON_KEY },
     { CFG_SHARED_PLATINUM_TOKEN, GI_OOT_PLATINUM_TOKEN, GI_MM_PLATINUM_TOKEN },
     { CFG_SHARED_MAGIC, GI_OOT_MAGIC_UPGRADE, GI_MM_MAGIC_UPGRADE },
@@ -2235,11 +2837,6 @@ static const SharedItem kSimpleSharedItems[] = {
     { CFG_SHARED_SOULS_ANIMAL, GI_OOT_SOUL_ANIMAL_BUTTERFLY, GI_MM_SOUL_ANIMAL_BUTTERFLY },
     { CFG_SHARED_SOULS_MISC,  GI_OOT_SOUL_MISC_GS, GI_MM_SOUL_MISC_GS },
     { CFG_SHARED_SOULS_MISC,  GI_OOT_SOUL_MISC_BUSINESS_SCRUB, GI_MM_SOUL_MISC_BUSINESS_SCRUB },
-    { CFG_SHARED_SHIELDS, GI_OOT_SHIELD_DEKU,   GI_MM_SHIELD_DEKU },
-    { CFG_SHARED_SHIELDS, GI_OOT_SHIELD_HYLIAN, GI_MM_SHIELD_HERO },
-    { CFG_SHARED_SHIELDS, GI_OOT_SHIELD_MIRROR, GI_MM_SHIELD_MIRROR },
-    { CFG_SHARED_SHIELDS, GI_OOT_PROGRESSIVE_SHIELD_DEKU,   GI_MM_PROGRESSIVE_SHIELD_DEKU },
-    { CFG_SHARED_SHIELDS, GI_OOT_PROGRESSIVE_SHIELD_HYLIAN, GI_MM_PROGRESSIVE_SHIELD_HERO },
     { CFG_SHARED_SPELL_FIRE, GI_OOT_SPELL_FIRE, GI_MM_SPELL_FIRE },
     { CFG_SHARED_SPELL_WIND, GI_OOT_SPELL_WIND, GI_MM_SPELL_WIND },
     { CFG_SHARED_SPELL_LOVE, GI_OOT_SPELL_LOVE, GI_MM_SPELL_LOVE },
@@ -2250,24 +2847,41 @@ static const SharedItem kSimpleSharedItems[] = {
     { CFG_SHARED_MASK_BLAST, GI_OOT_MASK_BLAST, GI_MM_MASK_BLAST },
     { CFG_SHARED_MASK_STONE, GI_OOT_MASK_STONE, GI_MM_MASK_STONE },
     { CFG_SHARED_MASK_KAMARO, GI_OOT_MASK_KAMARO, GI_MM_MASK_KAMARO },
+    { CFG_SHARED_MASK_GERUDO, GI_OOT_MASK_GERUDO, GI_MM_MASK_GERUDO },
+    { CFG_SHARED_MASK_SKULL, GI_OOT_MASK_SKULL, GI_MM_MASK_SKULL },
+    { CFG_SHARED_MASK_SPOOKY, GI_OOT_MASK_SPOOKY, GI_MM_MASK_SPOOKY },
     { CFG_SHARED_SCALES, GI_OOT_SCALE_BRONZE, GI_MM_SCALE_BRONZE },
     { CFG_SHARED_SCALES, GI_OOT_SCALE_SILVER, GI_MM_SCALE_SILVER },
     { CFG_SHARED_SCALES, GI_OOT_SCALE_GOLDEN, GI_MM_SCALE_GOLDEN },
     { CFG_SHARED_STRENGTH, GI_OOT_GORON_BRACELET, GI_MM_GORON_BRACELET },
     { CFG_SHARED_STRENGTH, GI_OOT_SILVER_GAUNTLETS, GI_MM_SILVER_GAUNTLETS },
     { CFG_SHARED_STRENGTH, GI_OOT_GOLDEN_GAUNTLETS, GI_MM_GOLDEN_GAUNTLETS },
-    { CFG_SHARED_SWORDS, GI_OOT_SWORD_KOKIRI, GI_MM_SWORD_KOKIRI },
-    { CFG_SHARED_SWORDS, GI_OOT_SWORD_RAZOR, GI_MM_SWORD_RAZOR },
-    { CFG_SHARED_SWORDS, GI_OOT_SWORD_GILDED, GI_MM_SWORD_GILDED },
+    { CFG_SHARED_CHILD_SWORDS, GI_OOT_SWORD_KOKIRI, GI_MM_SWORD_KOKIRI },
+    { CFG_SHARED_CHILD_SWORDS, GI_OOT_SWORD_RAZOR, GI_MM_SWORD_RAZOR },
+    { CFG_SHARED_CHILD_SWORDS, GI_OOT_SWORD_GILDED, GI_MM_SWORD_GILDED },
+    { CFG_SHARED_MASTER_SWORD, GI_OOT_SWORD_MASTER, GI_MM_SWORD_MASTER },
+    { CFG_SHARED_GORON_SWORDS, GI_OOT_SWORD_KNIFE, GI_MM_SWORD_KNIFE },
+    { CFG_SHARED_GORON_SWORDS, GI_OOT_SWORD_BIGGORON,GI_MM_SWORD_BIGGORON },
     { CFG_SHARED_SOULS_NPC, GI_OOT_SOUL_NPC_THIEVES, GI_MM_SOUL_NPC_THIEVES },
     { CFG_SHARED_SOULS_ENEMY, GI_OOT_SOUL_ENEMY_THIEVES, GI_MM_SOUL_ENEMY_THIEVES },
     { CFG_SHARED_HAMMER, GI_OOT_HAMMER, GI_MM_HAMMER },
+    { CFG_SHARED_BOOMERANG, GI_OOT_BOOMERANG, GI_MM_BOOMERANG },
+    { CFG_SHARED_BOWS, GI_OOT_BOW, GI_MM_BOW },
+    { CFG_SHARED_BOWS, GI_OOT_QUIVER2, GI_MM_QUIVER2 },
+    { CFG_SHARED_BOWS, GI_OOT_QUIVER3, GI_MM_QUIVER3 },
+    { CFG_SHARED_SLINGSHOT, GI_OOT_SLINGSHOT, GI_MM_SLINGSHOT },
+    { CFG_SHARED_SLINGSHOT, GI_OOT_BULLET_BAG2, GI_MM_BULLET_BAG2 },
+    { CFG_SHARED_SLINGSHOT, GI_OOT_BULLET_BAG3, GI_MM_BULLET_BAG3 },
+    { CFG_SHARED_GREAT_FAIRY_SWORD, GI_OOT_GREAT_FAIRY_SWORD, GI_MM_GREAT_FAIRY_SWORD },
     { CFG_SHARED_NUTS_STICKS, GI_OOT_STICK_UPGRADE, GI_MM_STICK_UPGRADE },
     { CFG_SHARED_NUTS_STICKS, GI_OOT_STICK_UPGRADE2, GI_MM_STICK_UPGRADE2 },
+    { CFG_SHARED_NUTS_STICKS, GI_OOT_STICK_UPGRADE3, GI_MM_STICK_UPGRADE3 },
     { CFG_SHARED_NUTS_STICKS, GI_OOT_NUT_UPGRADE,  GI_MM_NUT_UPGRADE },
     { CFG_SHARED_NUTS_STICKS, GI_OOT_NUT_UPGRADE2, GI_MM_NUT_UPGRADE2 },
+    { CFG_SHARED_NUTS_STICKS, GI_OOT_NUT_UPGRADE3, GI_MM_NUT_UPGRADE3 },
     { CFG_SHARED_STONE_OF_AGONY, GI_OOT_STONE_OF_AGONY, GI_MM_STONE_OF_AGONY },
     { CFG_SHARED_SPIN_UPGRADE, GI_OOT_SPIN_UPGRADE, GI_MM_SPIN_UPGRADE },
+    { CFG_SHARED_POWDER_KEG, GI_OOT_POWDER_KEG, GI_MM_POWDER_KEG },
     { CFG_SHARED_BOTTLES, GI_OOT_BOTTLE_EMPTY, GI_MM_BOTTLE_EMPTY },
     { CFG_SHARED_BOTTLES, GI_OOT_BOTTLE_MILK, GI_MM_BOTTLE_MILK },
     { CFG_SHARED_BOTTLES, GI_OOT_BOTTLE_RUTO_LETTER, GI_MM_BOTTLE_RUTO_LETTER },
@@ -2294,6 +2908,7 @@ static const SharedItem kSimpleSharedItems[] = {
     { CFG_SHARED_BOTTLES, GI_OOT_CHATEAU, GI_MM_CHATEAU } ,
     { CFG_SHARED_BOTTLES, GI_OOT_GOLD_DUST, GI_MM_GOLD_DUST } ,
     { CFG_SHARED_BOTTLES, GI_OOT_SEAHORSE2, GI_MM_SEAHORSE2 } ,
+    { CFG_SHARED_SHOVEL, GI_OOT_SHOVEL, GI_MM_SHOVEL },
 };
 
 static int addItem(PlayState* play, s16 gi)

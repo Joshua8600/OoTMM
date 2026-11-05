@@ -1,11 +1,13 @@
-import type { Settings, ItemID, Item, PlayerItem, PlayerItems } from '@ootmm/core';
+import type { CheckType } from '@ootmm/data';
+import type { Settings } from '@ootmm/core';
+import type { ItemID, Item, PlayerItem, PlayerItems, ItemSharedDef, ItemProperties } from '../items';
 import type { Location } from '../types';
-import type { ItemProperties } from '../item-properties';
-import type { ItemSharedDef } from '../data';
-import type { World, WorldCheckType } from './types';
+import type { World } from './types';
 
-import { POOL, Monitor, sample, Random, randomInt, ItemGroups, ItemHelpers, Items, itemByID, makePlayerItem, countMapAdd, gameId } from '@ootmm/core';
-import { TRAP_AMOUNTS, SharedItemGroups } from '../data';
+import { CHECKS, CHECKS_BY_LOCATION } from '@ootmm/data';
+import { Monitor, sample, Random, randomInt, countMapAdd } from '@ootmm/core';
+import { TRAP_AMOUNTS } from '../data';
+import { SharedItemGroups, ItemGroups, ItemHelpers, Items, itemByID, makePlayerItem } from '../items';
 import { optimizeWorldStartingAndPool } from './optimizer';
 import { mustStartWithMasterSword } from '../helpers';
 import { exprTrue } from '../expr';
@@ -25,6 +27,13 @@ const SONG_NOTES = new Map<Item, [Item, number]>([
   [Items.OOT_SONG_TP_SPIRIT, [Items.OOT_SONG_NOTE_TP_SPIRIT, 6]],
   [Items.OOT_SONG_TP_WATER, [Items.OOT_SONG_NOTE_TP_WATER, 5]],
   [Items.OOT_SONG_EMPTINESS, [Items.OOT_SONG_NOTE_EMPTINESS, 7]],
+  [Items.OOT_SONG_HEALING, [Items.OOT_SONG_NOTE_HEALING, 6]],
+  [Items.OOT_SONG_SOARING, [Items.OOT_SONG_NOTE_SOARING, 6]],
+  [Items.OOT_SONG_AWAKENING, [Items.OOT_SONG_NOTE_AWAKENING, 7]],
+  [Items.OOT_SONG_GORON, [Items.OOT_SONG_NOTE_GORON, 8]],
+  [Items.OOT_SONG_GORON_HALF, [Items.OOT_SONG_NOTE_GORON, 8]],
+  [Items.OOT_SONG_ZORA, [Items.OOT_SONG_NOTE_ZORA, 7]],
+  [Items.OOT_SONG_ORDER, [Items.OOT_SONG_NOTE_ORDER, 6]],
   [Items.MM_SONG_AWAKENING, [Items.MM_SONG_NOTE_AWAKENING, 7]],
   [Items.MM_SONG_EMPTINESS, [Items.MM_SONG_NOTE_EMPTINESS, 7]],
   [Items.MM_SONG_EPONA, [Items.MM_SONG_NOTE_EPONA, 6]],
@@ -40,8 +49,32 @@ const SONG_NOTES = new Map<Item, [Item, number]>([
   [Items.SHARED_SONG_EPONA, [Items.SHARED_SONG_NOTE_EPONA, 6]],
   [Items.SHARED_SONG_TIME, [Items.SHARED_SONG_NOTE_TIME, 6]],
   [Items.SHARED_SONG_STORMS, [Items.SHARED_SONG_NOTE_STORMS, 6]],
-  [Items.SHARED_SONG_SUN, [Items.SHARED_SONG_NOTE_SUN, 6]],
   [Items.SHARED_SONG_EMPTINESS, [Items.SHARED_SONG_NOTE_EMPTINESS, 7]],
+  [Items.SHARED_SONG_HEALING, [Items.SHARED_SONG_NOTE_HEALING, 6]],
+  [Items.SHARED_SONG_SOARING, [Items.SHARED_SONG_NOTE_SOARING, 6]],
+  [Items.SHARED_SONG_AWAKENING, [Items.SHARED_SONG_NOTE_AWAKENING, 7]],
+  [Items.SHARED_SONG_GORON, [Items.SHARED_SONG_NOTE_GORON, 8]],
+  [Items.SHARED_SONG_GORON_HALF, [Items.SHARED_SONG_NOTE_GORON, 8]],
+  [Items.SHARED_SONG_ZORA, [Items.SHARED_SONG_NOTE_ZORA, 7]],
+  [Items.SHARED_SONG_ORDER, [Items.SHARED_SONG_NOTE_ORDER, 6]],
+  [Items.MM_SONG_ZELDA, [Items.MM_SONG_NOTE_ZELDA, 6]],
+  [Items.MM_SONG_SARIA, [Items.MM_SONG_NOTE_SARIA, 6]],
+  [Items.MM_SONG_SUN, [Items.MM_SONG_NOTE_SUN, 6]],
+  [Items.MM_SONG_TP_FIRE, [Items.MM_SONG_NOTE_TP_FIRE, 8]],
+  [Items.MM_SONG_TP_FOREST, [Items.MM_SONG_NOTE_TP_FOREST, 6]],
+  [Items.MM_SONG_TP_LIGHT, [Items.MM_SONG_NOTE_TP_LIGHT, 6]],
+  [Items.MM_SONG_TP_SHADOW, [Items.MM_SONG_NOTE_TP_SHADOW, 7]],
+  [Items.MM_SONG_TP_SPIRIT, [Items.MM_SONG_NOTE_TP_SPIRIT, 6]],
+  [Items.MM_SONG_TP_WATER, [Items.MM_SONG_NOTE_TP_WATER, 5]],
+  [Items.SHARED_SONG_ZELDA, [Items.SHARED_SONG_NOTE_ZELDA, 6]],
+  [Items.SHARED_SONG_SARIA, [Items.SHARED_SONG_NOTE_SARIA, 6]],
+  [Items.SHARED_SONG_SUN, [Items.SHARED_SONG_NOTE_SUN, 6]],
+  [Items.SHARED_SONG_TP_FIRE, [Items.SHARED_SONG_NOTE_TP_FIRE, 8]],
+  [Items.SHARED_SONG_TP_FOREST, [Items.SHARED_SONG_NOTE_TP_FOREST, 6]],
+  [Items.SHARED_SONG_TP_LIGHT, [Items.SHARED_SONG_NOTE_TP_LIGHT, 6]],
+  [Items.SHARED_SONG_TP_SHADOW, [Items.SHARED_SONG_NOTE_TP_SHADOW, 7]],
+  [Items.SHARED_SONG_TP_SPIRIT, [Items.SHARED_SONG_NOTE_TP_SPIRIT, 6]],
+  [Items.SHARED_SONG_TP_WATER, [Items.SHARED_SONG_NOTE_TP_WATER, 5]],
 ]);
 
 const BROKEN_ACTORS_CHECKS = [
@@ -75,7 +108,7 @@ const EXTRA_ITEMS_OOT = new Set([
 
 const EXTRA_ITEMS_MM = new Set([
   Items.MM_MASK_DEKU,
-  Items.MM_SWORD,
+  Items.MM_SWORD_KOKIRI,
 ]);
 
 const ITEM_POOL_SCARCE = new Set([
@@ -86,22 +119,27 @@ const ITEM_POOL_SCARCE = new Set([
   Items.OOT_SLINGSHOT,
   Items.MM_MAGIC_UPGRADE,
   Items.MM_BOW,
-  Items.MM_SWORD,
+  Items.MM_SLINGSHOT,
+  Items.MM_SWORD_CHILD,
   Items.MM_BOMB_BAG,
   Items.MM_BOMBCHU_BAG,
   Items.MM_OCARINA,
   Items.SHARED_BOW,
+  Items.SHARED_SLINGSHOT,
   Items.SHARED_BOMB_BAG,
   Items.SHARED_BOMBCHU_BAG,
   Items.SHARED_MAGIC_UPGRADE,
-  Items.SHARED_SWORD,
+  Items.SHARED_SWORD_CHILD,
 ]);
 
 const ITEM_POOL_SCARCE_NOLIMIT = new Set([
   Items.OOT_STICK_UPGRADE,
   Items.OOT_NUT_UPGRADE,
+  Items.OOT_SWORD_CHILD,
   Items.OOT_SWORD,
   Items.OOT_SWORD_GORON,
+  Items.MM_SWORD_GORON,
+  Items.SHARED_SWORD_GORON,
   Items.MM_STICK_UPGRADE,
   Items.MM_NUT_UPGRADE,
   Items.SHARED_STICK_UPGRADE,
@@ -111,7 +149,14 @@ const ITEM_POOL_SCARCE_NOLIMIT = new Set([
 const ITEM_POOL_PLENTIFUL = new Set([
   ...ItemGroups.CLOCKS,
   ...ItemGroups.SONG_NOTES,
+  ...ItemGroups.OOT_RUSTY_KEYS,
+  ...ItemGroups.MM_RUSTY_KEYS,
+  ...ItemGroups.MASKS_TRANSFORM,
+  Items.OOT_SHOVEL,
+  Items.MM_SHOVEL,
+  Items.SHARED_SHOVEL,
   Items.MM_CLOCK,
+  Items.OOT_CLOCK,
   Items.OOT_BOTTLE_RUTO_LETTER,
   Items.OOT_WEIRD_EGG,
   Items.OOT_POCKET_EGG,
@@ -126,6 +171,7 @@ const ITEM_POOL_PLENTIFUL = new Set([
   Items.OOT_BOW,
   Items.OOT_CHICKEN,
   Items.OOT_HAMMER,
+  Items.OOT_GREAT_FAIRY_SWORD,
   Items.OOT_HOOKSHOT,
   Items.OOT_LENS,
   Items.OOT_MAGIC_UPGRADE,
@@ -138,7 +184,9 @@ const ITEM_POOL_PLENTIFUL = new Set([
   Items.OOT_SPELL_WIND,
   Items.OOT_SPELL_LOVE,
   Items.OOT_STRENGTH,
+  Items.SHARED_SWORD_CHILD,
   Items.SHARED_SWORD,
+  Items.OOT_SWORD_CHILD,
   Items.OOT_SWORD,
   Items.OOT_SWORD_GORON,
   Items.OOT_SWORD_KOKIRI,
@@ -177,9 +225,6 @@ const ITEM_POOL_PLENTIFUL = new Set([
   Items.MM_PLATINUM_TOKEN,
   Items.SHARED_PLATINUM_TOKEN,
   Items.MM_BOTTLED_GOLD_DUST,
-  Items.MM_MASK_DEKU,
-  Items.MM_MASK_GORON,
-  Items.MM_MASK_ZORA,
   Items.MM_MASK_CAPTAIN,
   Items.MM_MASK_GIANT,
   Items.MM_MASK_ALL_NIGHT,
@@ -206,12 +251,19 @@ const ITEM_POOL_PLENTIFUL = new Set([
   Items.SHARED_MASK_KAMARO,
   Items.MM_MASK_SCENTS,
   Items.MM_MASK_KAFEI,
-  Items.MM_MASK_FIERCE_DEITY,
   Items.MM_MAGIC_UPGRADE,
   Items.MM_BOMBER_NOTEBOOK,
   Items.MM_BOW,
+  Items.MM_SLINGSHOT,
   Items.MM_OCARINA,
   Items.MM_SWORD,
+  Items.MM_SWORD_CHILD,
+  Items.MM_SWORD_MASTER,
+  Items.MM_SWORD_KNIFE,
+  Items.MM_SWORD_GORON,
+  Items.SHARED_SWORD_MASTER,
+  Items.SHARED_SWORD_KNIFE,
+  Items.SHARED_SWORD_GORON,
   Items.MM_SHIELD,
   Items.MM_SHIELD_MIRROR,
   Items.MM_BOMB_BAG,
@@ -258,8 +310,6 @@ const ITEM_POOL_PLENTIFUL = new Set([
   Items.SHARED_HOOKSHOT,
   Items.SHARED_LENS,
   Items.SHARED_OCARINA,
-  Items.SHARED_MASK_GORON,
-  Items.SHARED_MASK_ZORA,
   Items.SHARED_MASK_TRUTH,
   Items.SHARED_MASK_BUNNY,
   Items.SHARED_MASK_KEATON,
@@ -301,6 +351,9 @@ const ITEM_POOL_PLENTIFUL = new Set([
   Items.SHARED_SCALE,
   Items.SHARED_STRENGTH,
   Items.SHARED_HAMMER,
+  Items.SHARED_BOOMERANG,
+  Items.SHARED_GREAT_FAIRY_SWORD,
+  Items.SHARED_SLINGSHOT,
   Items.SHARED_TRIFORCE_POWER,
   Items.SHARED_TRIFORCE_COURAGE,
   Items.SHARED_TRIFORCE_WISDOM,
@@ -380,9 +433,9 @@ class LogicPassWorldTransform {
     for (let i = 0; i < worlds.length; ++i) {
       const world = worlds[i];
       for (const locId of world.locations) {
-        const check = world.checks[locId];
+        const check = CHECKS_BY_LOCATION[locId];
+        const item = world.checkItems.get(locId)!;
         const location = makeLocation(locId, i);
-        const item = check.item;
         const playerItem = makePlayerItem(item, i);
         countMapAdd(this.pool, playerItem);
         const set = this.locsByItem.get(playerItem) || new Set();
@@ -408,8 +461,8 @@ class LogicPassWorldTransform {
     const newSet = this.locsByItem.get(to) || new Set();
     for (const loc of oldSet) {
       const locData = locationData(loc);
-      const check = this.state.worlds[locData.world!].checks[locData.id];
-      check.item = to.item;
+      const world = this.state.worlds[locData.world!];
+      world.checkItems.set(locData.id, to.item);
       newSet.add(loc);
     }
     this.locsByItem.set(to, newSet);
@@ -560,12 +613,15 @@ class LogicPassWorldTransform {
     }
 
     if (settings.shuffleMasterSword && settings.progressiveSwordsOot !== 'progressive') {
-      items.push(Items.OOT_SWORD_MASTER);
+      items.push(settings.sharedMasterSword ? Items.SHARED_SWORD_MASTER : Items.OOT_SWORD_MASTER);
     }
 
-    if (settings.zoraKing === 'open') {
-      items.push(Items.OOT_BOTTLE_EMPTY);
-    }
+    if (settings.zoraKing === 'open')
+      items.push(settings.sharedBottles ? Items.SHARED_BOTTLE_EMPTY : Items.OOT_BOTTLE_EMPTY);
+    else if (settings.sharedBottles)
+      items.push(Items.SHARED_BOTTLE_RUTO_LETTER);
+    if (settings.sharedBottles)
+      items.push(Items.SHARED_BOTTLED_GOLD_DUST);
 
     if (settings.smallKeyShuffleOot === 'anywhere') {
       items = [...items, ...ItemGroups.SMALL_KEYS_OOT, ...ItemGroups.KEY_RINGS_OOT];
@@ -684,11 +740,32 @@ class LogicPassWorldTransform {
   private setupSharedItems() {
     const { settings } = this.state;
 
-    if (settings.sharedSwords) {
-      /* Swords */
-      this.replaceItem(Items.OOT_SWORD, Items.SHARED_SWORD);
-      this.replaceItem(Items.MM_SWORD, Items.SHARED_SWORD);
-      this.removeItem(Items.SHARED_SWORD, 3);
+    if (settings.sharedChildSwords) {
+      if (settings.progressiveChildSwordsMm === 'progressive') {
+        this.shareItems([
+          {
+            shared: Items.SHARED_SWORD_CHILD,
+            oot: Items.OOT_SWORD_CHILD,
+            mm: Items.MM_SWORD_CHILD,
+          },
+        ], 'max');
+        this.replaceItem(Items.OOT_SWORD_CHILD, Items.SHARED_SWORD_CHILD);
+        this.replaceItem(Items.MM_SWORD_CHILD, Items.SHARED_SWORD_CHILD);
+
+      } else {
+        this.shareItems([
+          { shared: Items.SHARED_SWORD_KOKIRI, oot: Items.OOT_SWORD_KOKIRI, mm: Items.MM_SWORD_KOKIRI },
+          { shared: Items.SHARED_SWORD_RAZOR, oot: Items.OOT_SWORD_RAZOR, mm: Items.MM_SWORD_RAZOR },
+          { shared: Items.SHARED_SWORD_GILDED, oot: Items.OOT_SWORD_GILDED, mm: Items.MM_SWORD_GILDED },
+        ], 'max');
+
+        this.replaceItem(Items.OOT_SWORD_KOKIRI, Items.SHARED_SWORD_KOKIRI);
+        this.replaceItem(Items.MM_SWORD_KOKIRI, Items.SHARED_SWORD_KOKIRI);
+        this.replaceItem(Items.OOT_SWORD_RAZOR, Items.SHARED_SWORD_RAZOR);
+        this.replaceItem(Items.MM_SWORD_RAZOR, Items.SHARED_SWORD_RAZOR);
+        this.replaceItem(Items.OOT_SWORD_GILDED, Items.SHARED_SWORD_GILDED);
+        this.replaceItem(Items.MM_SWORD_GILDED, Items.SHARED_SWORD_GILDED);
+      }
     }
 
     if (settings.sharedBows) {
@@ -792,8 +869,13 @@ class LogicPassWorldTransform {
       this.removeItem(Items.SHARED_SONG_TIME, 1);
     }
 
-    if (settings.sharedSongSun && settings.sunSongMm) {
+    if (settings.sharedSongSun && settings.songSunMm) {
       this.replaceItem(Items.OOT_SONG_SUN, Items.SHARED_SONG_SUN);
+    }
+
+    if (settings.sticksNutsUpgradesInitial && settings.games !== 'mm') {
+      this.addItem(Items.OOT_STICK_UPGRADE, 1);
+      this.addItem(Items.OOT_NUT_UPGRADE, 1);
     }
 
     if (settings.sharedNutsSticks) {
@@ -817,6 +899,10 @@ class LogicPassWorldTransform {
     } else if (settings.sticksNutsUpgradesMm) {
       this.addItem(Items.MM_STICK_UPGRADE, 2);
       this.addItem(Items.MM_NUT_UPGRADE, 2);
+      if (settings.sticksNutsUpgradesInitial) {
+        this.addItem(Items.MM_STICK_UPGRADE, 1);
+        this.addItem(Items.MM_NUT_UPGRADE, 1);
+      }
     }
 
     if (settings.sharedHookshot) {
@@ -905,10 +991,152 @@ class LogicPassWorldTransform {
       this.addItem(Items.OOT_MASK_KAMARO);
     }
 
+    if (settings.sharedMaskGerudo) {
+      this.replaceItem(Items.OOT_MASK_GERUDO, Items.SHARED_MASK_GERUDO);
+    } else if (settings.gerudoMaskMm) {
+      this.addItem(Items.MM_MASK_GERUDO);
+    }
+
+    if (settings.sharedMaskSkull) {
+      this.replaceItem(Items.OOT_MASK_SKULL, Items.SHARED_MASK_SKULL);
+    } else if (settings.skullMaskMm) {
+      this.addItem(Items.MM_MASK_SKULL);
+    }
+
+    if (settings.sharedMaskSpooky) {
+      this.replaceItem(Items.OOT_MASK_SPOOKY, Items.SHARED_MASK_SPOOKY);
+    } else if (settings.spookyMaskMm) {
+      this.addItem(Items.MM_MASK_SPOOKY);
+    }
+
+    if (settings.adultMaskMm) {
+      this.addItem(Items.MM_MASK_ADULT);
+    }
+
     if (settings.sharedSongElegy) {
       this.replaceItem(Items.MM_SONG_EMPTINESS, Items.SHARED_SONG_EMPTINESS);
     } else if (settings.elegyOot) {
       this.addItem(Items.OOT_SONG_EMPTINESS);
+    }
+
+    if (settings.sharedSongHealing) {
+      this.replaceItem(Items.MM_SONG_HEALING, Items.SHARED_SONG_HEALING);
+    } else if (settings.songHealingOot) {
+      this.addItem(Items.OOT_SONG_HEALING);
+    }
+
+    if (settings.sharedSongSoaring) {
+      this.replaceItem(Items.MM_SONG_SOARING, Items.SHARED_SONG_SOARING);
+    } else if (settings.songSoaringOot) {
+      this.addItem(Items.OOT_SONG_SOARING);
+    }
+
+    if (settings.sharedSongAwakening) {
+      this.replaceItem(Items.MM_SONG_AWAKENING, Items.SHARED_SONG_AWAKENING);
+    } else if (settings.songAwakeningOot) {
+      this.addItem(Items.OOT_SONG_AWAKENING);
+    }
+
+    if (settings.sharedSongGoron) {
+      this.replaceItem(Items.MM_SONG_GORON, Items.SHARED_SONG_GORON);
+      this.replaceItem(Items.MM_SONG_GORON_HALF, Items.SHARED_SONG_GORON_HALF);
+      if (settings.progressiveGoronLullabyMm === 'progressive') {
+        this.replaceItem(Items.SHARED_SONG_GORON, Items.SHARED_SONG_GORON_HALF);
+      } else {
+        this.removeItem(Items.SHARED_SONG_GORON_HALF);
+        for (let i = 0; i < this.state.worlds.length; ++i) {
+          this.state.worlds[i].songLocations.delete('MM Goron Baby');
+        }
+      }
+    } else {
+      if (settings.songGoronOot) {
+        this.addItem(Items.OOT_SONG_GORON);
+        this.addItem(Items.OOT_SONG_GORON_HALF);
+      }
+
+      if (settings.progressiveGoronLullabyOot === 'progressive') {
+        this.replaceItem(Items.OOT_SONG_GORON, Items.OOT_SONG_GORON_HALF);
+      } else {
+        this.removeItem(Items.OOT_SONG_GORON_HALF);
+      }
+
+      /* Handle MM Lullaby */
+      if (settings.progressiveGoronLullabyMm === 'progressive') {
+        this.replaceItem(Items.MM_SONG_GORON, Items.MM_SONG_GORON_HALF);
+      } else {
+        this.removeItem(Items.MM_SONG_GORON_HALF);
+        for (let i = 0; i < this.state.worlds.length; ++i) {
+          this.state.worlds[i].songLocations.delete('MM Goron Baby');
+        }
+      }
+    }
+
+    if (settings.sharedSongZora) {
+      this.replaceItem(Items.MM_SONG_ZORA, Items.SHARED_SONG_ZORA);
+    } else if (settings.songZoraOot) {
+      this.addItem(Items.OOT_SONG_ZORA);
+    }
+
+    if (settings.sharedSongOrder) {
+      this.replaceItem(Items.MM_SONG_ORDER, Items.SHARED_SONG_ORDER);
+    } else if (settings.songOrderOot) {
+      this.addItem(Items.OOT_SONG_ORDER);
+    }
+
+
+    if (settings.sharedSongZeldaLullaby) {
+      this.replaceItem(Items.OOT_SONG_ZELDA, Items.SHARED_SONG_ZELDA);
+    } else if (settings.songZeldaLullabyMm) {
+      this.addItem(Items.MM_SONG_ZELDA);
+    }
+
+    if (settings.sharedSongSarias) {
+      this.replaceItem(Items.OOT_SONG_SARIA, Items.SHARED_SONG_SARIA);
+    } else if (settings.songSariasMm) {
+      this.addItem(Items.MM_SONG_SARIA);
+    }
+
+    if (settings.sharedSongMinuet) {
+      this.replaceItem(Items.OOT_SONG_TP_FOREST, Items.SHARED_SONG_TP_FOREST);
+    } else if (settings.songMinuetMm) {
+      this.addItem(Items.MM_SONG_TP_FOREST);
+    }
+
+    if (settings.sharedSongBolero) {
+      this.replaceItem(Items.OOT_SONG_TP_FIRE, Items.SHARED_SONG_TP_FIRE);
+    } else if (settings.songBoleroMm) {
+      this.addItem(Items.MM_SONG_TP_FIRE);
+    }
+
+    if (settings.sharedSongSerenade) {
+      this.replaceItem(Items.OOT_SONG_TP_WATER, Items.SHARED_SONG_TP_WATER);
+    } else if (settings.songSerenadeMm) {
+      this.addItem(Items.MM_SONG_TP_WATER);
+    }
+
+    if (settings.sharedSongRequiem) {
+      this.replaceItem(Items.OOT_SONG_TP_SPIRIT, Items.SHARED_SONG_TP_SPIRIT);
+    } else if (settings.songRequiemMm) {
+      this.addItem(Items.MM_SONG_TP_SPIRIT);
+    }
+
+    if (settings.sharedSongNocturne) {
+      this.replaceItem(Items.OOT_SONG_TP_SHADOW, Items.SHARED_SONG_TP_SHADOW);
+    } else if (settings.songNocturneMm) {
+      this.addItem(Items.MM_SONG_TP_SHADOW);
+    }
+
+    if (settings.sharedSongPrelude) {
+      this.replaceItem(Items.OOT_SONG_TP_LIGHT, Items.SHARED_SONG_TP_LIGHT);
+    } else if (settings.songPreludeMm) {
+      this.addItem(Items.MM_SONG_TP_LIGHT);
+    }
+
+
+    if (settings.sharedPowderKeg) {
+      this.replaceItem(Items.MM_POWDER_KEG, Items.SHARED_POWDER_KEG);
+    } else if (settings.powderKegOot) {
+      this.addItem(Items.OOT_POWDER_KEG);
     }
 
     if (settings.sharedLens) {
@@ -1031,24 +1259,69 @@ class LogicPassWorldTransform {
       this.shareItems(SharedItemGroups.PLATINUM_TOKEN, 'max');
     }
 
+    if (settings.sharedShovel) {
+      this.shareItems(SharedItemGroups.SHOVEL, 'max');
+    }
+
     if (settings.sharedOcarinaButtons) {
       this.shareItems(SharedItemGroups.OCARINA_BUTTONS, 'max');
     }
 
-    if (settings.sharedShields) {
-      this.shareItems(SharedItemGroups.SHIELDS, 'max');
+    if (settings.sharedDekuShield) {
+      this.replaceItem(Items.OOT_SHIELD_DEKU, Items.SHARED_SHIELD_DEKU);
+      this.replaceItem(Items.MM_SHIELD_DEKU, Items.SHARED_SHIELD_DEKU);
+    }
+
+    if (settings.sharedHeroShield) {
+      this.replaceItem(Items.OOT_SHIELD_HERO, Items.SHARED_SHIELD_HERO);
+      this.replaceItem(Items.MM_SHIELD_HERO, Items.SHARED_SHIELD_HERO);
+    }
+
+    if (settings.sharedHylianShield) {
       this.replaceItem(Items.OOT_SHIELD_HYLIAN, Items.SHARED_SHIELD_HYLIAN);
-      this.replaceItem(Items.MM_SHIELD_HERO,    Items.SHARED_SHIELD_HYLIAN);
-      if (settings.dekuShieldMm) {
-        this.replaceItem(Items.OOT_SHIELD_DEKU, Items.SHARED_SHIELD_DEKU);
-        this.replaceItem(Items.MM_SHIELD_DEKU, Items.SHARED_SHIELD_DEKU);
-      }
+      this.replaceItem(Items.MM_SHIELD_HYLIAN, Items.SHARED_SHIELD_HYLIAN);
+    }
+
+    if (settings.sharedMirrorShield) {
+      this.shareItems([{ shared: Items.SHARED_SHIELD_MIRROR, oot: Items.OOT_SHIELD_MIRROR, mm: Items.MM_SHIELD_MIRROR }], 'max');
+      this.replaceItem(Items.OOT_SHIELD_MIRROR, Items.SHARED_SHIELD_MIRROR);
+      this.replaceItem(Items.MM_SHIELD_MIRROR, Items.SHARED_SHIELD_MIRROR);
     }
 
     if (settings.sharedHammer) {
       this.replaceItem(Items.OOT_HAMMER, Items.SHARED_HAMMER);
     } else if (settings.hammerMm) {
       this.addItem(Items.MM_HAMMER);
+    }
+
+    if (settings.sharedBoomerang) {
+      this.replaceItem(Items.OOT_BOOMERANG, Items.SHARED_BOOMERANG);
+    } else if (settings.boomerangMm) {
+      this.addItem(Items.MM_BOOMERANG);
+    }
+
+    const sharedChildSeparate =
+        settings.sharedChildSwords &&
+        settings.progressiveChildSwordsMm === 'separate';
+
+    if (settings.sharedGFS) {
+      if (settings.progressiveGFSMm !== 'progressive' || sharedChildSeparate) {
+        this.replaceItem(Items.MM_GREAT_FAIRY_SWORD, Items.SHARED_GREAT_FAIRY_SWORD);
+      }
+    } else if (settings.gfsOot) {
+      if (settings.progressiveGFSOot !== 'progressive' || sharedChildSeparate) {
+        this.addItem(Items.OOT_GREAT_FAIRY_SWORD);
+      }
+    }
+
+    if (settings.sharedSlingshot) {
+      this.replaceItem(Items.OOT_SLINGSHOT, Items.SHARED_SLINGSHOT);
+      this.replaceItem(Items.OOT_DEKU_SEEDS_5, Items.SHARED_DEKU_SEEDS_5);
+      this.replaceItem(Items.OOT_DEKU_SEEDS_30, Items.SHARED_DEKU_SEEDS_30);
+    } else if (settings.slingshotMm) {
+      this.addItem(Items.MM_SLINGSHOT, 3);
+      this.addItem(Items.MM_DEKU_SEEDS_5, 0);
+      this.addItem(Items.MM_DEKU_SEEDS_30, 7);
     }
 
     if (settings.sharedStoneAgony) {
@@ -1124,49 +1397,52 @@ class LogicPassWorldTransform {
     }
   }
 
-  private removeLocations(locs: string[]) {
-    const { worlds } = this.state;
-    for (let i = 0; i < worlds.length; ++i) {
-      const world = worlds[i];
+  private removeWorldLocations(worldId: number, locs: string[]) {
+    const world = this.state.worlds[worldId];
+    for (const loc of locs) {
+      world.checkItems.delete(loc);
+      delete world.regions[loc];
+      world.locations.delete(loc);
+      this.fixedLocations.delete(makeLocation(loc, worldId));
+    }
+    for (const areaName in world.areas) {
+      const area = world.areas[areaName];
+      const locations = area.locations;
       for (const loc of locs) {
-        delete world.checks[loc];
-        delete world.regions[loc];
-        world.locations.delete(loc);
-        this.fixedLocations.delete(makeLocation(loc, i));
+        delete locations[loc];
       }
-      for (const areaName in world.areas) {
-        const area = world.areas[areaName];
-        const locations = area.locations;
-        for (const loc of locs) {
-          delete locations[loc];
-        }
-      }
-      for (const dungeonId of Object.keys(world.dungeons)) {
-        const dungeon = world.dungeons[dungeonId];
-        for (const l of locs) {
-          dungeon.delete(l);
-        }
+    }
+    for (const dungeonId of Object.keys(world.dungeons)) {
+      const dungeon = world.dungeons[dungeonId];
+      for (const l of locs) {
+        dungeon.delete(l);
       }
     }
   }
 
-  private filterLocations(value: 'none' | 'all' | 'overworld' | 'dungeons', type: WorldCheckType, game: 'oot' | 'mm') {
+  private removeLocations(locs: string[]) {
+    for (let i = 0; i < this.state.worlds.length; ++i) {
+      this.removeWorldLocations(i, locs);
+    }
+  }
+
+  private filterLocations(value: 'none' | 'all' | 'overworld' | 'dungeons', type: CheckType, game: 'oot' | 'mm') {
     if (value === 'all') {
       return;
     }
 
     let locationsToRemove: string[];
     if (value === 'overworld') {
-      locationsToRemove = POOL[game].filter((x: any) => x.type === type && isLocationInDungeon(x.scene)).map((x: any) => gameId(game, x.location, ' ')) as string[];
+      locationsToRemove = CHECKS.filter(x => x.game === game && x.type === type && isLocationInDungeon(x.scene)).map(x => x.location);
     } else if (value === 'dungeons') {
-      locationsToRemove = POOL[game].filter((x: any) => x.type === type && !isLocationInDungeon(x.scene)).map((x: any) => gameId(game, x.location, ' ')) as string[];
+      locationsToRemove = CHECKS.filter(x => x.game === game && x.type === type && !isLocationInDungeon(x.scene)).map(x => x.location);
     } else {
-      locationsToRemove = POOL[game].filter((x: any) => x.type === type).map((x: any) => gameId(game, x.location, ' ')) as string[];
+      locationsToRemove = CHECKS.filter(x => x.game === game && x.type === type).map(x => x.location);
     }
     this.removeLocations(locationsToRemove);
   }
 
-  private filterLocationsBool(value: boolean, type: WorldCheckType, game: 'oot' | 'mm') {
+  private filterLocationsBool(value: boolean, type: CheckType, game: 'oot' | 'mm') {
     this.filterLocations(value ? 'all' : 'none', type, game);
   }
 
@@ -1229,8 +1505,8 @@ class LogicPassWorldTransform {
     this.filterLocations(this.state.settings.shufflePotsMm, 'pot', 'mm');
 
     if (settings.goal === 'triforce' || settings.goal === 'triforce3') {
-      const potsGanonTower = POOL.oot.filter((x: any) => x.type === 'pot' && x.scene === 'GANON_TOWER').map((x: any) => gameId('oot', x.location, ' ')) as string[];
-      const potsMajora = POOL.mm.filter((x: any) => x.type === 'pot' && x.scene === 'LAIR_MAJORA').map((x: any) => gameId('mm', x.location, ' ')) as string[];
+      const potsGanonTower = CHECKS.filter(x => x.type === 'pot' && x.scene === 'OOT_GANON_TOWER').map(x => x.location);
+      const potsMajora = CHECKS.filter(x => x.type === 'pot' && x.scene === 'MM_LAIR_MAJORA').map(x => x.location);
       this.removeLocations(potsGanonTower);
       this.removeLocations(potsMajora);
     }
@@ -1269,7 +1545,7 @@ class LogicPassWorldTransform {
     this.filterLocations(this.state.settings.shuffleGrassMm, 'grass', 'mm');
 
     if(!this.state.settings.shuffleTFGrassMm) {
-      const grassTerminaField = POOL.mm.filter((x: any) => x.type === 'grass' && x.scene === 'TERMINA_FIELD').map((x: any) => gameId('mm', x.location, ' ')) as string[];
+      const grassTerminaField = CHECKS.filter(x => x.type === 'grass' && x.scene === 'MM_TERMINA_FIELD').map(x => x.location);
       this.removeLocations(grassTerminaField);
     }
   }
@@ -1278,8 +1554,19 @@ class LogicPassWorldTransform {
     this.filterLocationsBool(this.state.settings.shuffleRocksOot, 'rock', 'oot');
     this.filterLocations(this.state.settings.shuffleRocksMm, 'rock', 'mm');
 
-    if (!this.state.settings.bootsIronMm) {
-      /* Remove water rocks if iron boots are not available */
+    const blastMaskAge = this.state.settings.mmAgeReqMaskBlast;
+    const ironBootsAge = this.state.settings.mmAgeReqBootsIron;
+
+    const blastMaskAndIronBootsDifferentAges =
+        blastMaskAge !== 'none' &&
+        ironBootsAge !== 'none' &&
+        blastMaskAge !== ironBootsAge;
+
+    if (
+        !this.state.settings.bootsIronMm ||
+        blastMaskAndIronBootsDifferentAges
+    ) {
+      /* Remove water rocks if iron boots are not available, or if Blast Mask and Iron Boots require different ages */
       this.removeLocations(MM_WATER_ROCKS);
     }
   }
@@ -1295,7 +1582,7 @@ class LogicPassWorldTransform {
 
     if (this.state.settings.logic === 'allLocations' && !this.state.settings.tricks.includes('MM_GORON_BOMB_JUMP') && this.state.settings.hookshotAnywhereMm !== 'logical') {
       /* Can't reach Gorman track trees */
-      const locs = POOL.mm.filter((x: any) => x.type === 'tree' && x.scene === 'GORMAN_TRACK').map((x: any) => gameId('mm', x.location, ' ')) as string[];
+      const locs = CHECKS.filter(x => x.type === 'tree' && x.scene === 'MM_GORMAN_TRACK').map(x => x.location);
       this.removeLocations(locs);
     }
   }
@@ -1310,6 +1597,13 @@ class LogicPassWorldTransform {
     this.filterLocations(this.state.settings.shuffleSoilMm, 'soil', 'mm');
   }
 
+  private filterChecksGossipFairies() {
+    this.filterLocations(this.state.settings.shuffleGossipFairiesOot, 'gossip', 'oot');
+    this.filterLocations(this.state.settings.shuffleGossipBigFairiesOot, 'gossip-big', 'oot');
+    this.filterLocations(this.state.settings.shuffleGossipFairiesMm, 'gossip', 'mm');
+    this.filterLocations(this.state.settings.shuffleGossipBigFairiesMm, 'gossip-big', 'mm');
+  }
+
   private filterChecksWonder() {
     this.filterLocations(this.state.settings.shuffleWonderItemsOot, 'wonder', 'oot');
     this.filterLocationsBool(this.state.settings.shuffleWonderItemsMm, 'wonder', 'mm');
@@ -1320,9 +1614,29 @@ class LogicPassWorldTransform {
     this.filterLocationsBool(this.state.settings.shuffleButterfliesMm, 'butterfly', 'mm');
   }
 
+  private filterChecksBoulders() {
+    this.filterLocations(this.state.settings.shuffleBouldersOot, 'boulder', 'oot');
+    this.filterLocations(this.state.settings.shuffleBouldersMm, 'boulder', 'mm');
+  }
+
   private filterChecksRedBoulders() {
-    this.filterLocationsBool(this.state.settings.shuffleRedBouldersOot, 'redboulder', 'oot');
-    this.filterLocationsBool(this.state.settings.shuffleRedBouldersMm, 'redboulder', 'mm');
+    this.filterLocationsBool(this.state.settings.shuffleRedBouldersOot, 'boulder-red', 'oot');
+    this.filterLocationsBool(this.state.settings.shuffleRedBouldersMm, 'boulder-red', 'mm');
+  }
+
+  private filterChecksSilverBoulders() {
+    this.filterLocationsBool(this.state.settings.shuffleSilverBouldersOot, 'boulder-silver', 'oot');
+
+    /* Impossible boulders */
+    for (let i = 0; i < this.state.worlds.length; ++i) {
+      if (!this.state.settings.agelessStrength || this.state.worlds[i].resolvedFlags.openDungeonsOot.has('fireChild')) {
+        this.removeLocations([
+          'OOT Death Mountain Crater Silver Boulder 1',
+          'OOT Death Mountain Crater Silver Boulder 2',
+          'OOT Death Mountain Crater Silver Boulder 3',
+        ]);
+      }
+    }
   }
 
   private filterChecksSnowballs() {
@@ -1344,7 +1658,7 @@ class LogicPassWorldTransform {
   }
 
   private filterChecksFairySpots() {
-    this.filterLocationsBool(this.state.settings.fairySpotShuffleOot, 'fairy_spot', 'oot');
+    this.filterLocationsBool(this.state.settings.fairySpotShuffleOot, 'fairy-spot', 'oot');
   }
 
   run() {
@@ -1372,9 +1686,12 @@ class LogicPassWorldTransform {
     this.filterChecksRocks();
     this.filterChecksTrees();
     this.filterChecksBushes();
+    this.filterChecksGossipFairies();
     this.filterChecksWonder();
     this.filterChecksButterflies();
+    this.filterChecksBoulders();
     this.filterChecksRedBoulders();
+    this.filterChecksSilverBoulders()
     this.filterChecksSnowballs();
     this.filterChecksIcicles();
     this.filterChecksRedIce();
@@ -1409,6 +1726,11 @@ class LogicPassWorldTransform {
       ]);
     }
 
+    /* 100 skulls */
+    if (!settings.shuffleSkulltulaFinalReward) {
+      this.removeLocations(['OOT Skulltula House 100 Tokens']);
+    }
+
     /* Make the basic item pool */
     this.makePools();
 
@@ -1436,6 +1758,10 @@ class LogicPassWorldTransform {
     if (settings.soulsNpcMm) this.addItems(ItemGroups.MM_SOULS_NPC);
     if (settings.soulsAnimalMm) this.addItems(ItemGroups.MM_SOULS_ANIMAL);
     if (settings.soulsMiscMm) this.addItems(ItemGroups.MM_SOULS_MISC);
+
+    /* Add rusty keys */
+    if (settings.rustyKeysOot) this.addItems(ItemGroups.OOT_RUSTY_KEYS);
+    if (settings.rustyKeysMm) this.addItems(ItemGroups.MM_RUSTY_KEYS);
 
     /* Add skeleton keys */
     if (settings.skeletonKeyOot) {
@@ -1465,6 +1791,14 @@ class LogicPassWorldTransform {
       this.addItem(Items.MM_TRANSCENDENT_FAIRY);
     }
 
+    /* Add shovel(s) */
+    if (settings.shovelOot) {
+      this.addItem(Items.OOT_SHOVEL);
+    }
+    if (settings.shovelMm) {
+      this.addItem(Items.MM_SHOVEL);
+    }
+
     /* Add ocarina buttons */
     if (settings.ocarinaButtonsShuffleOot) {
       this.addItem(Items.OOT_BUTTON_A);
@@ -1483,12 +1817,16 @@ class LogicPassWorldTransform {
     }
 
     /* Add clocks */
-    if (this.state.settings.clocks) {
+    if (this.state.settings.clocksMm) {
       if (this.state.settings.progressiveClocks === 'separate') {
         this.addItems(ItemGroups.CLOCKS);
       } else {
         this.addItem(Items.MM_CLOCK, 5);
       }
+    }
+
+    if (this.state.settings.clocksOot !== 'none') {
+      this.addItem(Items.OOT_CLOCK);
     }
 
     /* Handle extra wallets */
@@ -1504,31 +1842,98 @@ class LogicPassWorldTransform {
       this.addExtraWallet();
     }
 
-    /* Handle progressive shields */
-    if (this.state.settings.progressiveShieldsOot === 'progressive') {
-      this.replaceItem(Items.OOT_SHIELD_MIRROR, Items.OOT_SHIELD);
-      this.addItem(Items.OOT_SHIELD, 2);
-      this.removeItem(Items.OOT_SHIELD_DEKU);
-      this.removeItem(Items.OOT_SHIELD_HYLIAN);
-    }
-
-    if (settings.progressiveShieldsMm === 'progressive') {
-      this.replaceItem(Items.MM_SHIELD_MIRROR, Items.MM_SHIELD);
-      this.addItem(Items.MM_SHIELD);
-      this.removeItem(Items.MM_SHIELD_HERO);
-
-      if (settings.dekuShieldMm) {
-        this.addItem(Items.MM_SHIELD);
-        this.removeItem(Items.MM_SHIELD_DEKU);
+    if (settings.goronSwordsMm) {
+      const swordSetting = settings.sharedGoronSwords ? settings.progressiveSwordsOot : settings.progressiveSwordsMm;
+      if (swordSetting === 'progressive') {
+        this.addItem(Items.MM_SWORD, 2);
+      } else if (swordSetting === 'goron') {
+        this.addItem(Items.MM_SWORD_GORON, 2);
+      } else {
+        this.addItem(Items.MM_SWORD_KNIFE);
+        this.addItem(Items.MM_SWORD_BIGGORON);
       }
     }
-    else if (settings.dekuShieldMm) {
-      this.addItem(Items.MM_SHIELD_DEKU, 3);
+
+    /* Handle progressive shields */
+    if (settings.progressiveShieldsShared === 'progressive') {
+      this.replaceItem(Items.OOT_SHIELD_MIRROR, Items.SHARED_SHIELD);
+      this.replaceItem(Items.MM_SHIELD_MIRROR, Items.SHARED_SHIELD);
+      this.removeItem(Items.OOT_SHIELD_DEKU);
+      this.removeItem(Items.OOT_SHIELD_HYLIAN);
+      this.removeItem(Items.OOT_SHIELD_HERO);
+      this.removeItem(Items.MM_SHIELD_DEKU);
+      this.removeItem(Items.MM_SHIELD_HYLIAN);
+      this.removeItem(Items.MM_SHIELD_HERO);
+      this.removeItem(Items.OOT_SHIELD);
+      this.removeItem(Items.MM_SHIELD);
+      for (let i = 0; i < this.state.worlds.length; ++i) {
+        this.pool.set(makePlayerItem(Items.SHARED_SHIELD, i), 3);
+      }
+    } else {
+
+      /* OoT progressive shields */
+      if (settings.progressiveShieldsOot === 'progressive') {
+        this.replaceItem(Items.OOT_SHIELD_MIRROR, Items.OOT_SHIELD);
+        this.addItem(Items.OOT_SHIELD, 2);
+        this.removeItem(Items.OOT_SHIELD_DEKU);
+        this.removeItem(Items.OOT_SHIELD_HYLIAN);
+        this.removeItem(Items.OOT_SHIELD_HERO);
+      } else {
+        if (settings.heroShieldOot) {
+          this.addItem(Items.OOT_SHIELD_HERO, 3);
+        }
+      }
+
+      /* MM progressive shields */
+      if (settings.progressiveShieldsMm === 'progressive') {
+        this.replaceItem(Items.MM_SHIELD_MIRROR, Items.MM_SHIELD);
+        this.addItem(Items.MM_SHIELD);
+        this.removeItem(Items.MM_SHIELD_HERO);
+        if (settings.dekuShieldMm) {
+          this.addItem(Items.MM_SHIELD);
+          this.removeItem(Items.MM_SHIELD_DEKU);
+        }
+        if (settings.hylianShieldMm) {
+          this.removeItem(Items.MM_SHIELD_HYLIAN);
+        }
+      } else {
+        if (settings.dekuShieldMm) {
+          this.addItem(Items.MM_SHIELD_DEKU, 3);
+        }
+        if (settings.hylianShieldMm) {
+          this.addItem(Items.MM_SHIELD_HYLIAN, 3);
+        }
+      }
     }
 
-    if (settings.extraChildSwordsOot) {
-      this.replaceItem(Items.OOT_SWORD_KOKIRI, Items.OOT_SWORD);
-      this.addItem(Items.OOT_SWORD, 2);
+    const ootChildProgressive = settings.sharedChildSwords
+        ? settings.progressiveChildSwordsMm === 'progressive'
+        : settings.progressiveChildSwordsOot === 'progressive';
+
+    if (ootChildProgressive &&
+        (settings.extraChildSwordsOot || settings.sharedChildSwords)) {
+      this.replaceItem(Items.OOT_SWORD_KOKIRI, Items.OOT_SWORD_CHILD);
+
+      if (settings.extraChildSwordsOot) {
+        this.addItem(Items.OOT_SWORD_CHILD, 2);
+      }
+    } else if (settings.extraChildSwordsOot) {
+      this.addItem(Items.OOT_SWORD_RAZOR);
+      this.addItem(Items.OOT_SWORD_GILDED);
+    }
+    if (settings.progressiveChildSwordsMm === 'progressive') {
+      this.replaceItem(Items.MM_SWORD_KOKIRI, Items.MM_SWORD_CHILD);
+      this.replaceItem(Items.MM_SWORD_RAZOR, Items.MM_SWORD_CHILD);
+      this.replaceItem(Items.MM_SWORD_GILDED, Items.MM_SWORD_CHILD);
+    }
+
+    const sharedChildSeparate = settings.sharedChildSwords && settings.progressiveChildSwordsMm === 'separate';
+    if (!sharedChildSeparate && settings.progressiveGFSMm === 'progressive') {
+      this.replaceItem(Items.MM_GREAT_FAIRY_SWORD, Items.MM_SWORD_CHILD);
+    }
+    if (!sharedChildSeparate && settings.gfsOot && !settings.sharedGFS &&
+        settings.progressiveGFSOot === 'progressive') {
+      this.addItem(Items.OOT_SWORD_CHILD);
     }
 
     /* Setup extra traps */
@@ -1643,7 +2048,7 @@ class LogicPassWorldTransform {
       if (srp.has('Ganon_Spirit')) this.keyRing(worldId, Items.OOT_RUPEE_SILVER_GANON_SPIRIT, Items.OOT_POUCH_SILVER_GANON_SPIRIT);
     }
 
-    if (settings.zoraKing === 'open' && !settings.sharedBottles) {
+    if (settings.zoraKing === 'open') {
       this.replaceItem(Items.OOT_BOTTLE_RUTO_LETTER, Items.OOT_BOTTLE_EMPTY);
       this.replaceItem(Items.MM_BOTTLE_RUTO_LETTER, Items.MM_BOTTLE_EMPTY);
       this.replaceItem(Items.SHARED_BOTTLE_RUTO_LETTER, Items.SHARED_BOTTLE_EMPTY);
@@ -1654,7 +2059,6 @@ class LogicPassWorldTransform {
       this.removeItem(Items.OOT_SWORD_MASTER);
     }
     if (settings.progressiveSwordsOot === 'progressive') {
-      this.replaceItem(Items.OOT_SWORD_KOKIRI,    Items.OOT_SWORD);
       this.replaceItem(Items.OOT_SWORD_MASTER,    Items.OOT_SWORD);
       this.replaceItem(Items.OOT_SWORD_KNIFE,     Items.OOT_SWORD);
       this.replaceItem(Items.OOT_SWORD_BIGGORON,  Items.OOT_SWORD);
@@ -1664,22 +2068,54 @@ class LogicPassWorldTransform {
     }
 
     /* Handle MM Swords */
-    if (settings.progressiveGFS === 'progressive') {
-      this.replaceItem(Items.MM_GREAT_FAIRY_SWORD, Items.MM_SWORD);
+    const swordSetting = settings.sharedMasterSword ? settings.progressiveSwordsOot : settings.progressiveSwordsMm;
+    if (settings.sharedMasterSword) {
+      if (swordSetting !== 'progressive' && !mustStartWithMasterSword(settings)) {
+        this.replaceItem(Items.OOT_SWORD_MASTER, Items.SHARED_SWORD_MASTER);
+      }
+    } else if (settings.masterSwordMm) {
+      this.addItem(swordSetting === 'progressive' ? Items.MM_SWORD : Items.MM_SWORD_MASTER);
     }
 
-    /* Handle MM Lullaby */
-    if (settings.progressiveGoronLullaby === 'progressive') {
-      this.replaceItem(Items.MM_SONG_GORON, Items.MM_SONG_GORON_HALF);
-    } else {
-      this.removeItem(Items.MM_SONG_GORON_HALF);
+    if (settings.sharedMasterSword && settings.sharedGoronSwords && settings.progressiveSwordsOot !== 'progressive') {
+      this.removeItem(Items.MM_SWORD);
+    }
+
+    /* Shared Goron swords follow the OoT progression setting. */
+    if (settings.sharedGoronSwords) {
+      switch (settings.progressiveSwordsOot) {
+        case 'separate':
+          this.shareItems([
+            { shared: Items.SHARED_SWORD_KNIFE, oot: Items.OOT_SWORD_KNIFE, mm: Items.MM_SWORD_KNIFE },
+            { shared: Items.SHARED_SWORD_BIGGORON, oot: Items.OOT_SWORD_BIGGORON, mm: Items.MM_SWORD_BIGGORON },
+          ], 'max');
+          break;
+        case 'goron':
+          this.shareItems([
+            { shared: Items.SHARED_SWORD_GORON, oot: Items.OOT_SWORD_GORON, mm: Items.MM_SWORD_GORON },
+          ], 'max');
+          break;
+        case 'progressive':
+          if (settings.sharedMasterSword) {
+            this.shareItems([
+              { shared: Items.SHARED_SWORD, oot: Items.OOT_SWORD, mm: Items.MM_SWORD },
+            ], 'max');
+          }
+          this.removeItem(Items.MM_SWORD_KNIFE);
+          this.removeItem(Items.MM_SWORD_BIGGORON);
+          this.removeItem(Items.MM_SWORD_GORON);
+          break;
+      }
+    }
+
+    if (settings.progressiveGoronLullabyMm === 'single') {
       for (let i = 0; i < this.state.worlds.length; ++i) {
         this.state.worlds[i].songLocations.delete('MM Goron Baby');
       }
     }
 
     /* Handle MM sun song */
-    if (settings.sunSongMm && !settings.sharedSongSun) {
+    if (settings.songSunMm && !settings.sharedSongSun) {
       this.addItem(Items.MM_SONG_SUN);
     }
 
@@ -1731,16 +2167,21 @@ class LogicPassWorldTransform {
 
     /* Alter the item pools */
     switch (settings.itemPool) {
-    case 'scarce':
-      this.scarcifyPool(1);
-      break;
-    case 'minimal':
-    case 'barren':
-      this.scarcifyPool(2);
-      break;
-    case 'plentiful':
-      this.plentifulPool();
-      break;
+      case 'scarce':
+        this.scarcifyPool(1);
+        break;
+      case 'minimal':
+      case 'barren':
+        this.scarcifyPool(2);
+        break;
+      case 'plentiful':
+        this.plentifulPool();
+        break;
+    }
+
+    /* Add extra OoT bottles */
+    if (settings.extraBottlesOot && !settings.sharedBottles) {
+      this.addItem(Items.OOT_BOTTLE_EMPTY, 2);
     }
 
     /* handle random bottle contents */
@@ -1842,8 +2283,7 @@ class LogicPassWorldTransform {
     for (const pi of this.pool.keys()) {
       if (this.state.itemProperties.junk.has(pi.item) && ItemHelpers.isItemConsumable(pi.item)) {
         for (const loc of this.locsByItem.get(pi) || []) {
-          const world = this.state.worlds[locationData(loc).world as number];
-          if (isLocationRenewable(world, loc) && !this.fixedLocations.has(loc)) {
+          if (isLocationRenewable(loc) && !this.fixedLocations.has(loc)) {
             countMapAdd(renewableJunks, pi);
           }
         }
@@ -1858,10 +2298,10 @@ class LogicPassWorldTransform {
 
     /* Handle fixed locations */
     for (const loc of this.fixedLocations) {
-      const worldId = locationData(loc).world as number;
+      const locD = locationData(loc);
+      const worldId = locD.world as number;
       const world = this.state.worlds[worldId];
-      const check = world.checks[locationData(loc).id];
-      const { item } = check;
+      const item = world.checkItems.get(locD.id)!;
       const pi = makePlayerItem(item, worldId);
       this.removePlayerItem(pi, 1);
       countMapAdd(allItems, pi);

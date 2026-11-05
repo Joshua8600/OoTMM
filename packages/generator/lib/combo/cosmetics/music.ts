@@ -1,4 +1,5 @@
-import type { Game, Cosmetics } from '@ootmm/core';
+import type { Game } from '@ootmm/data';
+import type { Cosmetics } from '@ootmm/core';
 
 import JSZip from 'jszip';
 import { Monitor, Random, sample, shuffle } from '@ootmm/core';
@@ -484,7 +485,7 @@ class MusicInjector {
       }
 
       /* Find the zseq file */
-      const zseqFiles = musicZip.file(/\.zseq$/);
+      const zseqFiles = musicZip.file(/\.(z|a)?seq$/);
       if (zseqFiles.length !== 1) {
         this.monitor.warn(`Skipped music file ${f.name}: multiple sequence files`);
         continue;

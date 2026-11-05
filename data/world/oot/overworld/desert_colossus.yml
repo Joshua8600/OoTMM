@@ -7,7 +7,7 @@
     "Spirit Temple": "true"
     "Haunted Wasteland End": "true"
     "Fairy Fountain Nayru": "has_explosives"
-    "Desert Colossus Grotto": "can_lift_silver"
+    "Desert Colossus Grotto": "has_shovel && can_lift_silver"
     "Spirit Temple Adult Hand": "climb_anywhere"
     "Spirit Temple Child Hand": "climb_anywhere"
     "Desert Colossus Oasis": "can_play_storms"
@@ -41,6 +41,9 @@
     "Desert Colossus Rock Circle 2 Rock 6": "true"
     "Desert Colossus Rock Circle 2 Rock 7": "true"
     "Desert Colossus Rock Circle 2 Rock 8": "true"
+    "Desert Colossus Silver Boulder": "can_lift_silver"
+    "Desert Colossus Gossip Fairy": "gossip_fairy"
+    "Desert Colossus Gossip Big Fairy": "gossip_fairy_big"
   gossip:
     "Desert Colossus Gossip": "true"
 

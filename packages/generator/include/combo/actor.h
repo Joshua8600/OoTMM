@@ -7,6 +7,7 @@
 #include <combo/util.h>
 #include <combo/math/vec.h>
 #include <combo/misc.h>
+#include <combo/common/actor_init.h>
 
 #define NBITS_TO_MASK(n)        ((1 << (n)) - 1)
 #define PARAMS_GET_U(p, s, n)   (((p) >> (s)) & NBITS_TO_MASK(n))
@@ -126,7 +127,7 @@ ASSERT_OFFSET(ActorShape, feetPos,          0x18);
 typedef struct Actor
 {
     u16         id;
-    u8          type;
+    u8          category;
     u8          room;
     s32         flags;
     PosRot      home;
@@ -392,7 +393,7 @@ AttentionRangeType;
 #endif
 
 ASSERT_OFFSET(Actor, id,        0x000);
-ASSERT_OFFSET(Actor, type,      0x002);
+ASSERT_OFFSET(Actor, category,  0x002);
 ASSERT_OFFSET(Actor, room,      0x003);
 ASSERT_OFFSET(Actor, home,      0x008);
 ASSERT_OFFSET(Actor, params,    0x01c);
@@ -447,6 +448,7 @@ s32 DynaPolyActor_IsPlayerOnTop(struct DynaPolyActor* dynaActor);
 s32 DynaPolyActor_IsPlayerAbove(struct DynaPolyActor* dynaActor);
 s32 DynaPolyActor_IsSwitchPressed(struct DynaPolyActor* dynaActor);
 
+void Actor_GetSlopeDirection(CollisionPoly* floorPoly, Vec3f* slopeNormal, s16* downwardSlopeYaw);
 void Actor_UpdatePos(Actor *actor);
 
 #if defined(GAME_MM)
@@ -456,6 +458,7 @@ s32 Actor_SetPlayerImpact(PlayState* play, PlayerImpactType type, s32 timer, f32
 void Actor_RequestQuakeAndRumble(Actor* actor, PlayState* play, s16 quakeY, s16 quakeDuration);
 #endif
 void Actor_SetClosestSecretDistance(Actor* actor, PlayState* play);
+void Actor_GetScreenPos(PlayState* play, Actor* actor, s16* x, s16* y);
 
 #if defined(GAME_OOT)
 typedef enum NaviEnemy {
@@ -612,6 +615,7 @@ typedef struct NpcInteractInfo {
 #if defined(GAME_OOT)
 void func_80033480(struct PlayState* play, Vec3f* posBase, f32 randRangeDiameter, s32 amountMinusOne, s16 scaleBase,
                    s16 scaleStep, u8 arg6);
+void Actor_RequestQuakeAndRumble(Actor* actor, struct PlayState* play, s16 quakeY, s16 quakeDuration);
 void Actor_SetObjectDependency(struct PlayState* play, Actor* actor);
 #else
 extern Gfx D_801AEFA0[];
@@ -619,5 +623,18 @@ extern Gfx D_801AEF88[];
 #endif
 
 void Actor_WorldToActorCoords(Actor* actor, Vec3f* dest, Vec3f* pos);
+void Actor_ProjectPos(PlayState* play, Vec3f* src, Vec3f* xyzDest, f32* cappedInvWDest);
+s32 Actor_OfferOcarinaInteraction(Actor* actor, PlayState* play, f32 xzRange, f32 yRange);
 
+#if defined(GAME_MM)
+typedef struct GameState GameState;
+s32 Actor_OcarinaInteractionAccepted(Actor* actor, GameState* gameState);
+typedef s32 (*PictoValidationFunc)(PlayState *, Actor *);
+
+typedef struct
+{
+    /* 0x000 */ Actor actor;
+    /* 0x144 */ PictoValidationFunc validationFunc;
+} PictoActor;
+#endif
 #endif

@@ -4,7 +4,8 @@ import type { GameAddresses } from '../addresses';
 import type { DecompressedRoms } from '../decompress';
 import type { PatchGroup } from './group';
 
-import { Monitor, GAMES } from '@ootmm/core';
+import { GAMES } from '@ootmm/data';
+import { Monitor } from '@ootmm/core';
 import { isEntranceShuffle } from '@ootmm/logic';
 import { CONFIG } from '../config';
 import { Patcher } from './patcher';
@@ -48,6 +49,7 @@ function asmPatchGroups(world: LogicResultWorld, settings: Settings) {
     OOT_AGELESS_STICKS: settings.agelessSticks,
     OOT_AGELESS_BOOMERANG: settings.agelessBoomerang,
     OOT_AGELESS_HAMMER: settings.agelessHammer,
+    OOT_AGELESS_GREAT_FAIRY_SWORD: settings.agelessGFS,
     OOT_AGELESS_HOOKSHOT: settings.agelessHookshot,
     OOT_AGELESS_SLINGSHOT: settings.agelessSlingshot,
     OOT_AGELESS_BOW: settings.agelessBow,
@@ -71,7 +73,6 @@ function asmPatchGroups(world: LogicResultWorld, settings: Settings) {
     CRIT_WIGGLE_DISABLE: settings.critWiggleDisable,
     OOT_LOST_WOODS_EXITS: settings.alterLostWoodsExits,
     MM_VOID_WARP: settings.voidWarpMm,
-    OOT_SWORDLESS_ADULT: settings.swordlessAdult,
     MM_FAST_MASKS: settings.fastMasks,
     OOT_FAST_BOAT: settings.shadowFastBoat,
     MM_WELL_OPEN_OR_REMORSELESS: settings.beneathWell !== 'vanilla',
@@ -80,6 +81,15 @@ function asmPatchGroups(world: LogicResultWorld, settings: Settings) {
     MM_JP_LAYOUT_STONE_TOWER_TEMPLE: world.resolvedFlags.jpLayouts.has('ST'),
     MM_JP_LAYOUT_GREAT_BAY_COAST: world.resolvedFlags.jpLayouts.has('GreatBayCoast'),
     MM_KEG_STRENGTH_3: settings.kegStrength3,
+    ER_TELESCOPES: settings.erIndoorsTelescopes,
+    OOT_SKIP_CUTSCENES: settings.cutsceneSkipOoT,
+    MM_CS_GOHT: settings.cutsceneIntroGoht,
+    MM_CS_WART: settings.cutsceneIntroWart,
+    MM_CS_GYORG: settings.cutsceneIntroGyorg,
+    MM_CS_IGOS: settings.cutsceneIntroIgos,
+    MM_CS_GOMESS: settings.cutsceneIntroGomess,
+    MM_CS_TWINMOLD: settings.cutsceneIntroTwinmold,
+    MM_CS_MAJORA: settings.cutsceneIntroMajora
   };
   const keys = Object.keys(groups) as PatchGroup[];
   return keys.filter((k) => groups[k]);
@@ -119,11 +129,11 @@ export async function buildPatchfiles(args: BuildPatchfileIn): Promise<Patchfile
       }
       /* Pack the payload */
       const payload = await fileResolver.fetch(`${game}_payload.bin`);
-      if (payload.length > (game === 'mm' ? 0x50000 : 0x80000)) {
+      if (payload.length > (game === 'mm' ? 0x60000 : 0x80000)) {
         throw new Error(`Payload too large ${game}`);
       }
       const payloadVrom = game === 'oot' ? 0xf0000000 : 0xf0100000;
-      const payloadVram = game === 'oot' ? 0x80400000 : 0x80730000; /* TODO: Codegen this */
+      const payloadVram = game === 'oot' ? 0x80400000 : 0x80720000; /* TODO: Codegen this */
       const payloadVramEnd = payloadVram + payload.length;
       p.addNewFile({ name: `${game}/payload`, vrom: payloadVrom, vram: { [game]: [payloadVram, payloadVramEnd] }, data: payload, compressed: false });
 

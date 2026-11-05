@@ -1,5 +1,4 @@
 #include <combo.h>
-#include <combo/net.h>
 #include <combo/sr.h>
 #include <combo/dma.h>
 #include <combo/menu.h>
@@ -8,19 +7,19 @@
 #include <combo/global.h>
 #include <combo/context.h>
 #include <combo/hint.h>
+#include <combo/ipc.h>
 
 ComboGlobal g;
 
 void initHeap(void);
 void AudioCustom_Init(void);
 void comboInitObjects(void);
+void Xflag_InitSystem(void);
 
 void menuInit();
 
 void comboInit(void)
 {
-    g.delayedSwitchFlagsCount = 0;
-
     initHeap();
     AudioCustom_Init();
     Context_Init();
@@ -28,10 +27,11 @@ void comboInit(void)
     comboInitData();
     comboInitObjects();
     comboInitOverride();
+    Xflag_InitSystem();
     Hint_Init();
     comboInitEntrances();
-    comboSilverRupeesInit();
-    netInit();
+    SilverRupees_Init();
+    IPC_Init();
     menuInit();
     Debug_Init();
 }

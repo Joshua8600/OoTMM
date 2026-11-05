@@ -1,5 +1,6 @@
-import type { Item, ItemsCount, Settings } from '@ootmm/core';
+import type { Settings } from '@ootmm/core';
 import type { Age } from '../age';
+import type { Item, ItemsCount } from '../items';
 
 type ExprNodeTrue = { readonly type: 'true' };
 type ExprNodeFalse = { readonly type: 'false' };
@@ -15,7 +16,8 @@ type ExprNodeSpecial = { readonly type: 'special'; readonly specialId: string };
 type ExprNodeTimeOot = { readonly type: 'time-oot'; readonly flag: number };
 type ExprNodeTimeMm = { readonly type: 'time-mm'; readonly value: number; readonly value2: number };
 type ExprNodePrice = { readonly type: 'price'; readonly slot: number; readonly max: number };
-type ExprNodeSongEvent = { readonly type: 'song-event'; readonly songId: number; readonly cmp: number };
+type ExprNodeSongEventOoT = { readonly type: 'song-event-oot'; readonly songId: number; readonly cmp: number };
+type ExprNodeSongEventMm = { readonly type: 'song-event-mm'; readonly songId: number; readonly cmp: number };
 type ExprNodeFlagOn = { readonly type: 'flag-on'; readonly flag: number };
 type ExprNodeFlagOff = { readonly type: 'flag-off'; readonly flag: number };
 
@@ -34,7 +36,8 @@ export type ExprNode =
   | ExprNodeTimeOot
   | ExprNodeTimeMm
   | ExprNodePrice
-  | ExprNodeSongEvent
+  | ExprNodeSongEventOoT
+  | ExprNodeSongEventMm
   | ExprNodeFlagOn
   | ExprNodeFlagOff;
 
@@ -42,7 +45,8 @@ export type ExprFunc = (state: ExprState, deps: ExprDependencies) => ExprResult;
 export type Expr = ExprNode & { readonly id: number; readonly eval: ExprFunc };
 
 type ExprStateWorld = {
-  songEvents: number[];
+  songEventsOot: number[];
+  songEventsMm: number[];
   prices: number[];
 };
 

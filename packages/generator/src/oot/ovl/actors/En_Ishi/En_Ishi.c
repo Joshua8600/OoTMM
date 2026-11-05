@@ -234,10 +234,12 @@ void EnIshi_SpawnDustLarge(EnIshi* this, PlayState* play) {
 
 void EnIshi_DropCollectible(EnIshi* this, PlayState* play) {
     s16 dropParams;
+    Vec3f pos = GET_PLAYER(play)->actor.world.pos;
 
-    if (Xflag_IsShuffled(&this->xflag))
+    pos.y += 20.0f;
+    if (this->xflag != XFLAGID_NONE)
     {
-        EnItem00_DropCustom(play, &this->actor.world.pos, &this->xflag);
+        EnItem00_DropCustomNoInertiaEx(play, &pos, this->xflag);
         return;
     }
 
@@ -248,7 +250,7 @@ void EnIshi_DropCollectible(EnIshi* this, PlayState* play) {
             dropParams = 0;
         }
 
-        Item_DropCollectibleRandom(play, NULL, &this->actor.world.pos, dropParams << 4);
+        Item_DropCollectibleRandom(play, NULL, &pos, dropParams << 4);
     }
 }
 
@@ -298,76 +300,13 @@ static InitChainEntry sInitChains[][5] = {
     },
 };
 
-static void EnIshi_Alias(Xflag* xf) {
-    switch (xf->sceneId)
-    {
-    case SCE_OOT_LAKE_HYLIA:
-        xf->setupId = 0;
-        xf->id = 22;
-        break;
-    case SCE_OOT_DESERT_COLOSSUS:
-        if (xf->setupId == 2)
-        {
-            xf->setupId = 0;
-            xf->id -= 2;
-        }
-        break;
-    case SCE_OOT_GORON_CITY:
-        xf->setupId = 0;
-        xf->id = 47;
-        break;
-    case SCE_OOT_KAKARIKO_VILLAGE:
-        switch (xf->setupId)
-        {
-        case 1: xf->id += 5; break;
-        case 2: xf->id += 11; break;
-        case 3: xf->id += 12; break;
-        }
-        xf->setupId = 0;
-        break;
-    case SCE_OOT_GRAVEYARD:
-        xf->setupId = 0;
-        xf->id = 14;
-        break;
-    case SCE_OOT_ZORA_RIVER:
-        if (xf->setupId == 2)
-        {
-            xf->setupId = 0;
-            xf->id += 29;
-        }
-        break;
-    case SCE_OOT_GERUDO_VALLEY:
-        if (xf->setupId == 0)
-        {
-            xf->setupId = 2;
-            switch (xf->id)
-            {
-            case 23: xf->id = 42; break;
-            case 24: xf->id = 43; break;
-            case 25: xf->id = 33; break;
-            case 26: xf->id = 34; break;
-            case 27: xf->id = 35; break;
-            case 28: xf->id = 44; break;
-            }
-        }
-        break;
-    case SCE_OOT_DEATH_MOUNTAIN_TRAIL:
-        if (xf->setupId == 2)
-        {
-            xf->setupId = 0;
-            xf->id -= 8;
-        }
-        break;
-    }
-}
-
 void EnIshi_Init(Actor* thisx, PlayState* play) {
     EnIshi* this = (EnIshi*)thisx;
     s16 type = PARAMS_GET_U(this->actor.params, 0, 1);
 
-    if (comboXflagInit(&this->xflag, &this->actor, play)) {
-        EnIshi_Alias(&this->xflag);
-    }
+    this->xflag = Xflag_InitEx(&this->actor, play);
+    if (!Xflag_IsShuffledEx(this->xflag))
+        this->xflag = XFLAGID_NONE;
 
     Actor_ProcessInitChain(&this->actor, sInitChains[type]);
     if (play->csCtx.state != CS_STATE_IDLE) {
@@ -378,7 +317,7 @@ void EnIshi_Init(Actor* thisx, PlayState* play) {
     }
     Actor_SetScale(&this->actor, sRockScales[type]);
     EnIshi_InitCollider(&this->actor, play);
-    if ((type == ROCK_LARGE) && Flags_GetSwitch(play, ISHI_GET_SWITCH_FLAG(&this->actor))) {
+    if ((type == ROCK_LARGE) && Flags_GetSwitch(play, ISHI_GET_SWITCH_FLAG(&this->actor)) && this->xflag == XFLAGID_NONE) {
         Actor_Kill(&this->actor);
         return;
     }
@@ -476,6 +415,12 @@ void EnIshi_Fly(EnIshi* this, PlayState* play) {
     s32 quakeIndex;
     Vec3f contactPos;
 
+    if (this->actor.world.pos.y < this->actor.home.pos.y - 1000.0f) {
+        EnIshi_DropCollectible(this, play);
+        Actor_Kill(&this->actor);
+        return;
+    }
+
     if (this->actor.bgCheckFlags & (BGCHECKFLAG_GROUND | BGCHECKFLAG_WALL)) {
         EnIshi_DropCollectible(this, play);
         sFragmentSpawnFuncs[type](this, play);
@@ -527,6 +472,9 @@ void EnIshi_Fly(EnIshi* this, PlayState* play) {
 void EnIshi_Update(Actor* thisx, PlayState* play) {
     EnIshi* this = (EnIshi*)thisx;
 
+    if (Xflag_Get(this->xflag))
+        this->xflag = XFLAGID_NONE;
+
     this->actionFunc(this, play);
 }
 
@@ -534,13 +482,13 @@ int EnIshi_CAMC(EnIshi* this, PlayState* play)
 {
     ComboItemOverride o;
 
-    if (!Xflag_IsShuffled(&this->xflag))
+    if (this->xflag == XFLAGID_NONE)
         return CSMC_NORMAL;
 
     if (!csmcEnabled())
         return CSMC_MAJOR;
 
-    comboXflagItemOverride(&o, &this->xflag, 0);
+    Xflag_ItemOverride(&o, this->xflag, GI_NONE);
     return csmcFromItemCloaked(o.gi, o.cloakGi);
 }
 
@@ -576,14 +524,24 @@ void EnIshi_DrawSmall(EnIshi* this, PlayState* play) {
 }
 
 void EnIshi_DrawLarge(EnIshi* this, PlayState* play) {
-    OPEN_DISPS(play->state.gfxCtx);
+    int csmc;
+    const Color_RGB8* color;
 
+    csmc = EnIshi_CAMC(this, play);
+
+    OPEN_DISPS(play->state.gfxCtx);
     Gfx_SetupDL_25Opa(play->state.gfxCtx);
     MATRIX_FINALIZE_AND_LOAD(POLY_OPA_DISP++, play->state.gfxCtx);
     gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 255, 255);
     gSPDisplayList(POLY_OPA_DISP++, gSilverRockDL);
-
     CLOSE_DISPS();
+
+    if (csmc != CSMC_NORMAL)
+    {
+        color = csmcTypeColor(csmc);
+        Gfx_SetupDL_25Xlu(play->state.gfxCtx);
+        Gfx_DrawFlameColor(play, color->r << 24 | color->g << 16 | color->b << 8 | 0xcc, 4.5f, 120.f);
+    }
 }
 
 static EnIshiDrawFunc sDrawFuncs[] = { EnIshi_DrawSmall, EnIshi_DrawLarge };

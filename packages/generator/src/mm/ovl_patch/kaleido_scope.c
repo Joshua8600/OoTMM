@@ -1,15 +1,413 @@
 #include <combo.h>
 #include <combo/dma.h>
-#include <combo/dungeon.h>
 #include <combo/menu.h>
 #include <combo/item.h>
 #include <combo/player.h>
 #include <combo/global.h>
 #include <combo/dpad.h>
 #include <combo/inventory.h>
-#include <combo/entrance.h>
 #include <combo/misc.h>
 #include <combo/common/Kaleido_Scope.h>
+#include "combo/age.h"
+#include "combo/custom.h"
+#include "combo/mask.h"
+
+
+static u32 comboResolvePauseSlot(PlayState* play, u32 slot)
+{
+    if (play && play->pauseCtx.pageIndex == PAUSE_MASK)
+        return slot + ITEM_NUM_SLOTS;
+    return slot;
+}
+
+static int KaleidoScope_NormalizeMoonMaskSlot(u32 slot);
+static void KaleidoScope_ToggleMaskSlotSkipHidden(u32 slot);
+
+static u8 MmSword_GetItemId(MmSwordId sword)
+{
+    switch (sword)
+    {
+        case MM_SWORD_KOKIRI:
+            return ITEM_MM_SWORD_KOKIRI;
+
+        case MM_SWORD_RAZOR:
+            return ITEM_MM_SWORD_RAZOR;
+
+        case MM_SWORD_GILDED:
+            return ITEM_MM_SWORD_GILDED;
+
+        case MM_SWORD_MASTER:
+            return ITEM_MM_SWORD_MASTER;
+
+        case MM_SWORD_GIANTS_KNIFE:
+            return ITEM_MM_SWORD_GIANTS_KNIFE;
+
+        case MM_SWORD_BIGGORON:
+            return ITEM_MM_SWORD_BIGGORON;
+
+        default:
+            return ITEM_NONE;
+    }
+}
+
+static u8 MmShield_GetItemId(MmShieldId shield)
+{
+    switch (shield)
+    {
+        case MM_SHIELD_DEKU:
+            return ITEM_MM_SHIELD_DEKU;
+
+        case MM_SHIELD_HERO:
+            return ITEM_MM_SHIELD_HERO;
+
+        case MM_SHIELD_HYLIAN:
+            return ITEM_MM_SHIELD_HYLIAN;
+
+        case MM_SHIELD_MIRROR:
+            return ITEM_MM_SHIELD_MIRROR;
+
+        default:
+            return ITEM_NONE;
+    }
+}
+
+static Vtx* KaleidoScope_GetQuestVtx(PlayState* play)
+{
+    return *(Vtx**)((u8*)&play->pauseCtx + MM_PAUSE_QUEST_VTX_OFFSET);
+}
+
+static void KaleidoScope_InvalidateNamedItem(PlayState* play)
+{
+    *(u16*)((u8*)&play->pauseCtx + MM_PAUSE_NAMED_ITEM_OFFSET) =
+        MM_PAUSE_ITEM_NONE;
+}
+
+static s32 sQuestEquipProxyActive;
+static s32 sQuestEquipProxyActive;
+static u8 sQuestSavedNativeSword;
+
+static void KaleidoScope_BeginQuestEquipProxy(PlayState* play)
+{
+    MmSwordId sword;
+    MmShieldId shield;
+
+    if (!play || play->pauseCtx.state == 0)
+        return;
+
+    if (!sQuestEquipProxyActive)
+        sQuestSavedNativeSword = gMmSave.info.itemEquips.sword;
+
+    MmSword_EnsureState();
+    MmShield_EnsureState();
+
+    sword = MmSword_GetSelected();
+    shield = MmShield_GetSelected();
+
+    switch (sword)
+    {
+        case MM_SWORD_KOKIRI:
+            gMmSave.info.itemEquips.sword = 1;
+            break;
+        case MM_SWORD_RAZOR:
+            gMmSave.info.itemEquips.sword = 2;
+            break;
+        case MM_SWORD_GILDED:
+        case MM_SWORD_MASTER:
+        case MM_SWORD_GIANTS_KNIFE:
+        case MM_SWORD_BIGGORON:
+            gMmSave.info.itemEquips.sword = 3;
+            break;
+        default:
+            gMmSave.info.itemEquips.sword = 0;
+            break;
+    }
+
+    switch (shield)
+    {
+        case MM_SHIELD_DEKU:
+        case MM_SHIELD_HERO:
+        case MM_SHIELD_HYLIAN:
+            gMmSave.info.itemEquips.shield = 1;
+            break;
+        case MM_SHIELD_MIRROR:
+            gMmSave.info.itemEquips.shield = 2;
+            break;
+        default:
+            gMmSave.info.itemEquips.shield = 0;
+            break;
+    }
+
+    sQuestEquipProxyActive = 1;
+}
+
+static void KaleidoScope_EndQuestEquipProxy(void)
+{
+    Player* player;
+    if (!sQuestEquipProxyActive)
+        return;
+
+    player = gPlay ? GET_PLAYER(gPlay) : NULL;
+    if (player &&player->transformation == MM_PLAYER_FORM_FIERCE_DEITY && MmSword_GetEquipped() == MM_SWORD_NONE)
+        gMmSave.info.itemEquips.sword =sQuestSavedNativeSword;
+    else
+        MmSword_RefreshNativeEquip(NULL);
+    MmShield_RefreshNativeEquip(NULL);
+    sQuestEquipProxyActive = 0;
+}
+
+void MmShield_Unequip(PlayState* play)
+{
+    MmShield_EnsureState();
+    gSharedCustomSave.mm.humanAgeLoadouts[gMmSave.linkAge].shield = MM_SHIELD_NONE;
+    MmShield_RefreshNativeEquip(play);
+}
+
+static void KaleidoScope_CycleQuestEquip(PlayState* play, s32 equipType)
+{
+    s32 changed = 0;
+
+    if (equipType == MM_QUEST_EQUIP_SWORD)
+    {
+        MmSwordId selected = MmSword_GetSelected();
+        MmSwordId next = MmSword_GetNextOwned(selected);
+
+        if (next != selected)
+        {
+            MmSword_SetSelected(next);
+            changed = 1;
+        }
+    }
+    else
+    {
+        MmShieldId selected = MmShield_GetSelected();
+        MmShieldId next = MmShield_GetNextOwned(selected);
+
+        if (next != selected)
+        {
+            MmShield_SetSelected(next);
+            changed = 1;
+        }
+    }
+
+    if (changed)
+    {
+        KaleidoScope_BeginQuestEquipProxy(play);
+        KaleidoScope_InvalidateNamedItem(play);
+    }
+    PlaySound(changed ? 0x4809 : 0x4806);
+}
+
+static void KaleidoScope_EquipQuestItem(PlayState* play, s32 equipType)
+{
+    s32 selected;
+    s32 equipped;
+    u8 item;
+
+    if (equipType == MM_QUEST_EQUIP_SWORD)
+    {
+        selected = MmSword_GetSelected();
+        equipped = MmSword_GetEquipped();
+        item = MmSword_GetItemId((MmSwordId)selected);
+    }
+    else
+    {
+        selected = MmShield_GetSelected();
+        equipped = MmShield_GetEquipped();
+        item = MmShield_GetItemId((MmShieldId)selected);
+    }
+
+    if ((item != ITEM_MM_SHIELD_HYLIAN && !comboCheckItemAgeReqMm(item)) ||
+        (equipType == MM_QUEST_EQUIP_SWORD && item == ITEM_MM_SWORD_RAZOR &&
+         gMmSave.info.playerData.swordHealth == 0))
+    {
+        PlaySound(0x4806);
+        return;
+    }
+
+    if (selected != equipped)
+    {
+        KaleidoScope_EndQuestEquipProxy();
+        if (equipType == MM_QUEST_EQUIP_SWORD)
+            MmSword_Equip(play, (MmSwordId)selected);
+        else
+            MmShield_Equip(play, (MmShieldId)selected);
+        KaleidoScope_BeginQuestEquipProxy(play);
+        KaleidoScope_InvalidateNamedItem(play);
+    }
+    PlaySound(0x4808);
+}
+
+void KaleidoScope_BeforeUpdateCustomMm(PlayState* play)
+{
+    PauseContext* pauseCtx = &play->pauseCtx;
+    u16 press = play->state.input[0].press.button;
+    u16 slot;
+    s32 equipType;
+    u16 cycleButtons;
+
+    if (pauseCtx->state != 0)
+        KaleidoScope_BeginQuestEquipProxy(play);
+    else
+        KaleidoScope_EndQuestEquipProxy();
+
+    if (pauseCtx->state != 6 || pauseCtx->mainState != 0 || pauseCtx->pageIndex != PAUSE_QUEST)
+        return;
+
+    slot = pauseCtx->cursorSlot[PAUSE_QUEST];
+    if (slot == MM_QUEST_SWORD_SLOT)
+    {
+        equipType = MM_QUEST_EQUIP_SWORD;
+        MmSword_EnsureState();
+        if (MmSword_GetSelected() == MM_SWORD_NONE)
+            return;
+    }
+    else if (slot == MM_QUEST_SHIELD_SLOT)
+    {
+        equipType = MM_QUEST_EQUIP_SHIELD;
+        MmShield_EnsureState();
+        if (MmShield_GetSelected() == MM_SHIELD_NONE)
+            return;
+    }
+    else
+    {
+        return;
+    }
+
+    pauseCtx->cursorColorIndex = 4;
+    if (equipType == MM_QUEST_EQUIP_SHIELD && (press & L_TRIG))
+    {
+        if (MmShield_GetEquipped() != MM_SHIELD_NONE)
+        {
+            KaleidoScope_EndQuestEquipProxy();
+            MmShield_Unequip(play);
+            KaleidoScope_BeginQuestEquipProxy(play);
+            KaleidoScope_InvalidateNamedItem(play);
+            PlaySound(0x4808);
+        }
+        else
+        {
+            PlaySound(0x4806);
+        }
+        play->state.input[0].press.button &= ~L_TRIG;
+        return;
+    }
+
+    cycleButtons = (equipType == MM_QUEST_EQUIP_SWORD) ? (L_TRIG | U_CBUTTONS) : U_CBUTTONS;
+    if (press & cycleButtons)
+    {
+        KaleidoScope_CycleQuestEquip(play, equipType);
+        play->state.input[0].press.button &= ~cycleButtons;
+        return;
+    }
+
+    if (press & A_BUTTON)
+    {
+        KaleidoScope_EquipQuestItem(play, equipType);
+        play->state.input[0].press.button &= ~A_BUTTON;
+    }
+}
+
+void KaleidoScope_AfterUpdateCustomMm(PlayState* play)
+{
+    PauseContext* pauseCtx;
+    u16 slot;
+
+    pauseCtx = &play->pauseCtx;
+
+    if (pauseCtx->state == 6 && pauseCtx->mainState == 0 && pauseCtx->pageIndex == PAUSE_QUEST)
+    {
+        slot = pauseCtx->cursorSlot[PAUSE_QUEST];
+
+        if (slot == MM_QUEST_SWORD_SLOT)
+        {
+            MmSword_EnsureState();
+
+            if (MmSword_GetSelected() != MM_SWORD_NONE)
+                pauseCtx->cursorColorIndex = 4;
+        }
+        else if (slot == MM_QUEST_SHIELD_SLOT)
+        {
+            MmShield_EnsureState();
+
+            if (MmShield_GetSelected() != MM_SHIELD_NONE)
+                pauseCtx->cursorColorIndex = 4;
+        }
+    }
+
+    if (sQuestEquipProxyActive && pauseCtx->state == 0)
+        KaleidoScope_EndQuestEquipProxy();
+}
+
+static u8 KaleidoScope_CustomMaskToItem(s32 customMask)
+{
+    switch (customMask)
+    {
+    case PLAYER_CUSTOM_MASK_GERUDO:
+        return ITEM_MM_MASK_GERUDO;
+    case PLAYER_CUSTOM_MASK_SKULL:
+        return ITEM_MM_MASK_SKULL;
+    case PLAYER_CUSTOM_MASK_SPOOKY:
+        return ITEM_MM_MASK_SPOOKY;
+    default:
+        return ITEM_NONE;
+    }
+}
+
+static s32 KaleidoScope_IsWornCustomMaskSlot(u32 slot)
+{
+    s32 i;
+    u8 wornItem;
+    u32 flags;
+    const u8* table;
+    u32 tableSize;
+    u8* itemPtr;
+
+    wornItem = KaleidoScope_CustomMaskToItem(gCustomSave.customMask);
+    if (wornItem == ITEM_NONE)
+        return 0;
+
+    for (i = EQUIP_SLOT_C_LEFT; i <= EQUIP_SLOT_C_RIGHT; i++)
+    {
+        if (BUTTON_ITEM_EQUIP(0, i) == wornItem && C_SLOT_EQUIP(0, i) == slot)
+            return 1;
+    }
+    if (comboGetSlotExtras(slot, &itemPtr, &flags, &table, &tableSize) >= 0)
+        return *itemPtr == wornItem;
+
+    return 0;
+}
+
+s32 Player_GetCurMaskItemId_Custom(PlayState* play)
+{
+    Player* player;
+    s32 customItem;
+
+    customItem = KaleidoScope_CustomMaskToItem(gCustomSave.customMask);
+    if (customItem != ITEM_NONE)
+        return customItem;
+
+    player = GET_PLAYER(play);
+
+    if (player->currentMask != PLAYER_MASK_NONE)
+        return Player_MaskIdToItemId(player->currentMask - 1);
+
+    return ITEM_NONE;
+}
+
+PATCH_FUNC(0x80122eec, Player_GetCurMaskItemId_Custom);
+
+void removeMmSlotFromCurrentCButton(u16 slot, u8 item)
+{
+    for (int button = 1; button < 4; ++button)
+    {
+        if (gMmSave.info.itemEquips.cButtonSlots[0][button] == slot ||
+            gMmSave.info.itemEquips.buttonItems[0][button] == item)
+        {
+            gMmSave.info.itemEquips.buttonItems[0][button] = ITEM_NONE;
+            gMmSave.info.itemEquips.cButtonSlots[0][button] = 0xff;
+        }
+    }
+}
 
 void KaleidoScope_AfterSetCutsorColor(PlayState* play)
 {
@@ -20,7 +418,19 @@ void KaleidoScope_AfterSetCutsorColor(PlayState* play)
     /* Update Dpad */
     Dpad_Update(play);
 
-    cursorSlot = play->pauseCtx.cursorSlot[0];
+    if (play->pauseCtx.pageIndex == PAUSE_MASK)
+    {
+        u16 slot = play->pauseCtx.cursorSlot[PAUSE_MASK];
+        if (slot >= MASK_NUM_SLOTS || gSave.info.inventory.items[ITEM_NUM_SLOTS + slot] == ITEM_NONE)
+        {
+            play->pauseCtx.cursorItem[PAUSE_MASK] = 999;
+            if (play->pauseCtx.nameSegment)
+                bzero(play->pauseCtx.nameSegment, 0x400);
+        }
+    }
+
+    cursorSlot = play->pauseCtx.cursorSlot[play->pauseCtx.pageIndex];
+    cursorSlot = comboResolvePauseSlot(play, cursorSlot);
     press = !!(play->state.input[0].press.button & (L_TRIG | U_CBUTTONS));
     effect = 0;
 
@@ -28,12 +438,36 @@ void KaleidoScope_AfterSetCutsorColor(PlayState* play)
     u32 flags;
     const u8* table;
     u32 tableSize;
-    if (comboGetSlotExtras(cursorSlot, &itemPtr, &flags, &table, &tableSize) >= 0 && play->pauseCtx.cursorItem[0] != 999 && popcount(flags) > 1)
+
+    if (comboGetSlotExtras(cursorSlot, &itemPtr, &flags, &table, &tableSize) >= 0 &&
+play->pauseCtx.cursorItem[play->pauseCtx.pageIndex] != 999 &&
+popcount(flags) > 1)
     {
+        if (play->pauseCtx.pageIndex == PAUSE_MASK)
+        {
+            if (KaleidoScope_NormalizeMoonMaskSlot(cursorSlot))
+                effect = 1;
+        }
+
         play->pauseCtx.cursorColorIndex = 4;
+
         if (press)
         {
-            comboToggleSlot(cursorSlot);
+            if (KaleidoScope_IsWornCustomMaskSlot(cursorSlot))
+            {
+                PlaySound(0x4806); /* NA_SE_SY_ERROR */
+                return;
+            }
+
+            if (play->pauseCtx.pageIndex == PAUSE_MASK)
+                KaleidoScope_ToggleMaskSlotSkipHidden(cursorSlot);
+            else
+                comboToggleSlot(cursorSlot);
+            if (!comboCheckItemAgeReqMm(*itemPtr))
+            {
+                removeMmSlotFromCurrentCButton(cursorSlot, *itemPtr);
+            }
+
             effect = 1;
         }
     }
@@ -55,100 +489,114 @@ void KaleidoScope_AfterSetCutsorColor(PlayState* play)
     }
 }
 
-void KaleidoScope_LoadNamedItemCustom(void* segment, u32 texIndex)
+static s32 KaleidoScope_GetForeignIconId(u8 item)
+{
+    switch (item)
+    {
+    case ITEM_MM_OCARINA_FAIRY:  return ITEM_OOT_OCARINA_FAIRY;
+    case ITEM_MM_HOOKSHOT_SHORT: return ITEM_OOT_HOOKSHOT;
+    case ITEM_MM_SPELL_FIRE:     return ITEM_OOT_SPELL_FIRE;
+    case ITEM_MM_SPELL_WIND:     return ITEM_OOT_SPELL_WIND;
+    case ITEM_MM_SPELL_LOVE:     return ITEM_OOT_SPELL_LOVE;
+    case ITEM_MM_BOOTS_IRON:     return ITEM_OOT_BOOTS_IRON;
+    case ITEM_MM_BOOTS_HOVER:    return ITEM_OOT_BOOTS_HOVER;
+    case ITEM_MM_TUNIC_GORON:   return ITEM_OOT_TUNIC_GORON;
+    case ITEM_MM_TUNIC_ZORA:    return ITEM_OOT_TUNIC_ZORA;
+    case ITEM_MM_HAMMER:        return ITEM_OOT_HAMMER;
+    case ITEM_MM_BOOMERANG:     return ITEM_OOT_BOOMERANG;
+    case ITEM_MM_SLINGSHOT:     return ITEM_OOT_SLINGSHOT;
+    case ITEM_MM_RUTO_LETTER:   return ITEM_OOT_RUTO_LETTER;
+    case ITEM_MM_MASK_GERUDO:   return ITEM_OOT_GERUDO_MASK;
+    case ITEM_MM_MASK_SKULL:    return ITEM_OOT_SKULL_MASK;
+    case ITEM_MM_MASK_SPOOKY:   return ITEM_OOT_SPOOKY_MASK;
+    default:                    return -1;
+    }
+}
+
+static void KaleidoScope_LoadForeignNamedIcon(void* segment, u32 foreignIcon)
 {
     DmaEntry dma;
-    u32 isForeign = 0;
-    switch (texIndex)
-    {
-    case ITEM_MM_SHIELD_HERO:
-        if (gSharedCustomSave.mmShieldIsDeku)
-        {
-            isForeign = 1;
-            texIndex = 0x7b + ITEM_OOT_SHIELD_DEKU;
-        }
-        break;
-    case ITEM_MM_OCARINA_FAIRY:
-        isForeign = 1;
-        texIndex = 0x7b + ITEM_OOT_OCARINA_FAIRY;
-        break;
-    case ITEM_MM_HOOKSHOT_SHORT:
-        isForeign = 1;
-        texIndex = 0x7b + ITEM_OOT_HOOKSHOT;
-        break;
-    case ITEM_MM_SPELL_FIRE:
-        isForeign = 1;
-        texIndex = 0x7b + ITEM_OOT_SPELL_FIRE;
-        break;
-    case ITEM_MM_SPELL_WIND:
-        isForeign = 1;
-        texIndex = 0x7b + ITEM_OOT_SPELL_WIND;
-        break;
-    case ITEM_MM_SPELL_LOVE:
-        isForeign = 1;
-        texIndex = 0x7b + ITEM_OOT_SPELL_LOVE;
-        break;
-    case ITEM_MM_BOOTS_IRON:
-        isForeign = 1;
-        texIndex = 0x7b + ITEM_OOT_BOOTS_IRON;
-        break;
-    case ITEM_MM_BOOTS_HOVER:
-        isForeign = 1;
-        texIndex = 0x7b + ITEM_OOT_BOOTS_HOVER;
-        break;
-    case ITEM_MM_TUNIC_GORON:
-        isForeign = 1;
-        texIndex = 0x7b + ITEM_OOT_TUNIC_GORON;
-        break;
-    case ITEM_MM_TUNIC_ZORA:
-        isForeign = 1;
-        texIndex = 0x7b + ITEM_OOT_TUNIC_ZORA;
-        break;
-    case ITEM_MM_HAMMER:
-        isForeign = 1;
-        texIndex = 0x7b + ITEM_OOT_HAMMER;
-        break;
-    case ITEM_MM_RUTO_LETTER:
-        isForeign = 1;
-        texIndex = 0x7b + ITEM_OOT_RUTO_LETTER;
-        break;
-    }
-    if (isForeign)
-    {
-        comboDmaLookupForeignId(&dma, 0xf);
-        u32 textureFileAddress = dma.pstart;
-        u32 textureOffset = 0x400 * texIndex;
-        DMARomToRam((textureFileAddress + textureOffset) | PI_DOM1_ADDR2, segment, 0x400);
-    }
-    else
-    {
-        LoadIcon(0x00A27660, texIndex, segment, 0x400);
-    }
-
+    comboDmaLookupForeignId(&dma, 0xf);
+    DMARomToRam((dma.pstart + 0x400 * (0x7b + foreignIcon)) | PI_DOM1_ADDR2, segment, 0x400);
 }
 
-void KaleidoScope_ShowEquipMessage(PlayState* play, u16 messageId, u8 yPosition)
+void KaleidoScope_LoadNamedItemCustom(void* segment, u32 texIndex)
 {
-    char* b;
-    Message_ShowMessageAtYPosition(play, messageId, yPosition);
-    s16 itemId = messageId - 0x1737;
-    switch (itemId)
+    if (gPlay && gPlay->pauseCtx.pageIndex == PAUSE_QUEST)
     {
-    case ITEM_MM_SHIELD_HERO:
-        if (!gSharedCustomSave.mmShieldIsDeku)
-            break;
-        b = play->msgCtx.font.textBuffer.schar;
-        b[2] = 0xFE; /* Use No Icon */
-        b += 11;
-        comboTextAppendStr(&b, TEXT_COLOR_YELLOW "Deku Shield" TEXT_NL);
-        comboTextAppendClearColor(&b);
-        comboTextAppendStr(&b, "A basic shield." TEXT_NL "Vulnerable to fire." TEXT_END);
-        break;
-    }
-}
+        u16 slot = gPlay->pauseCtx.cursorSlot[PAUSE_QUEST];
 
-PATCH_CALL(0x808184e4, KaleidoScope_ShowEquipMessage);
-PATCH_CALL(0x80818528, KaleidoScope_ShowEquipMessage);
+        if (slot == MM_QUEST_SWORD_SLOT)
+        {
+            MmSwordId sword;
+            MmSword_EnsureState();
+            sword = MmSword_GetSelected();
+
+            switch (sword)
+            {
+            case MM_SWORD_KOKIRI:
+            case MM_SWORD_RAZOR:
+            case MM_SWORD_GILDED:
+                LoadIcon(0x00A27660, MmSword_GetItemId(sword), segment, 0x400);
+                return;
+            case MM_SWORD_MASTER:
+                KaleidoScope_LoadForeignNamedIcon(segment, ITEM_OOT_SWORD_MASTER);
+                return;
+            case MM_SWORD_GIANTS_KNIFE:
+                KaleidoScope_LoadForeignNamedIcon(segment,
+                    MmSword_GetGiantsKnifeHealth() == 0 ?
+                    ITEM_OOT_SWORD_KNIFE_BROKEN : ITEM_OOT_SWORD_KNIFE_BIGGORON);
+                return;
+            case MM_SWORD_BIGGORON:
+                KaleidoScope_LoadForeignNamedIcon(segment, 0x7a);
+                return;
+            default:
+                break;
+            }
+        }
+        else if (slot == MM_QUEST_SHIELD_SLOT)
+        {
+            MmShieldId shield;
+            MmShield_EnsureState();
+            shield = MmShield_GetSelected();
+
+            switch (shield)
+            {
+            case MM_SHIELD_DEKU:
+                KaleidoScope_LoadForeignNamedIcon(segment, ITEM_OOT_SHIELD_DEKU);
+                return;
+            case MM_SHIELD_HYLIAN:
+                KaleidoScope_LoadForeignNamedIcon(segment, ITEM_OOT_SHIELD_HYLIAN);
+                return;
+            case MM_SHIELD_HERO:
+            case MM_SHIELD_MIRROR:
+                LoadIcon(0x00A27660, MmShield_GetItemId(shield), segment, 0x400);
+                return;
+            default:
+                break;
+            }
+        }
+    }
+
+    if (texIndex == ITEM_MM_MASK_ADULT)
+    {
+        void* src = comboCacheGetFile(CUSTOM_ADULT_MASK_TEXT_ADDR);
+        if (src)
+            memcpy(segment, src, 0x400);
+        else
+            bzero(segment, 0x400);
+        return;
+    }
+    {
+        s32 foreignIcon = texIndex <= 0xff ? KaleidoScope_GetForeignIconId((u8)texIndex) : -1;
+        if (foreignIcon >= 0)
+        {
+            KaleidoScope_LoadForeignNamedIcon(segment, foreignIcon);
+            return;
+        }
+    }
+    LoadIcon(0x00A27660, texIndex, segment, 0x400);
+}
 
 void KaleidoScope_ShowItemMessage(PlayState* play, u16 messageId, u8 yPosition)
 {
@@ -235,6 +683,26 @@ void KaleidoScope_ShowItemMessage(PlayState* play, u16 messageId, u8 yPosition)
         comboTextAppendClearColor(&b);
         comboTextAppendStr(&b, " to smash and break " TEXT_NL "junk! It's so heavy, you need to " TEXT_NL "use two hands to swing it!" TEXT_END);
         break;
+    case ITEM_MM_BOOMERANG:
+        b = play->msgCtx.font.textBuffer.schar;
+        b[2] = 0xFE; /* Use No Icon */
+        b += 11;
+        comboTextAppendStr(&b, TEXT_COLOR_RED "Boomerang" TEXT_NL);
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, "Press " TEXT_COLOR_YELLOW "\xB2");
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, " to throw and watch it come" TEXT_NL "back! The boomerang can stun or" TEXT_NL "defeat enemies!" TEXT_END);
+        break;
+    case ITEM_MM_SLINGSHOT:
+        b = play->msgCtx.font.textBuffer.schar;
+        b[2] = 0xFE; /* Use No Icon */
+        b += 11;
+        comboTextAppendStr(&b, TEXT_COLOR_RED "Fairy Slingshot" TEXT_NL);
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, "Press " TEXT_COLOR_YELLOW "\xB2");
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, " to unleash a deku seed" TEXT_NL "at your target!" TEXT_END);
+        break;
     case ITEM_MM_BLUE_FIRE:
         b = play->msgCtx.font.textBuffer.schar;
         b[2] = 0xFE; /* Use No Icon */
@@ -250,6 +718,43 @@ void KaleidoScope_ShowItemMessage(PlayState* play, u16 messageId, u8 yPosition)
         comboTextAppendStr(&b, TEXT_COLOR_RED "Letter" TEXT_NL);
         comboTextAppendClearColor(&b);
         comboTextAppendStr(&b, "It looks like there is something" TEXT_NL "already inside this bottle." TEXT_END);
+        break;
+    case ITEM_MM_MASK_GERUDO:
+        b = play->msgCtx.font.textBuffer.schar;
+        b[2] = 0xFE; /* Use No Icon */
+        b += 11;
+        comboTextAppendStr(&b, TEXT_COLOR_RED "Gerudo Mask" TEXT_NL);
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, "With its charming eyes, it makes" TEXT_NL "a great lady's disguise." TEXT_END);
+        break;
+    case ITEM_MM_MASK_SKULL:
+            b = play->msgCtx.font.textBuffer.schar;
+        b[2] = 0xFE; /* Use No Icon */
+        b += 11;
+        comboTextAppendStr(&b, TEXT_COLOR_RED "Skull Mask" TEXT_NL);
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, "A mysterious aura emanates from" TEXT_NL "this mask." TEXT_END);
+        break;
+    case ITEM_MM_MASK_SPOOKY:
+            b = play->msgCtx.font.textBuffer.schar;
+        b[2] = 0xFE; /* Use No Icon */
+        b += 11;
+        comboTextAppendStr(&b, TEXT_COLOR_RED "Spooky Mask" TEXT_NL);
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, "This mask was manufactured from" TEXT_NL "the plank of a coffin." TEXT_END);
+        break;
+    case ITEM_MM_MASK_ADULT:
+            b = play->msgCtx.font.textBuffer.schar;
+        b[2] = 0xFE; /* Use No Icon */
+        b += 11;
+        comboTextAppendStr(&b, TEXT_COLOR_RED "Adult Mask" TEXT_NL);
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, "Wear it with " TEXT_COLOR_YELLOW "\xB2");
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, " to assume Adult" TEXT_NL);
+        comboTextAppendStr(&b, "form. Use " TEXT_COLOR_YELLOW "\xB2");
+        comboTextAppendClearColor(&b);
+        comboTextAppendStr(&b, " to change back." TEXT_END);
         break;
     }
 }
@@ -338,6 +843,17 @@ PATCH_CALL(0x80822a00, KaleidoScope_DrawDungeonUnk2);
 PATCH_CALL(0x80822f68, KaleidoScope_DrawDungeonUnk2);
 
 u32 gCustomIconAddr;
+static u32 gBrokenGiantsKnifeIconAddr;
+
+static const u8 sNativeQuestAgeIcons[] = {
+    ITEM_MM_SWORD_KOKIRI,
+    ITEM_MM_SWORD_RAZOR,
+    ITEM_MM_SWORD_GILDED,
+    ITEM_MM_SHIELD_HERO,
+    ITEM_MM_SHIELD_MIRROR,
+};
+
+static u32 sNativeQuestGrayIconAddr[ARRAY_COUNT(sNativeQuestAgeIcons)];
 
 static u32 sCustomIcons[] = {
     ITEM_MM_SPELL_WIND,
@@ -348,102 +864,293 @@ static u32 sCustomIcons[] = {
     ITEM_MM_TUNIC_GORON,
     ITEM_MM_TUNIC_ZORA,
     ITEM_MM_HAMMER,
+    ITEM_MM_BOOMERANG,
+    ITEM_MM_SLINGSHOT,
     ITEM_MM_RUTO_LETTER,
+    ITEM_MM_MASK_GERUDO,
+    ITEM_MM_MASK_SKULL,
+    ITEM_MM_MASK_SPOOKY,
+    ITEM_MM_MASK_ADULT,
+    ITEM_MM_SWORD_MASTER,
+    ITEM_MM_SWORD_GIANTS_KNIFE,
+    ITEM_MM_SWORD_BIGGORON,
+    ITEM_MM_SHIELD_HYLIAN,
+    ITEM_MM_SHIELD_DEKU,
 };
 
-s8 gPlayerFormCustomItemRestrictions[5][ITEM_MM_CUSTOM_MAX - ITEM_MM_CUSTOM_MIN] =
+#define PLAYER_STATE1_MOUNTED 0x00800000
+
+static u8 sHorseBowManaged;
+static u8 sHorsePreviousBItem;
+
+static void Interface_UpdateButtons_Horse(PlayState* play)
 {
-    { 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    { 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    { 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    { 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    { 1, 1, 1, -1, -1, -1, -1, 1, 1 },
+    Player* player;
+    u8* bItem;
+    u8 savedBowItem;
+    u8 itemBefore;
+    int mounted;
+    int spoofBow;
+    int canUseBow;
+    int refreshIcon;
+
+    player = GET_PLAYER(play);
+    bItem = &gMmSave.info.itemEquips.buttonItems[0][EQUIP_SLOT_B];
+    mounted = !!(player->stateFlags1 & PLAYER_STATE1_MOUNTED) || gHorseIsMounted;
+    canUseBow = comboCheckItemAgeReqMm(ITEM_MM_BOW);
+    refreshIcon = 0;
+    if (sHorseBowManaged)
+    {
+        gSaveContext.buttonStatus[EQUIP_SLOT_B] = (mounted && sHorsePreviousBItem == ITEM_NONE) ? BTN_ENABLED : sHorsePreviousBItem;
+
+        if (mounted && *bItem == ITEM_NONE)
+            *bItem = ITEM_MM_BOW;
+    }
+
+    itemBefore = *bItem;
+    savedBowItem = gMmSave.info.inventory.items[ITS_MM_BOW];
+    spoofBow = mounted && savedBowItem == ITEM_NONE;
+    if (spoofBow)
+        gMmSave.info.inventory.items[ITS_MM_BOW] = ITEM_MM_BOW;
+    if (mounted && canUseBow && *bItem == ITEM_NONE)
+    {
+        *bItem = ITEM_MM_BOW;
+        gSaveContext.buttonStatus[EQUIP_SLOT_B] = BTN_ENABLED;
+        refreshIcon = 1;
+    }
+    ((void (*)(PlayState*))0x80111cb4)(play);
+
+    if (spoofBow)
+        gMmSave.info.inventory.items[ITS_MM_BOW] = savedBowItem;
+    player = GET_PLAYER(play);
+    mounted = !!(player->stateFlags1 & PLAYER_STATE1_MOUNTED) || gHorseIsMounted;
+    if (!mounted)
+    {
+        sHorseBowManaged = 0;
+        return;
+    }
+    if (!canUseBow)
+    {
+        if (*bItem == ITEM_MM_BOW)
+        {
+            *bItem = ITEM_NONE;
+            Interface_LoadItemIconImpl(play, EQUIP_SLOT_B);
+        }
+        sHorseBowManaged = 0;
+        return;
+    }
+    if (*bItem == ITEM_MM_BOMB || *bItem == ITEM_MM_BOMBCHU)
+    {
+        sHorseBowManaged = 0;
+        return;
+    }
+    if (!sHorseBowManaged)
+    {
+        sHorsePreviousBItem = (itemBefore == ITEM_MM_BOW) ? ITEM_NONE : itemBefore;
+        sHorseBowManaged = 1;
+        refreshIcon = 1;
+    }
+    if (*bItem != ITEM_MM_BOW)
+    {
+        *bItem = ITEM_MM_BOW;
+        refreshIcon = 1;
+    }
+    gSaveContext.buttonStatus[EQUIP_SLOT_B] = BTN_ENABLED;
+    if (refreshIcon)
+        Interface_LoadItemIconImpl(play, EQUIP_SLOT_B);
+}
+
+PATCH_CALL(0x80112e68, Interface_UpdateButtons_Horse);
+PATCH_CALL(0x80121140, Interface_UpdateButtons_Horse);
+
+static u8 KaleidoScope_GetMmSlotItem(u16 slot)
+{
+    u8* itemPtr;
+    u32 flags;
+    const u8* table;
+    u32 tableSize;
+
+    if (slot > ITS_MM_MASK_FIERCE_DEITY)
+        return ITEM_NONE;
+
+    if (comboGetSlotExtras(slot, &itemPtr, &flags, &table, &tableSize) >= 0)
+        return *itemPtr;
+
+    return gMmSave.info.inventory.items[slot];
+}
+
+int KaleidoScope_CheckMmSlotAgeReq(u16 slot)
+{
+    u8 item;
+
+    item = KaleidoScope_GetMmSlotItem(slot);
+
+    if (item != ITEM_NONE && item < 0xff)
+        return comboCheckItemAgeReqMm(item);
+
+    return 1;
+}
+
+s8 gPlayerFormCustomItemRestrictions[5][ITEM_MM_CUSTOM_USABLE_MAX - ITEM_MM_CUSTOM_MIN] =
+{
+    { 0, 0, 0,  0,  0,  0,  0, 0, 0, 0, 1, 0, 0, 0, 0 },
+    { 0, 0, 0,  0,  0,  0,  0, 0, 0, 0, 1, 0, 0, 0, 0 },
+    { 0, 0, 0,  0,  0,  0,  0, 0, 0, 0, 1, 0, 0, 0, 0 },
+    { 0, 0, 0,  0,  0,  0,  0, 0, 0, 0, 1, 0, 0, 0, 0 },
+    { 1, 1, 1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1 },
 };
 
 typedef void (*KaleidoScope_GrayOutTextureRGBA32)(u32*, u16);
 
 const size_t customIconSize = 0x1000;
 
+void MmSword_RefreshHudIcon(PlayState* play)
+{
+    if (!play)
+        return;
+
+    Interface_LoadItemIconImpl(
+        play,
+        EQUIP_SLOT_B);
+}
+
+static int KaleidoScope_CustomIconAllowed(u8 item)
+{
+    u8 customItemIndex;
+
+    if (item != ITEM_MM_SHIELD_HYLIAN && !comboCheckItemAgeReqMm(item))
+        return 0;
+
+    if (item >= ITEM_MM_CUSTOM_MIN && item < ITEM_MM_CUSTOM_USABLE_MAX)
+    {
+        customItemIndex = item - ITEM_MM_CUSTOM_MIN;
+        return !!gPlayerFormCustomItemRestrictions[gSaveContext.save.playerForm][customItemIndex];
+    }
+
+    return 1;
+}
+
 void KaleidoScope_LoadIcons(u32 vrom, void* dst, size_t* size)
 {
     DmaEntry dma;
     KaleidoScope_GrayOutTextureRGBA32 KaleidoScope_GrayOutTextureRGBA32 = OverlayAddr(0x808286D8);
+    u32 textureFileAddress;
+    u32 customIconCount;
 
     CmpDma_LoadAllFiles(vrom, dst, *size);
 
     gCustomIconAddr = (u32)dst + *size;
+    customIconCount = ITEM_MM_CUSTOM_MAX - ITEM_MM_CUSTOM_MIN;
+    *size += customIconCount * customIconSize;
+    gBrokenGiantsKnifeIconAddr = (u32)dst + *size;
+    *size += customIconSize;
+    for (u32 i = 0; i < ARRAY_COUNT(sNativeQuestAgeIcons); i++)
+    {
+        sNativeQuestGrayIconAddr[i] = (u32)dst + *size;
+        *size += customIconSize;
+    }
+    {
+        u32* gItemIcons = (u32*)0x801c1e6c;
 
+        for (u32 i = 0; i < ARRAY_COUNT(sNativeQuestAgeIcons); i++)
+        {
+            u8 item = sNativeQuestAgeIcons[i];
+            void* src = (u8*)dst + (gItemIcons[item] & 0x00ffffff);
+            void* gray = (void*)sNativeQuestGrayIconAddr[i];
+
+            memcpy(gray, src, customIconSize);
+            KaleidoScope_GrayOutTextureRGBA32((u32*)gray, customIconSize);
+        }
+    }
     comboDmaLookupForeignId(&dma, 8);
-    u32 textureFileAddress = dma.pstart;
+    textureFileAddress = dma.pstart;
 
     for (u32 i = 0; i < ARRAY_COUNT(sCustomIcons); i++)
     {
         u32 icon = sCustomIcons[i];
-        u32 foreignIcon;
-        switch (icon)
+        s32 foreignIcon;
+        u32 textureOffset;
+        u32 customDestination;
+        customDestination = gCustomIconAddr + ((icon - ITEM_MM_CUSTOM_MIN) * customIconSize);
+        if (icon == ITEM_MM_MASK_ADULT)
         {
-        case ITEM_MM_SPELL_FIRE:
-            foreignIcon = ITEM_OOT_SPELL_FIRE;
-            break;
-        case ITEM_MM_SPELL_WIND:
-            foreignIcon = ITEM_OOT_SPELL_WIND;
-            break;
-        case ITEM_MM_SPELL_LOVE:
-            foreignIcon = ITEM_OOT_SPELL_LOVE;
-            break;
-        case ITEM_MM_BOOTS_IRON:
-            foreignIcon = ITEM_OOT_BOOTS_IRON;
-            break;
-        case ITEM_MM_BOOTS_HOVER:
-            foreignIcon = ITEM_OOT_BOOTS_HOVER;
-            break;
-        case ITEM_MM_TUNIC_GORON:
-            foreignIcon = ITEM_OOT_TUNIC_GORON;
-            break;
-        case ITEM_MM_TUNIC_ZORA:
-            foreignIcon = ITEM_OOT_TUNIC_ZORA;
-            break;
-        case ITEM_MM_HAMMER:
-            foreignIcon = ITEM_OOT_HAMMER;
-            break;
-        case ITEM_MM_RUTO_LETTER:
-            foreignIcon = ITEM_OOT_RUTO_LETTER;
-            break;
-        default:
+            void* src = comboCacheGetFile(CUSTOM_ADULT_MASK_ICON_ADDR);
+
+            if (src)
+                memcpy((void*)customDestination, src, customIconSize);
+            else
+                bzero((void*)customDestination, customIconSize);
+
+            if (!KaleidoScope_CustomIconAllowed(icon))
+                KaleidoScope_GrayOutTextureRGBA32((u32*)customDestination, customIconSize);
             continue;
         }
-        u32 textureOffset = customIconSize * foreignIcon;
-        u32 customDestination = gCustomIconAddr + (i * customIconSize);
-        DMARomToRam((textureFileAddress + textureOffset) | PI_DOM1_ADDR2, (void*)customDestination, customIconSize);
 
-        u8 customItemIndex = icon - ITEM_MM_CUSTOM_MIN;
-        if (customItemIndex >= (ITEM_MM_CUSTOM_MAX - ITEM_MM_CUSTOM_MIN) || !gPlayerFormCustomItemRestrictions[gSaveContext.save.playerForm][customItemIndex])
+        switch (icon)
         {
-            KaleidoScope_GrayOutTextureRGBA32((u32*)customDestination, customIconSize);
+        case ITEM_MM_SWORD_MASTER:
+            foreignIcon = ITEM_OOT_SWORD_MASTER;
+            break;
+        case ITEM_MM_SWORD_GIANTS_KNIFE:
+        case ITEM_MM_SWORD_BIGGORON:
+            foreignIcon = ITEM_OOT_SWORD_KNIFE_BIGGORON;
+            break;
+        case ITEM_MM_SHIELD_DEKU:
+            foreignIcon = ITEM_OOT_SHIELD_DEKU;
+            break;
+        case ITEM_MM_SHIELD_HYLIAN:
+            foreignIcon = ITEM_OOT_SHIELD_HYLIAN;
+            break;
+        default:
+            foreignIcon = KaleidoScope_GetForeignIconId((u8)icon);
+            break;
         }
 
-        *size += customIconSize;
+        if (foreignIcon < 0)
+        {
+            bzero((void*)customDestination, customIconSize);
+            continue;
+        }
+
+        textureOffset = customIconSize * foreignIcon;
+        DMARomToRam((textureFileAddress + textureOffset) | PI_DOM1_ADDR2, (void*)customDestination, customIconSize);
+
+        if (!KaleidoScope_CustomIconAllowed(icon))
+            KaleidoScope_GrayOutTextureRGBA32((u32*)customDestination, customIconSize);
     }
 
-    /* Replace the Hero's Shield texture with Deku Shield */
-    if (gSharedCustomSave.mmShieldIsDeku)
-    {
-        DMARomToRam((textureFileAddress + customIconSize * ITEM_OOT_SHIELD_DEKU) | PI_DOM1_ADDR2, (char*)dst + customIconSize * ITEM_MM_SHIELD_HERO, customIconSize);
-    }
+    DMARomToRam((textureFileAddress + customIconSize * ITEM_OOT_SWORD_KNIFE_BROKEN) | PI_DOM1_ADDR2, (void*)gBrokenGiantsKnifeIconAddr, customIconSize);
+
+    if (!comboCheckItemAgeReqMm(ITEM_MM_SWORD_GIANTS_KNIFE))
+        KaleidoScope_GrayOutTextureRGBA32((u32*)gBrokenGiantsKnifeIconAddr, customIconSize);
 }
 
 static u32 GetItemTexture(u8 item)
 {
     u32* gItemIcons = (u32*)0x801c1e6c;
+
+    if (item == ITEM_MM_SWORD_GIANTS_KNIFE && MmSword_GetGiantsKnifeHealth() == 0)
+        return gBrokenGiantsKnifeIconAddr;
     if (item < ITEM_MM_CUSTOM_MIN)
     {
+        if (!comboCheckItemAgeReqMm(item) || (item == ITEM_MM_SWORD_RAZOR && gMmSave.info.playerData.swordHealth == 0))
+        {
+            for (u32 i = 0;
+                 i < ARRAY_COUNT(sNativeQuestAgeIcons);
+                 i++)
+            {
+                if (sNativeQuestAgeIcons[i] == item)
+                    return sNativeQuestGrayIconAddr[i];
+            }
+        }
+
         return gItemIcons[item];
     }
-    else
-    {
-        u8 customItem = item - ITEM_MM_CUSTOM_MIN;
-        return gCustomIconAddr + (customIconSize * customItem);
-    }
+
+    if (item >= ITEM_MM_CUSTOM_MAX)
+        return 0;
+
+    return gCustomIconAddr + (customIconSize * (item - ITEM_MM_CUSTOM_MIN));
 }
 
 static u8 GetNextItem(u32 slot, s32* outTableIndex)
@@ -460,17 +1167,31 @@ static u8 GetNextItem(u32 slot, s32* outTableIndex)
     return ITEM_NONE;
 }
 
+static void KaleidoScope_DrawTexQuadRGBA32Raw(GraphicsContext* gfxCtx, u32 texture, u16 width, u16 height, u16 point)
+{
+    OPEN_DISPS(gfxCtx);
+    gDPLoadTextureBlock(POLY_OPA_DISP++, texture, G_IM_FMT_RGBA, G_IM_SIZ_32b, width, height, 0, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
+    gSP1Quadrangle(POLY_OPA_DISP++, point, point + 2, point + 3, point + 1, 0);
+    CLOSE_DISPS();
+}
+
 /* Vertex buffers. */
-static Vtx gVertexBufs[(4 * 6) * 2];
+static Vtx gVertexBufs[(4 * 12) * 2];
 
 /* Vertex buffer pointers. */
-static Vtx* gVertex[6] = {
+static Vtx* gVertex[12] = {
     &gVertexBufs[(4 * 0) * 2],
     &gVertexBufs[(4 * 1) * 2],
     &gVertexBufs[(4 * 2) * 2],
     &gVertexBufs[(4 * 3) * 2],
     &gVertexBufs[(4 * 4) * 2],
     &gVertexBufs[(4 * 5) * 2],
+    &gVertexBufs[(4 * 6) * 2],
+    &gVertexBufs[(4 * 7) * 2],
+    &gVertexBufs[(4 * 8) * 2],
+    &gVertexBufs[(4 * 9) * 2],
+    &gVertexBufs[(4 * 10) * 2],
+    &gVertexBufs[(4 * 11) * 2],
 };
 
 static Vtx* GetVtxBuffer(PlayState* play, u32 vertIdx, u32 slot) {
@@ -510,18 +1231,355 @@ static void DrawIcon(GraphicsContext* gfxCtx, const Vtx* vtx, u32 segAddr, u16 w
     CLOSE_DISPS();
 }
 
-typedef void (*KaleidoScope_DrawIcon)(GraphicsContext* gfxCtx, u32 texture, u16 width, u16 height, u16 point);
-
 void KaleidoScope_DrawIconCustom(GraphicsContext* gfxCtx, u8 item, u16 width, u16 height, u32 slot, u16 point, u16 vertIdx)
 {
     u32 texture = GetItemTexture(item);
-
-    KaleidoScope_DrawIcon KaleidoScope_DrawIcon = OverlayAddr(0x80821ad4);
-    KaleidoScope_DrawIcon(gfxCtx, texture, width, height, point);
-
+    KaleidoScope_DrawTexQuadRGBA32Raw(gfxCtx, texture, width, height, point);
     s32 tableIndex;
     u8 next = GetNextItem(slot, &tableIndex);
     if (next != ITEM_NONE && next != item)
+    {
+        texture = GetItemTexture(next);
+        Vtx* vtx = GetVtxBuffer(gfxCtx->play, vertIdx, tableIndex);
+        DrawIcon(gfxCtx, vtx, texture, width, height, point);
+    }
+}
+
+static Vtx sQuestEquipVtx[MM_QUEST_EQUIP_MAX][MM_QUEST_VTX_MAX][8];
+
+static Vtx* KaleidoScope_GetQuestEquipVtx(PlayState* play, s32 equipType, u32 slot, s32 vtxType)
+{
+    Vtx* questVtx;
+    const Vtx* src;
+    Vtx* dst;
+    s32 frame;
+
+    questVtx = KaleidoScope_GetQuestVtx(play);
+    if (!questVtx)
+        return NULL;
+
+    frame = play->state.gfxCtx->displayListCounter & 1;
+    dst = &sQuestEquipVtx[equipType][vtxType][frame * 4];
+
+    if (vtxType == MM_QUEST_VTX_SMALL_OUTLINE)
+        src = &sQuestEquipVtx[equipType][MM_QUEST_VTX_SMALL][frame * 4];
+    else
+        src = questVtx + slot * 4;
+
+    for (s32 i = 0; i < 4; i++)
+        dst[i] = src[i];
+
+    if (vtxType == MM_QUEST_VTX_SMALL)
+    {
+        dst[0].v.ob[0] += 16;
+        dst[2].v.ob[0] += 16;
+        dst[0].v.ob[1] -= 16;
+        dst[1].v.ob[1] -= 16;
+    }
+    else if (vtxType == MM_QUEST_VTX_PRIMARY_OUTLINE)
+    {
+        dst[0].v.ob[0] -= 2;
+        dst[2].v.ob[0] -= 2;
+        dst[1].v.ob[0] += 2;
+        dst[3].v.ob[0] += 2;
+        dst[0].v.ob[1] += 2;
+        dst[1].v.ob[1] += 2;
+        dst[2].v.ob[1] -= 2;
+        dst[3].v.ob[1] -= 2;
+    }
+    else if (vtxType == MM_QUEST_VTX_SMALL_OUTLINE)
+    {
+        dst[0].v.ob[0] -= 1;
+        dst[2].v.ob[0] -= 1;
+        dst[1].v.ob[0] += 1;
+        dst[3].v.ob[0] += 1;
+        dst[0].v.ob[1] += 1;
+        dst[1].v.ob[1] += 1;
+        dst[2].v.ob[1] -= 1;
+        dst[3].v.ob[1] -= 1;
+    }
+
+    return dst;
+}
+
+static void KaleidoScope_DrawEquippedOutline(GraphicsContext* gfxCtx, Vtx* vtx)
+{
+    PauseContext* pauseCtx;
+    if (!vtx)
+        return;
+    pauseCtx = &gfxCtx->play->pauseCtx;
+    OPEN_DISPS(gfxCtx);
+    gDPPipeSync(POLY_OPA_DISP++);
+    gDPSetCombineMode(POLY_OPA_DISP++, G_CC_MODULATEIA_PRIM, G_CC_MODULATEIA_PRIM);
+    gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 255, pauseCtx->itemAlpha);
+    gSPVertex(POLY_OPA_DISP++, vtx, 4, 0);
+    gDPLoadTextureBlock(POLY_OPA_DISP++, MM_EQUIPPED_ITEM_OUTLINE, G_IM_FMT_IA, G_IM_SIZ_8b, 32, 32, 0,
+                        G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK,
+                        G_TX_NOLOD, G_TX_NOLOD);
+    gSP1Quadrangle(POLY_OPA_DISP++, 0, 2, 3, 1, 0);
+    CLOSE_DISPS();
+}
+
+static void KaleidoScope_DrawQuestEquipCustom(GraphicsContext* gfxCtx, s32 equipType, u32 originalTexture, u16 width, u16 height, u16 point)
+{
+    PlayState* play;
+    Vtx* questVtx;
+    Vtx* smallVtx;
+    Vtx* outlineVtx;
+    u32 slot;
+    s32 selected;
+    s32 equipped;
+    s32 secondary;
+    s32 none;
+    u8 selectedItem;
+    u8 secondaryItem;
+
+    play = gfxCtx->play;
+
+    if (equipType == MM_QUEST_EQUIP_SWORD)
+    {
+        MmSword_EnsureState();
+        slot = MM_QUEST_SWORD_SLOT;
+        selected = MmSword_GetSelected();
+        equipped = MmSword_GetEquipped();
+        secondary = MmSword_GetNextOwned(selected);
+        none = MM_SWORD_NONE;
+        selectedItem = MmSword_GetItemId((MmSwordId)selected);
+        secondaryItem = MmSword_GetItemId((MmSwordId)secondary);
+    }
+    else
+    {
+        MmShield_EnsureState();
+        slot = MM_QUEST_SHIELD_SLOT;
+        selected = MmShield_GetSelected();
+        equipped = MmShield_GetEquipped();
+        secondary = MmShield_GetNextOwned(selected);
+        none = MM_SHIELD_NONE;
+        selectedItem = MmShield_GetItemId((MmShieldId)selected);
+        secondaryItem = MmShield_GetItemId((MmShieldId)secondary);
+    }
+
+    if (selectedItem == ITEM_NONE)
+    {
+        KaleidoScope_DrawTexQuadRGBA32Raw(gfxCtx, originalTexture, width, height, point);
+        return;
+    }
+
+    if (selected == equipped)
+    {
+        outlineVtx = KaleidoScope_GetQuestEquipVtx(play, equipType, slot, MM_QUEST_VTX_PRIMARY_OUTLINE);
+        KaleidoScope_DrawEquippedOutline(gfxCtx, outlineVtx);
+    }
+
+    questVtx = KaleidoScope_GetQuestVtx(play);
+    if (questVtx)
+    {
+        OPEN_DISPS(gfxCtx);
+        gSPVertex(POLY_OPA_DISP++, questVtx + slot * 4, 4, 0);
+        CLOSE_DISPS();
+    }
+
+    KaleidoScope_DrawTexQuadRGBA32Raw(gfxCtx, GetItemTexture(selectedItem), 32, 32, 0);
+    if (secondary == none || secondary == selected || secondaryItem == ITEM_NONE)
+        return;
+    smallVtx = KaleidoScope_GetQuestEquipVtx(play, equipType, slot, MM_QUEST_VTX_SMALL);
+    if (!smallVtx)
+        return;
+    if (secondary == equipped)
+    {
+        outlineVtx = KaleidoScope_GetQuestEquipVtx(play, equipType, slot, MM_QUEST_VTX_SMALL_OUTLINE);
+        KaleidoScope_DrawEquippedOutline(gfxCtx, outlineVtx);
+    }
+    OPEN_DISPS(gfxCtx);
+    gSPVertex(POLY_OPA_DISP++, smallVtx, 4, 0);
+    CLOSE_DISPS();
+    KaleidoScope_DrawTexQuadRGBA32Raw(gfxCtx, GetItemTexture(secondaryItem), 32, 32, 0);
+}
+
+void KaleidoScope_DrawTexQuadRGBA32Custom(GraphicsContext* gfxCtx, u32 texture, u16 width, u16 height, u16 point)
+{
+    PlayState* play;
+    u32* gItemIcons;
+    s32 equipType;
+    equipType = -1;
+    play = gfxCtx->play;
+
+    if (play && width == 32 && height == 32)
+    {
+        gItemIcons = (u32*)0x801c1e6c;
+        if (texture == gItemIcons[ITEM_MM_SWORD_KOKIRI] || texture == gItemIcons[ITEM_MM_SWORD_RAZOR] || texture == gItemIcons[ITEM_MM_SWORD_GILDED])
+            equipType = MM_QUEST_EQUIP_SWORD;
+        else if (texture == gItemIcons[ITEM_MM_SHIELD_HERO] || texture == gItemIcons[ITEM_MM_SHIELD_MIRROR])
+            equipType = MM_QUEST_EQUIP_SHIELD;
+    }
+    if (equipType < 0)
+    {
+        KaleidoScope_DrawTexQuadRGBA32Raw(gfxCtx, texture, width, height, point);
+        return;
+    }
+    KaleidoScope_DrawQuestEquipCustom(gfxCtx, equipType, texture, width, height, point);
+}
+
+#define MOON_MASK_BIT(i, f) ((u16)(((i) << 8) | (f)))
+#define MOON_MASK_BYTES     ((u8*)0x801f3f3a)
+#define MOON_MASK_GIVEN(i)  (MOON_MASK_BYTES[sMasksGivenOnMoonBits_Custom[i] >> 8] & (u8)sMasksGivenOnMoonBits_Custom[i])
+
+static const u16 sMasksGivenOnMoonBits_Custom[MASK_NUM_SLOTS] = {
+    MOON_MASK_BIT(1, 0x01), MOON_MASK_BIT(0, 0x04), MOON_MASK_BIT(2, 0x02), MOON_MASK_BIT(1, 0x80),
+    MOON_MASK_BIT(1, 0x04), MOON_MASK_BIT(2, 0x10), MOON_MASK_BIT(0, 0x10), MOON_MASK_BIT(2, 0x01),
+    MOON_MASK_BIT(0, 0x08), MOON_MASK_BIT(1, 0x10), MOON_MASK_BIT(2, 0x04), MOON_MASK_BIT(2, 0x20),
+    MOON_MASK_BIT(0, 0x40), MOON_MASK_BIT(0, 0x80), MOON_MASK_BIT(0, 0x02), MOON_MASK_BIT(1, 0x02),
+    MOON_MASK_BIT(0, 0x01), MOON_MASK_BIT(2, 0x40), MOON_MASK_BIT(1, 0x20), MOON_MASK_BIT(1, 0x08),
+    MOON_MASK_BIT(0, 0x20), MOON_MASK_BIT(1, 0x40), MOON_MASK_BIT(2, 0x08), MOON_MASK_BIT(2, 0x80),
+};
+
+typedef struct {
+    u32 flags;
+    u32 tableSize;
+    u8* itemPtr;
+    const u8* table;
+    s32 index;
+} MaskSlotExtras;
+
+static int GetMaskSlotExtras(u32 slot, MaskSlotExtras* e) {
+    e->index = comboGetSlotExtras(slot, &e->itemPtr, &e->flags, &e->table, &e->tableSize);
+    return e->index >= 0 && e->tableSize != 0;
+}
+
+static int KaleidoScope_IsMoonGivenParam0Mask(u32 slot, u8 item) {
+    u32 maskSlot = slot - ITEM_NUM_SLOTS;
+    MaskSlotExtras e;
+    if (slot < ITEM_NUM_SLOTS || maskSlot >= MASK_NUM_SLOTS || !MOON_MASK_GIVEN(maskSlot))
+        return 0;
+    return GetMaskSlotExtras(slot, &e) ? item == e.table[0] : item == gSave.info.inventory.items[slot];
+}
+
+static s32 GetMaskItemTableIndex(u32 slot, u8 item) {
+    MaskSlotExtras e;
+    s32 i;
+    if (!GetMaskSlotExtras(slot, &e))
+        return -1;
+    for (i = 0; i < (s32)e.tableSize; i++)
+        if (e.table[i] == item)
+            return i;
+    return -1;
+}
+
+static u8 GetNextVisibleMaskTrade(u32 slot, u8 currentItem) {
+    MaskSlotExtras e;
+    u8 next, probe = currentItem;
+    u32 i;
+    if (!GetMaskSlotExtras(slot, &e))
+        return ITEM_NONE;
+    for (i = 0; i < e.tableSize; i++) {
+        next = comboGetNextTrade(probe, e.flags, e.table, e.tableSize);
+        if (next == ITEM_NONE || next == currentItem)
+            return ITEM_NONE;
+        if (!KaleidoScope_IsMoonGivenParam0Mask(slot, next))
+            return next;
+        probe = next;
+    }
+    return ITEM_NONE;
+}
+
+static u8 GetCurrentVisibleMaskItem(u32 slot, s32* outActiveIndex) {
+    MaskSlotExtras e;
+    u8 next;
+    if (!GetMaskSlotExtras(slot, &e)) {
+        *outActiveIndex = -1;
+        return ITEM_NONE;
+    }
+    *outActiveIndex = e.index;
+    if (!KaleidoScope_IsMoonGivenParam0Mask(slot, *e.itemPtr))
+        return *e.itemPtr;
+    next = GetNextVisibleMaskTrade(slot, *e.itemPtr);
+    if (next == ITEM_NONE)
+        return ITEM_NONE;
+    *e.itemPtr = next;
+    *outActiveIndex = GetMaskItemTableIndex(slot, next);
+    return next;
+}
+
+static int KaleidoScope_NormalizeMoonMaskSlot(u32 slot) {
+    MaskSlotExtras e;
+    u8 next;
+    if (slot < ITEM_NUM_SLOTS || slot >= ITEM_NUM_SLOTS + MASK_NUM_SLOTS || !GetMaskSlotExtras(slot, &e))
+        return 0;
+    if (!KaleidoScope_IsMoonGivenParam0Mask(slot, *e.itemPtr))
+        return 0;
+    next = GetNextVisibleMaskTrade(slot, *e.itemPtr);
+    if (next == ITEM_NONE)
+        return 0;
+    *e.itemPtr = next;
+    return 1;
+}
+
+static u8 GetNextVisibleMaskOverlayItem(u32 slot, u8 currentItem, s32* outVtxBufferIndex) {
+    MaskSlotExtras e;
+    u8 next;
+    if (!GetMaskSlotExtras(slot, &e)) {
+        *outVtxBufferIndex = -1;
+        return ITEM_NONE;
+    }
+    *outVtxBufferIndex = e.index;
+    next = GetNextVisibleMaskTrade(slot, currentItem);
+    return next != currentItem ? next : ITEM_NONE;
+}
+
+static void KaleidoScope_ToggleMaskSlotSkipHidden(u32 slot) {
+    MaskSlotExtras e;
+    u32 i;
+    if (!GetMaskSlotExtras(slot, &e))
+        return;
+    for (i = 0; i < e.tableSize; i++) {
+        comboToggleSlot(slot);
+        if (!GetMaskSlotExtras(slot, &e) || !KaleidoScope_IsMoonGivenParam0Mask(slot, *e.itemPtr))
+            return;
+    }
+}
+
+u16 KaleidoScope_ResolveMoonMaskCursorItem(u16 maskSlot, u16 cursorItem) {
+    u32 slot = maskSlot + ITEM_NUM_SLOTS;
+    s32 activeIndex;
+    u8 activeItem;
+    if (cursorItem == ITEM_NONE || cursorItem == 999 || !KaleidoScope_IsMoonGivenParam0Mask(slot, cursorItem))
+        return cursorItem;
+    activeItem = GetCurrentVisibleMaskItem(slot, &activeIndex);
+    return activeItem != ITEM_NONE ? activeItem : ITEM_NONE;
+}
+
+void KaleidoScope_DrawMaskIconCustom(GraphicsContext* gfxCtx, u8 item, u16 width, u16 height, u32 maskSlot, u16 point, u16 vertIdx)
+{
+    u32 slot;
+    u32 texture;
+    s32 tableIndex;
+    u8 primary;
+    u8 next;
+
+    maskSlot = vertIdx >> 2;
+    slot = maskSlot + ITEM_NUM_SLOTS;
+
+    if (!KaleidoScope_IsMoonGivenParam0Mask(slot, item))
+    {
+        texture = GetItemTexture(item);
+        KaleidoScope_DrawTexQuadRGBA32Raw(gfxCtx, texture, width, height, point);
+
+        next = GetNextVisibleMaskOverlayItem(slot, item, &tableIndex);
+        if (next != ITEM_NONE && next != item && tableIndex >= 0)
+        {
+            texture = GetItemTexture(next);
+            Vtx* vtx = GetVtxBuffer(gfxCtx->play, vertIdx, tableIndex);
+            DrawIcon(gfxCtx, vtx, texture, width, height, point);
+        }
+        return;
+    }
+    primary = GetCurrentVisibleMaskItem(slot, &tableIndex);
+    if (primary == ITEM_NONE)
+        return;
+    texture = GetItemTexture(primary);
+    KaleidoScope_DrawTexQuadRGBA32Raw(gfxCtx, texture, width, height, point);
+    next = GetNextVisibleMaskOverlayItem(slot, primary, &tableIndex);
+    if (next != ITEM_NONE && next != primary && tableIndex >= 0)
     {
         texture = GetItemTexture(next);
         Vtx* vtx = GetVtxBuffer(gfxCtx->play, vertIdx, tableIndex);
@@ -548,3 +1606,157 @@ void KaleidoScope_SetSaveButton(PlayState* play, s16 bButtonDoAction)
 }
 
 PATCH_CALL(0x80828908, KaleidoScope_SetSaveButton);
+
+typedef void (*KaleidoScope_DrawAmmoCount)(PauseContext*, GraphicsContext*, s16, u16);
+
+const static u8* gAmmoDigit0Tex = (u8*)0x02004aa0;
+
+static s16 sAmmoRectLeft[] = {
+    95,  // SLOT_BOW
+    62,  // SLOT_BOMB
+    95,  // SLOT_BOMBCHU
+    128, // SLOT_DEKU_STICK
+    161, // SLOT_DEKU_NUT
+    194, // SLOT_MAGIC_BEANS
+    62,  // SLOT_POWDER_KEG
+    95,  // SLOT_PICTOGRAPH_BOX
+};
+
+static s16 sAmmoRectHeight[] = {
+    85,  // SLOT_BOW
+    117, // SLOT_BOMB
+    117, // SLOT_BOMBCHU
+    117, // SLOT_DEKU_STICK
+    117, // SLOT_DEKU_NUT
+    117, // SLOT_MAGIC_BEANS
+    150, // SLOT_POWDER_KEG
+    150, // SLOT_PICTOGRAPH_BOX
+};
+
+void KaleidoScope_CustomDrawAmmoCount(PauseContext* pauseCtx, GraphicsContext* gfxCtx, s16 item, u16 ammoIndex)
+{
+    s16 ammo;
+    s16 ammoTens;
+    s16 maxAmmo;
+    s32 canEquip = 0;
+
+    OPEN_DISPS(gfxCtx);
+
+    switch (item)
+    {
+    case ITEM_MM_BOW:
+        ammo = gSave.info.inventory.ammo[ITS_MM_BOW];
+        maxAmmo = kMaxArrows[gMmSave.info.inventory.upgrades.quiver];
+        canEquip = gPlayerFormItemRestrictions[gSaveContext.save.playerForm][item] && comboCheckItemAgeReqMm(item);
+        break;
+
+    case ITEM_MM_BOMB:
+        ammo = gSave.info.inventory.ammo[ITS_MM_BOMBS];
+        maxAmmo = kMaxBombs[gMmSave.info.inventory.upgrades.bombBag];
+        canEquip = gPlayerFormItemRestrictions[gSaveContext.save.playerForm][item] && comboCheckItemAgeReqMm(item);
+        break;
+
+    case ITEM_MM_BOMBCHU:
+        ammo = gSave.info.inventory.ammo[ITS_MM_BOMBCHU];
+        maxAmmo = gMaxBombchuMm;
+        canEquip = gPlayerFormItemRestrictions[gSaveContext.save.playerForm][item] && comboCheckItemAgeReqMm(item);
+        break;
+
+    case ITEM_MM_STICK:
+        ammo = gSave.info.inventory.ammo[ITS_MM_STICKS];
+        maxAmmo = kMaxSticks[gMmSave.info.inventory.upgrades.dekuStick];
+        canEquip = gPlayerFormItemRestrictions[gSaveContext.save.playerForm][item] && comboCheckItemAgeReqMm(item);
+        break;
+
+    case ITEM_MM_NUT:
+        ammo = gSave.info.inventory.ammo[ITS_MM_NUTS];
+        maxAmmo = kMaxNuts[gMmSave.info.inventory.upgrades.dekuNut];
+        canEquip = gPlayerFormItemRestrictions[gSaveContext.save.playerForm][item] && comboCheckItemAgeReqMm(item);
+        break;
+
+    case ITEM_MM_MAGIC_BEAN:
+        ammo = gSave.info.inventory.ammo[ITS_MM_BEANS];
+        maxAmmo = 20;
+        canEquip = gPlayerFormItemRestrictions[gSaveContext.save.playerForm][item] && comboCheckItemAgeReqMm(item);
+        break;
+
+    case ITEM_MM_POWDER_KEG:
+        ammo = gSave.info.inventory.ammo[ITS_MM_KEG];
+        maxAmmo = 1;
+        canEquip = gPlayerFormItemRestrictions[gSaveContext.save.playerForm][item] && comboCheckItemAgeReqMm(item);
+        break;
+
+    case ITEM_MM_PICTOGRAPH_BOX:
+        ammo = (gSave.info.inventory.quest.value & (1 << 0x19)) ? 1 : 0;
+        maxAmmo = 1;
+        canEquip = gPlayerFormItemRestrictions[gSaveContext.save.playerForm][item] && comboCheckItemAgeReqMm(item);
+        break;
+
+    case ITEM_MM_SLINGSHOT:
+        ammo = gMmExtraAmmo.slingshotSeeds;
+        maxAmmo = kMaxSeeds[gMmSave.info.inventory.upgrades.bulletBag];
+        canEquip = gPlayerFormCustomItemRestrictions[gSaveContext.save.playerForm][item - ITEM_MM_CUSTOM_MIN] && comboCheckItemAgeReqMm(item);
+        break;
+    default:
+        return;
+    }
+
+    gDPPipeSync(POLY_OPA_DISP++);
+
+    if (!canEquip) {
+        gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 100, 100, 100, pauseCtx->itemAlpha);
+    } else {
+        gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 255, 255, 255, pauseCtx->itemAlpha);
+
+        if (ammo == 0) {
+            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 130, 130, 130, pauseCtx->itemAlpha);
+        } else if (ammo == maxAmmo) {
+            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 120, 255, 0, pauseCtx->itemAlpha);
+        }
+    }
+
+    for (ammoTens = 0; ammo >= 10; ammoTens++) {
+        ammo -= 10;
+    }
+
+    gDPPipeSync(POLY_OPA_DISP++);
+
+    if (ammoTens != 0) {
+        POLY_OPA_DISP =
+            Gfx_TextureIA8(POLY_OPA_DISP, ((u8*)gAmmoDigit0Tex + (8 * 8 * ammoTens)), 8, 8,
+                               sAmmoRectLeft[ammoIndex], sAmmoRectHeight[ammoIndex], 8, 8, 1 << 10, 1 << 10);
+    }
+
+    POLY_OPA_DISP =
+        Gfx_TextureIA8(POLY_OPA_DISP, ((u8*)gAmmoDigit0Tex + (8 * 8 * ammo)), 8, 8, sAmmoRectLeft[ammoIndex] + 6,
+                           sAmmoRectHeight[ammoIndex], 8, 8, 1 << 10, 1 << 10);
+
+    CLOSE_DISPS();
+}
+
+void KaleidoScope_DrawAmmoCountWrapper(PauseContext* pauseCtx, GraphicsContext* gfxCtx, s16 item, u16 ammoIndex)
+{
+    switch (item)
+    {
+    case ITEM_MM_BOW:
+    case ITEM_MM_BOMB:
+    case ITEM_MM_BOMBCHU:
+    case ITEM_MM_STICK:
+    case ITEM_MM_NUT:
+    case ITEM_MM_MAGIC_BEAN:
+    case ITEM_MM_POWDER_KEG:
+    case ITEM_MM_PICTOGRAPH_BOX:
+    case ITEM_MM_SLINGSHOT:
+        KaleidoScope_CustomDrawAmmoCount(pauseCtx, gfxCtx, item, ammoIndex);
+        break;
+    case ITEM_MM_BOOMERANG:
+        /* No ammo, draw nothing */
+        break;
+    default:
+        KaleidoScope_DrawAmmoCount KaleidoScope_DrawAmmoCount = OverlayAddr(0x8081b240);
+        KaleidoScope_DrawAmmoCount(pauseCtx, gfxCtx, item, ammoIndex);
+        break;
+    }
+}
+
+PATCH_CALL(0x8081bc4c, KaleidoScope_DrawAmmoCountWrapper)

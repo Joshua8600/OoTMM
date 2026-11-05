@@ -1,6 +1,6 @@
 import type { Options, OptionsInput, Settings, MonitorCallbacks } from '@ootmm/core';
 
-import { Monitor, Random, applyRandomSettings, options } from '@ootmm/core';
+import { Monitor, Random, applyRandomSettings, options, resolveMmAgeRequirements } from '@ootmm/core';
 import { logic } from '@ootmm/logic';
 import { codegen } from './codegen';
 import { custom } from './custom';
@@ -50,17 +50,32 @@ function makeFile(opts: { name?: string, data: string | Uint8Array, mime: string
 }
 
 /* For settings that require randomization always */
-function randomVariants(settings: Settings) {
+async function randomVariants(settings: Settings) {
   const random = new Random();
   const randBytes = crypto.getRandomValues(new Uint8Array(32));
   const randBytesAsHex = Array.from(randBytes).map(b => b.toString(16).padStart(2, '0')).join('');
-  random.seed(randBytesAsHex);
+  await random.seed(randBytesAsHex);
 
-  if (settings.startingAge === 'random') {
+  if (settings.startingAgeOot === 'random') {
     if (random.next() & 1) {
-      settings.startingAge = 'adult';
+      settings.startingAgeOot = 'adult';
     } else {
-      settings.startingAge = 'child';
+      settings.startingAgeOot = 'child';
+    }
+  }
+  if (settings.startingAgeMm === 'random') {
+    if (random.next() & 1) {
+      settings.startingAgeMm = 'adult';
+    } else {
+      settings.startingAgeMm = 'child';
+    }
+  }
+
+  if (settings.clocksOot === 'random') {
+    if (random.next() & 1) {
+      settings.clocksOot = 'night';
+    } else {
+      settings.clocksOot = 'day';
     }
   }
 }
@@ -88,13 +103,20 @@ export class Generator {
     const roms = await decompressGames(this.monitor, { oot: this.oot, mm: this.mm });
     const addresses = makeAddresses(roms);
     let patchfiles: Patchfile[];
-    let log: string | null = null;
+    const files: GeneratorOutputFile[] = [];
 
     /* Apply random settings (if enabled) */
     if (this.opts.mode === 'random') {
       this.opts.settings = await applyRandomSettings(this.opts.random, this.opts.settings);
     } else if (this.opts.mode === 'create') {
-      randomVariants(this.opts.settings);
+      await randomVariants(this.opts.settings);
+    }
+
+    if (this.opts.mode !== 'patch') {
+      await resolveMmAgeRequirements(
+          this.opts.settings,
+          this.opts.seed,
+      );
     }
 
     if (this.opts.mode !== 'patch') {
@@ -116,9 +138,45 @@ export class Generator {
         settings: this.opts.settings,
       });
 
+      const hash = patchfiles[0].hash;
+      const hashFileName = isDev ? undefined : hash;
+
       /* Generate spoiler log */
       if (this.opts.settings.generateSpoilerLog) {
-        log = makeSpoilerLog(logicResult, this.opts);
+        const log = makeSpoilerLog(logicResult, this.opts);
+        files.push(makeFile({ name: 'Spoiler', hash: hashFileName, data: log, mime: 'text/plain', ext: 'txt' }));
+      }
+
+      /* Prepare multi stuff */
+      const sessionIds: Uint8Array[] = [];
+      const sessionSecrets: Uint8Array[] = [];
+      for (let i = 0; i < this.opts.settings.teams; ++i) {
+        const sessionId = new Uint8Array(16);
+        const sessionSecret = new Uint8Array(8);
+        crypto.getRandomValues(sessionId);
+        crypto.getRandomValues(sessionSecret);
+        sessionIds.push(sessionId);
+        sessionSecrets.push(sessionSecret);
+      }
+
+      /* Emit the patchfiles */
+      const playerNumber = (id: number) => patchfiles.length === 1 ? undefined : id + 1;
+      const teamNumber = (id: number) => this.opts.settings.teams === 1 ? undefined : id + 1;
+
+      for (let i = 0; i < patchfiles.length; i++) {
+        const patchfile = patchfiles[i];
+        patchfile.meta['mode'] = this.opts.settings.mode;
+        patchfile.meta['worldId'] = (i + 1);
+        for (let team = 0; team < this.opts.settings.teams; ++team) {
+          const sessionId = sessionIds[team];
+          const sessionSecret = sessionSecrets[team];
+          patchfile.meta['sessionId'] = sessionId.toHex();
+          patchfile.meta['sessionSecret'] = sessionSecret.toHex();
+          patchfile.addSymbolPatch('MULTI_SESSION_ID', sessionId);
+          patchfile.addSymbolPatch('MULTI_SESSION_SECRET', sessionSecret);
+          const data = await patchfile.serialize();
+          files.push(makeFile({ name: 'Patch', hash: hashFileName, data, mime: 'application/vnd.ootmm.patch+zip', world: playerNumber(i), team: teamNumber(team), ext: 'ootmm' }));
+        }
       }
     } else {
       if (!this.opts.patch) {
@@ -129,46 +187,16 @@ export class Generator {
       patchfiles = [patchfile];
     }
 
-    const hash = patchfiles[0].hash;
-    const hashFileName = isDev ? undefined : hash;
-    const files: GeneratorOutputFile[] = [];
-    const playerNumber = (id: number) => patchfiles.length === 1 ? undefined : id + 1;
-    const teamNumber = (id: number) => this.opts.settings.teams === 1 ? undefined : id + 1;
-
-    /* Make team UUIDs */
-    const teamsUuids: Uint8Array[] = [];
-    for (let i = 0; i < this.opts.settings.teams; ++i) {
-      teamsUuids.push(crypto.getRandomValues(new Uint8Array(16)));
-    }
-
     /* Build ROM(s) */
-    if ((patchfiles.length === 1 && this.opts.settings.teams === 1) || this.opts.patch || isDev) {
+    if ((patchfiles.length === 1 && this.opts.settings.teams === 1) || this.opts.patch) {
       for (let i = 0; i < patchfiles.length; i++) {
-        if (!this.opts.patch) {
-          patchfiles[i].multiId = teamsUuids[0];
-        }
+        const hashFileName = isDev ? undefined : patchfiles[0].hash;
         const { rom, cosmeticLog } = await pack({ opts: this.opts, monitor: this.monitor, roms, patchfile: patchfiles[i], addresses });
-        files.push(makeFile({ hash: hashFileName, data: rom, mime: 'application/octet-stream', world: playerNumber(i), ext: 'z64' }));
+        files.push(makeFile({ hash: hashFileName, data: rom, mime: 'application/octet-stream', ext: 'z64' }));
         if (cosmeticLog) {
-          files.push(makeFile({ name: 'Cosmetics', hash: hashFileName, data: cosmeticLog, mime: 'text/plain', world: playerNumber(i), ext: 'txt' }));
+          files.push(makeFile({ name: 'Cosmetics', hash: hashFileName, data: cosmeticLog, mime: 'text/plain', ext: 'txt' }));
         }
       }
-    }
-
-    /* Build patch(es) */
-    if (!this.opts.patch) {
-      for (let i = 0; i < patchfiles.length; i++) {
-        const patchfile = patchfiles[i];
-        for (let team = 0; team < this.opts.settings.teams; ++team) {
-          patchfile.multiId = teamsUuids[team];
-          const data = await patchfiles[i].serialize();
-          files.push(makeFile({ name: 'Patch', hash: hashFileName, data, mime: 'application/octet-stream', world: playerNumber(i), team: teamNumber(team), ext: 'ootmm' }));
-        }
-      }
-    }
-
-    if (log) {
-      files.push(makeFile({ name: 'Spoiler', hash: hashFileName, data: log, mime: 'text/plain', ext: 'txt' }));
     }
 
     const endTime = performance.now();
@@ -176,7 +204,7 @@ export class Generator {
     const duration = durationMs / 1000;
     this.monitor.debug(`Generation took ${duration.toFixed(3)}s`);
 
-    return { hash, files };
+    return { hash: patchfiles[0].hash, files };
   }
 };
 

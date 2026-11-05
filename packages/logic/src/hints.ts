@@ -1,14 +1,19 @@
-import type { Game, Settings, CountMap, PlayerItems, PlayerItem, Region } from '@ootmm/core';
+import type { Game } from '@ootmm/data';
+import type { Settings, CountMap, Region } from '@ootmm/core';
+import type { PlayerItems, PlayerItem } from './items';
 import type { ItemPlacement, Location } from './types';
 import type { Analysis, AnalysisPath } from './analysis';
 import type { World } from './world';
 
-import { Monitor, Random, sample, shuffle, randomInt, countMapArray, ItemGroups, ItemHelpers, Items, itemByID, makePlayerItem, makeRegion, hintLocations } from '@ootmm/core';
+import { hintLocations, CHECKS_BY_LOCATION } from '@ootmm/data';
+import { Monitor, Random, sample, shuffle, randomInt, countMapArray, makeRegion } from '@ootmm/core';
+import { ItemGroups, ItemHelpers, Items, itemByID, makePlayerItem } from './items';
 import { Pathfinder } from './pathfind';
 import { DUNGEONS_REGIONS } from './world';
 import { isLocationFullyShuffled, locationData, makeLocation } from './locations';
 
 const FIXED_HINTS_LOCATIONS = [
+  'OOT Skulltula House 100 Tokens',
   'OOT Skulltula House 10 Tokens',
   'OOT Skulltula House 20 Tokens',
   'OOT Skulltula House 30 Tokens',
@@ -304,9 +309,9 @@ class LogicPassHints {
 
   private locRegionOath(playerId: number): LocRegion[] {
     if (this.state.settings.songs === 'notes') {
-      return this.findItemMulti(makePlayerItem(Items.MM_SONG_NOTE_ORDER, playerId), 6);
+      return this.findItemMulti([makePlayerItem(Items.MM_SONG_NOTE_ORDER, playerId), makePlayerItem(Items.SHARED_SONG_NOTE_ORDER, playerId)], 6);
     } else {
-      const oath = [this.findItem(makePlayerItem(Items.MM_SONG_ORDER, playerId))];
+      const oath = [this.findItem([makePlayerItem(Items.MM_SONG_ORDER, playerId), makePlayerItem(Items.SHARED_SONG_ORDER, playerId)])];
       for (let i = 0; i < 5; ++i) {
         oath.push({ loc: null, region: makeRegion('NONE', playerId) });
       }
@@ -461,9 +466,6 @@ class LogicPassHints {
   }
 
   private placeGossipItemExact(worldId: number, checkWorldId: number, checkHint: string, extra: number, context: 'normal' | 'moon' | 'playthrough') {
-    if (checkHint === 'NONE') {
-      return false;
-    }
     const world = this.state.worlds[worldId];
     const checkWorld = this.state.worlds[checkWorldId];
     const locations = hintLocations(checkHint).filter(x => checkWorld.locations.has(x)).map(x => makeLocation(x, checkWorldId));
@@ -637,8 +639,9 @@ class LogicPassHints {
     if (this.state.settings.noDuplicatePlaythroughHints && context === 'playthrough' && this.hintedPlaythroughItems.has(item)) {
       return false;
     }
-    const hint = locWorld.checks[locD.id].hint;
-    if (this.placeGossipItemExact(worldId, locD.world as number, hint, extra, context)) {
+    const check = CHECKS_BY_LOCATION[locD.id];
+    const hint = check.hint;
+    if (hint && this.placeGossipItemExact(worldId, locD.world as number, hint, extra, context)) {
       return true;
     }
     let gossip;
@@ -728,7 +731,7 @@ class LogicPassHints {
   }
 
   private placeMoonGossip(world: number) {
-    for (const mask of ItemGroups.MASKS_REGULAR) {
+    for (const mask of ItemGroups.MASKS_REGULAR_VANILLA_MM) {
       const location = this.findItem(makePlayerItem(mask, world)).loc;
       this.placeGossipItemRegion(world, location, 0, 'moon');
     }
@@ -811,7 +814,11 @@ class LogicPassHints {
 
     /* Mark static hints */
     for (let world = 0; world < this.state.settings.players; ++world) {
-      FIXED_HINTS_LOCATIONS.forEach(x => this.hintedLocations.add(makeLocation(x, world)));
+      for (const loc of FIXED_HINTS_LOCATIONS) {
+        if (this.state.worlds[world].locations.has(loc)) {
+          this.hintedLocations.add(makeLocation(loc, world));
+        }
+      }
     }
 
     /* Compute foolish */

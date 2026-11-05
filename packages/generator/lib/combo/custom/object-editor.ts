@@ -1,5 +1,8 @@
 import { concatUint8Arrays } from 'uint8array-extras';
-import { bufReadU16BE, bufReadU32BE, bufReadU8, bufWriteU32BE } from '../util/buffer';
+import { mat4, vec3, vec4 } from 'gl-matrix';
+
+import { bufReadU16BE, bufReadU32BE, bufReadU8, bufWriteU32BE, bufWriteU8, bufWriteU16BE, bufReadI16BE, bufWriteI16BE } from '../util/buffer';
+import type { NegativeInfinity } from 'type-fest';
 
 export type ObjectEditorOut = {
   data: Uint8Array;
@@ -13,10 +16,17 @@ export class ObjectEditor {
   private out: Uint8Array[] = [];
   private outSize: number = 0;
   private outOffsets: number[] = [];
+  private transform: mat4 | null = null;
+  private bbMin = [Infinity, Infinity, Infinity];
+  private bbMax = [-Infinity, -Infinity, -Infinity];
 
   constructor(
     private readonly segOut: number,
   ) {
+  }
+
+  setTransform(m: mat4) {
+    this.transform = m;
   }
 
   submitOut(listAddr: number) {
@@ -56,7 +66,7 @@ export class ObjectEditor {
         /* Vertices */
         const count = (data >> 12) & 0xff;
         const addr = bufReadU32BE(list, i + 4);
-        const newAddr = this.copy(addr, count * 0x10);
+        const newAddr = this.processVertices(this.segData(addr, count * 16) ?? new Uint8Array(0));
         bufWriteU32BE(list, i + 4, newAddr);
       } else if (op === 0xfd) {
         /* Texture or palette */
@@ -86,7 +96,7 @@ export class ObjectEditor {
           const w = (((data3 >>> 12) & 0xfff) / 4) + 1;
           const h = (((data3 >>>  0) & 0xfff) / 4) + 1;
           const addr = bufReadU32BE(list, i + 4);
-          const newAddr = this.copy(addr, (w * h * bpp) / 8);
+          const newAddr = this.copy(addr, Math.max((w * h * bpp) / 8, 8));
           bufWriteU32BE(list, i + 4, newAddr);
         } else if (op2 === 0xe8) {
           /* Palette */
@@ -131,6 +141,46 @@ export class ObjectEditor {
       this.out.push(extraBuf);
     }
     return newAddr;
+  }
+
+  private bbRegister(v: vec3) {
+    for (let i = 0; i < 3; ++i) {
+      const min = this.bbMin[i];
+      const max = this.bbMax[i];
+      const vv = v[i];
+
+      if (vv < min) this.bbMin[i] = vv;
+      if (vv > max) this.bbMax[i] = vv;
+    }
+  }
+
+  center() {
+    const c = [0, 0, 0];
+    vec3.add(c, this.bbMin, this.bbMax);
+    vec3.scale(c, c, 0.5);
+    return c;
+  }
+
+  processVertices(data: Uint8Array) {
+    const newData = new Uint8Array(data);
+    if (this.transform) {
+      const count = newData.length / 16;
+      for (let i = 0; i < count; ++i) {
+        const base = 16 * i;
+        const v = [
+          bufReadI16BE(newData, base + 0),
+          bufReadI16BE(newData, base + 2),
+          bufReadI16BE(newData, base + 4),
+          1
+        ];
+        vec4.transformMat4(v, v, this.transform);
+        this.bbRegister(v);
+        bufWriteI16BE(newData, base + 0, v[0]);
+        bufWriteI16BE(newData, base + 2, v[1]);
+        bufWriteI16BE(newData, base + 4, v[2]);
+      }
+    }
+    return this.emitData(newData);
   }
 
   processJointIndexAddr(addr: number, limbCount: number) {
@@ -200,6 +250,81 @@ export class ObjectEditor {
     const newData = new Uint8Array(data);
     const newLimbs = this.processSkeletonLimbsAddr(bufReadU32BE(data, 0), bufReadU8(data, 0x08));
     bufWriteU32BE(newData, 0, newLimbs);
+    return this.emitData(newData);
+  }
+
+  private processAnimatedMatColorParamsAddr(addr: number) {
+    const data = this.segData(addr, 0x10);
+    if (!data)
+      return addr;
+    const newData = new Uint8Array(data);
+    const keyFrameLength = bufReadU16BE(data, 0x00);
+    const keyFrameCount = bufReadU16BE(data, 0x02);
+    const primColorsAddr = bufReadU32BE(data, 0x04);
+    const envColorsAddr = bufReadU32BE(data, 0x08);
+    const keyFramesAddr = bufReadU32BE(data, 0x10);
+    bufWriteU32BE(newData, 0x00, keyFrameLength);
+    bufWriteU32BE(newData, 0x02, keyFrameCount);
+    bufWriteU32BE(newData, 0x04, this.copy(primColorsAddr, 5));
+    bufWriteU32BE(newData, 0x08, this.copy(envColorsAddr, 4));
+    bufWriteU32BE(newData, 0x0c, this.copy(keyFramesAddr, 2 * keyFrameCount));
+    return this.emitData(newData);
+  }
+
+  private processAnimatedMatTexCycleParamsAddr(addr: number) {
+    const data = this.segData(addr, 0xc);
+    if (!data)
+      return addr;
+    const newData = new Uint8Array(data);
+    const keyFrameLength = bufReadU16BE(data, 0x00);
+    const textureListAddr = bufReadU32BE(data, 0x04);
+    const textureIndexListAddr = bufReadU32BE(data, 0x08);
+    const textureIndices = this.segData(textureIndexListAddr, keyFrameLength);
+    let textureListCount = 0;
+    if (textureIndices) {
+      for (const textureIndex of textureIndices) {
+        if (textureIndex + 1 > textureListCount) {
+          textureListCount = textureIndex + 1;
+        }
+      }
+    }
+    bufWriteU32BE(newData, 0x00, keyFrameLength);
+    /* TODO figure out how to copy the textures at this point */
+    bufWriteU32BE(newData, 0x08, this.copy(textureIndexListAddr, keyFrameLength));
+    return this.emitData(newData);
+  }
+
+  processAnimatedMaterialAddr(addr: number, count: number) {
+    const data = this.segData(addr, 8 * count);
+    if (!data)
+      return addr;
+    const newData = new Uint8Array(data);
+
+    for (let i = 0; i < count; ++i) {
+      const segment = bufReadU8(data, i * 8 + 0x00);
+      const type = bufReadU16BE(data, i * 8 + 0x02);
+      const paramsAddr = bufReadU32BE(data, i * 8 + 0x04);
+      bufWriteU8(newData, i * 8 + 0x00, segment);
+      bufWriteU16BE(newData, i * 8 + 0x02, type);
+      let newAddr = paramsAddr;
+      switch (type) {
+        case 0:
+          newAddr = this.copy(paramsAddr, 4);
+          break;
+        case 1:
+          newAddr = this.copy(paramsAddr, 8);
+          break;
+        case 2:
+        case 3:
+        case 4:
+          newAddr = this.processAnimatedMatColorParamsAddr(paramsAddr);
+          break;
+        case 5:
+          newAddr = this.processAnimatedMatTexCycleParamsAddr(paramsAddr);
+          break;
+      }
+      bufWriteU32BE(newData, i * 8 + 0x04, newAddr);
+    }
     return this.emitData(newData);
   }
 

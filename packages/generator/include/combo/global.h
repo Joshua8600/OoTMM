@@ -16,13 +16,11 @@ typedef struct
     const ComboItemQuery*   itemQuery;
     const ComboItemQuery*   itemQueryBox;
     u8                      silverRupee;
-    u8                      delayedSwitchFlags[4];
-    u8                      delayedSwitchFlagsCount;
     u8                      roomEnemyLackSoul:1;
-    u8                      spawnExtended:1;
     u8                      xflagOverride:1;
     u8                      isNextEntranceInitialSong:1;
     u8                      bronzeScaleSolidGround:1;
+    u8                      blockingMessage:1;
     u8                      bronzeScaleTimer;
     u8                      decoysCount;
     u8                      menuScreen;
@@ -33,7 +31,7 @@ typedef struct
     u8                      sceneSetupId;
     u32                     nextEntrance;
     s8                      prevRoom;
-    Xflag                   xflag;
+    XflagID                 xflagId;
 #if defined(GAME_OOT)
     u8                      triggerWeirdEgg:1;
     u8                      triggerPocketEgg:1;

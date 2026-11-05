@@ -1,8 +1,8 @@
-import type { Entrance } from '../data/data';
+import type { Entrance } from '@ootmm/data';
 import type { SettingHint } from './hints';
 import type { SpecialConds } from './special-conds';
 import type { TrickKey } from './tricks';
-
+import type { PlandoSongEvents } from '../song-events';
 import { SETTINGS } from './data';
 
 type SettingDataEnumValue = {
@@ -66,6 +66,7 @@ export type SettingsBase = UnionToIntersection<SettingShapes>;
 type SettingsPlando = {
   locations: {[k: string]: string | null};
   entrances: Record<Entrance, Entrance>;
+  songEvents: PlandoSongEvents;
 };
 export type Settings = SettingsBase & {
   startingItems: {[k: string]: number};

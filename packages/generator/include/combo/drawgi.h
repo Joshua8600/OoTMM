@@ -19,6 +19,7 @@ DrawGi;
 extern const DrawGi kDrawGi[];
 
 /* Vanilla draw funcs */
+void DrawGi_Table(PlayState*, s16);
 void DrawGi_Opa0_Xlu1(PlayState*, s16);
 void DrawGi_Opa0_Xlu12(PlayState*, s16);
 void DrawGi_Opa0(PlayState*, s16);
@@ -54,8 +55,8 @@ void DrawGi_Xlu0(PlayState* play, s16 drawGiId);
 void DrawGi_CustomScale(PlayState*, s16, u8);
 void DrawGi_CustomNote(PlayState* play, s16 drawGiId, u8 param);
 void DrawGi_CustomHeartContainer(PlayState* play, s16 drawGiId);
-void DrawGi_CustomStick(PlayState* play, s16 drawGiId);
-void DrawGi_CustomNut(PlayState* play, s16 drawGiId);
+void DrawGi_CustomStick(PlayState* play, s16 drawGiId, u8 param);
+void DrawGi_CustomNut(PlayState* play, s16 drawGiId, u8 param);
 void DrawGi_BossRemains(PlayState* play, s16 drawGiId);
 void DrawGi_SpiritualStones(PlayState* play, s16 drawGiId);
 void DrawGi_MasterSword(PlayState* play, s16 drawGiId);
@@ -69,7 +70,7 @@ void DrawGi_SilverRupee(PlayState* play, s16 index);
 void DrawGi_MagicalRupee(PlayState* play, s16 index);
 void DrawGi_BottleRutosLetter(PlayState* play, s16 index);
 void DrawGi_RutosLetter(PlayState* play, s16 index);
-void DrawGi_CustomSmallKey(PlayState* play, s16 index);
+void DrawGi_CustomSmallKey(PlayState* play, s16 index, u8 param);
 void DrawGi_Coin(PlayState* play, s16 index);
 void DrawGi_MagicJar(PlayState* play, s16 index);
 void DrawGi_Triforce(PlayState* play, s16 index, u8 param);

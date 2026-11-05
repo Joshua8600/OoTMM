@@ -1,6 +1,8 @@
-import type { Settings, PlayerItems } from '@ootmm/core';
+import type { Settings } from '@ootmm/core';
+import type {Item, PlayerItems} from '../items';
 
-import { Monitor, Random, sample, countMapAdd, countMapRemove, ItemGroups, Items, itemByID, makePlayerItem  } from '@ootmm/core';
+import { Monitor, Random, sample, countMapAdd, countMapRemove } from '@ootmm/core';
+import { ItemGroups, Items, itemByID, makePlayerItem } from '../items';
 import { mustStartWithMasterSword } from '../helpers';
 
 type LogicPassConfigState = {
@@ -19,6 +21,31 @@ class LogicPassConfig {
     this.startingItems = new Map;
 
     for (const [itemId, count] of Object.entries(state.settings.startingItems)) {
+      let randomBottleGroup: Set<Item> | undefined;
+
+      switch (itemId) {
+        case 'OOT_BOTTLE_RANDOM':
+          randomBottleGroup = ItemGroups.BOTTLES_OOT;
+          break;
+        case 'MM_BOTTLE_RANDOM':
+          randomBottleGroup = ItemGroups.BOTTLES_MM;
+          break;
+        case 'SHARED_BOTTLE_RANDOM':
+          randomBottleGroup = ItemGroups.BOTTLES_SHARED;
+          break;
+      }
+
+      if (randomBottleGroup) {
+        for (let playerId = 0; playerId < this.state.settings.players; ++playerId) {
+          for (let i = 0; i < count; ++i) {
+            const item = sample(this.state.random, randomBottleGroup);
+            const pi = makePlayerItem(item, playerId);
+            countMapAdd(this.startingItems, pi);
+          }
+        }
+        continue;
+      }
+
       const item = itemByID(itemId);
       for (let playerId = 0; playerId < this.state.settings.players; ++playerId) {
         const pi = makePlayerItem(item, playerId);
@@ -74,8 +101,8 @@ class LogicPassConfig {
     /* Handle fairies */
     this.startingFairies();
 
-    /* Handle clocks */
-    if (this.state.settings.clocks && this.state.settings.progressiveClocks === 'separate') {
+    /* Handle MM clocks */
+    if (this.state.settings.clocksMm && this.state.settings.progressiveClocks === 'separate') {
       for (let playerId = 0; playerId < this.state.settings.players; ++playerId) {
         /* Check if the player already has a clock */
         let hasClock = false;

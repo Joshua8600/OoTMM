@@ -163,7 +163,10 @@
 #define ITEM_OOT_SPRING_WATER           0xa4
 #define ITEM_OOT_SPRING_WATER_HOT       0xa5
 #define ITEM_OOT_ZORA_EGG               0xa6
-#define ITEM_OOT_CUSTOM_MAX             0xa7
+#define ITEM_OOT_POWDER_KEG             0xa7
+#define ITEM_OOT_GREAT_FAIRY_SWORD      0xa8
+#define ITEM_OOT_SHIELD_HERO            0xa9
+#define ITEM_OOT_CUSTOM_MAX             0xaa
 
 #if defined(GAME_OOT)
 # define ITEM_STICK                     ITEM_OOT_STICK
@@ -317,6 +320,7 @@
 # define ITEM_MASK_BLAST                ITEM_OOT_MASK_BLAST
 # define ITEM_MASK_STONE                ITEM_OOT_MASK_STONE
 # define ITEM_MASK_KAMARO               ITEM_OOT_MASK_KAMARO
+# define ITEM_GREAT_FAIRY_SWORD         ITEM_OOT_GREAT_FAIRY_SWORD
 #endif
 
 #define ITEM_MM_OCARINA_OF_TIME             0x00
@@ -450,6 +454,7 @@
 #define ITEM_MM_ARROWS_10                   0x93
 #define ITEM_MM_ARROWS_30                   0x94
 #define ITEM_MM_ARROWS_40                   0x95
+#define ITEM_MM_ARROWS_50                   0x96
 #define ITEM_MM_BOMBCHU_20                  0x97
 #define ITEM_MM_BOMBCHU_10                  0x98
 #define ITEM_MM_BOMBCHU_ALT                 0x99
@@ -472,8 +477,24 @@
 #define ITEM_MM_TUNIC_GORON                 0xb3
 #define ITEM_MM_TUNIC_ZORA                  0xb4
 #define ITEM_MM_HAMMER                      0xb5
-#define ITEM_MM_RUTO_LETTER                 0xb6
-#define ITEM_MM_CUSTOM_MAX                  0xb7
+#define ITEM_MM_BOOMERANG                   0xb6
+#define ITEM_MM_SLINGSHOT                   0xb7
+#define ITEM_MM_RUTO_LETTER                 0xb8
+#define ITEM_MM_MASK_GERUDO                 0xb9
+#define ITEM_MM_MASK_SKULL                  0xba
+#define ITEM_MM_MASK_SPOOKY                 0xbb
+#define ITEM_MM_MASK_ADULT                  0xbc
+#define ITEM_MM_CUSTOM_USABLE_MAX           0xbd
+#define ITEM_MM_SEEDS_5                     0xbd
+#define ITEM_MM_SEEDS_30                    0xbe
+#define ITEM_MM_BULLET_BAG2                 0xbf
+#define ITEM_MM_BULLET_BAG3                 0xc0
+#define ITEM_MM_SWORD_MASTER                0xc1
+#define ITEM_MM_SWORD_GIANTS_KNIFE          0xc2
+#define ITEM_MM_SWORD_BIGGORON              0xc3
+#define ITEM_MM_SHIELD_HYLIAN               0xc4
+#define ITEM_MM_SHIELD_DEKU                 0xc5
+#define ITEM_MM_CUSTOM_MAX                  0xc6
 
 /* Setting values above ITEM_MM_CUSTOM_MAX without updating this will cause magic arrow issues */
 
@@ -606,6 +627,7 @@
 /* Shared defs */
 #if defined(GAME_OOT)
 # define ITS_NATIVE_BOW             ITS_OOT_BOW
+# define ITS_NATIVE_SLINGSHOT       ITS_OOT_SLINGSHOT
 # define ITS_NATIVE_BOMBS           ITS_OOT_BOMBS
 # define ITS_NATIVE_STICKS          ITS_OOT_STICKS
 # define ITS_NATIVE_NUTS            ITS_OOT_NUTS
@@ -636,6 +658,7 @@
 # define ITS_NATIVE_BOTTLE3         ITS_MM_BOTTLE3
 # define ITS_NATIVE_BOTTLE4         ITS_MM_BOTTLE4
 # define ITS_FOREIGN_BOW            ITS_OOT_BOW
+# define ITS_FOREIGN_SLINGSHOT      ITS_OOT_SLINGSHOT
 # define ITS_FOREIGN_BOMBS          ITS_OOT_BOMBS
 # define ITS_FOREIGN_STICKS         ITS_OOT_STICKS
 # define ITS_FOREIGN_NUTS           ITS_OOT_NUTS
@@ -660,6 +683,7 @@
 # define ITEM_RUPEE_BLUE       ITEM_MM_RUPEE_BLUE
 # define ITEM_RUPEE_RED        ITEM_MM_RUPEE_RED
 # define ITEM_RUPEE_PURPLE     ITEM_MM_RUPEE_PURPLE
+# define ITEM_RUPEE_GOLD       ITEM_MM_RUPEE_GOLD
 # define ITEM_RECOVERY_HEART   ITEM_MM_RECOVERY_HEART
 #endif
 

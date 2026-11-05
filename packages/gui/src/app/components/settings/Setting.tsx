@@ -1,8 +1,10 @@
+import type { ReactNode } from 'react';
 import { SETTINGS } from '@ootmm/generator';
 
-import { InputField, SelectField, CheckboxField, Select } from '@/app/components/ui';
+import { InputField, SelectField, CheckboxField, Select, Tooltip, Label } from '@/app/components/ui';
 import { xor } from 'lodash-es';
 import { useStore } from '@/app/store';
+import { explainUnavailable } from './SettingDependencies';
 
 const SET_OPTIONS = [
   { value: 'none', label: 'None' },
@@ -68,7 +70,7 @@ function SettingTooltip({ setting }: { setting: string }) {
   </>;
 }
 
-function SettingSet({ setting }: { setting: string }) {
+function SettingSet({ setting, label }: { setting: string; label?: string }) {
   const settings = useStore(state => state.settings);
   const patchSettings = useStore(state => state.patchSettings);
   const data = SETTINGS.find(x => x.key === setting)!;
@@ -146,7 +148,7 @@ function SettingSet({ setting }: { setting: string }) {
     <span>
       <SelectField
         value={(settings[data.key] as any).type as string}
-        label={data.name}
+        label={label ?? data.name}
         options={SET_OPTIONS}
         tooltip={(data as any).description && <SettingTooltip setting={data.key}/>}
         onSelect={onTypeChange as any}
@@ -186,39 +188,55 @@ function SettingSet({ setting }: { setting: string }) {
   );
 }
 
-export function Setting({ setting }: { setting: string }) {
+type SettingProps = {
+  setting: string;
+  showDisabled?: boolean;
+  label?: string;
+};
+
+export function Setting({ setting, showDisabled = false, label }: SettingProps) {
   const settings = useStore(state => state.settings);
   const patchSettings = useStore(state => state.patchSettings);
   const data = SETTINGS.find(x => x.key === setting)!;
   const cond = (data as any).cond;
-  const isDisabled = cond && !cond(settings);
+  const isDisabled = !!cond && !cond(settings);
+  const settingLabel = label ?? data.name;
+  const unavailableMessage = isDisabled
+      ? explainUnavailable(cond, settings)
+      : undefined;
 
-  if (isDisabled) {
+  if (isDisabled && !showDisabled) {
     return null;
   }
 
+  let content: ReactNode;
+
   switch (data.type) {
   case 'enum':
-    return (
+    content = (
       <SelectField
         value={settings[data.key] as string}
-        label={data.name}
+        label={settingLabel}
         options={(data as any).values.filter((x: any) => x.cond === undefined || x.cond(settings)).map((x: any) => ({ label: x.name, value: x.value }))}
         tooltip={data.description && <SettingTooltip setting={data.key}/>}
         onSelect={(v) => patchSettings({ [data.key]: v })}
       />
     );
-  case 'set': return <SettingSet setting={setting}/>;
+    break;
+  case 'set':
+    content = <SettingSet setting={setting} label={settingLabel}/>;
+    break;
   case 'boolean':
-    return (
+    content = (
       <CheckboxField
-        label={data.name}
+        label={settingLabel}
         tooltip={(data as any).description && <SettingTooltip setting={data.key}/>}
         checked={settings[data.key] as boolean}
         onChange={(v) => patchSettings({ [data.key]: v })}
       />
     );
-  case 'number':
+    break;
+  case 'number': {
     const min = (data as any).min;
     const max = (data as any).max;
     let minValue: number | undefined;
@@ -231,18 +249,87 @@ export function Setting({ setting }: { setting: string }) {
       maxValue = typeof max === 'function' ? max(settings) : max;
     }
 
-    return (
-      <InputField
-        type="number"
-        label={data.name}
-        tooltip={(data as any).description && <SettingTooltip setting={data.key}/>}
-        value={settings[data.key].toString()}
-        onChange={(v) => patchSettings({ [data.key]: Number(v) })}
-        min={minValue}
-        max={maxValue}
-      />
+    const sliderLabels = (data as any).sliderLabels as
+        Record<number, string> | undefined;
+
+    const formatSliderValue = (value: number) =>
+        sliderLabels?.[value] ?? value.toString();
+
+
+    content = (data as any).slider ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-2">
+        <Label htmlFor={`slider-${data.key}`}>
+          {settingLabel}
+        </Label>
+
+        {(data as any).description && (
+            <Tooltip>
+              <SettingTooltip setting={data.key} />
+            </Tooltip>
+        )}
+      </span>
+
+        <span className="font-bold">
+          {formatSliderValue(Number(settings[data.key]))}
+        </span>
+          </div>
+
+          <input
+              id={`slider-${data.key}`}
+              type="range"
+              min={minValue ?? 0}
+              max={maxValue ?? 100}
+              step={1}
+              value={Number(settings[data.key])}
+              onChange={(e) =>
+                  patchSettings({
+                    [data.key]: Number(e.currentTarget.value),
+                  })
+              }
+              className="w-full cursor-pointer"
+          />
+
+          <div className="flex justify-between text-xs opacity-60">
+            <span>{formatSliderValue(minValue ?? 0)}</span>
+            <span>{formatSliderValue(maxValue ?? 100)}</span>
+          </div>
+        </div>
+    ) : (
+        <InputField
+            type="number"
+            label={settingLabel}
+            tooltip={
+                (data as any).description &&
+                <SettingTooltip setting={data.key} />
+            }
+            value={settings[data.key].toString()}
+            onChange={(v) =>
+                patchSettings({ [data.key]: Number(v) })
+            }
+            min={minValue}
+            max={maxValue}
+        />
     );
+    break;
+  }
   default:
     return null;
   }
+
+  return (
+    <div
+      className={isDisabled ? 'opacity-50' : undefined}
+      aria-disabled={isDisabled || undefined}
+      title={unavailableMessage}
+    >
+      <fieldset
+        disabled={isDisabled}
+        className={`m-0 min-w-0 border-0 p-0 ${isDisabled ? 'pointer-events-none' : ''}`}
+      >
+        {content}
+      </fieldset>
+    </div>
+  );
 }
