@@ -155,8 +155,8 @@
 - { id: OOT_SONG_NOTE_TP_SHADOW, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_TP_SHADOW], flags: 0x80, draw: [NOTE, 0xc0], object: [oot, 0x00b6], name: "a <C2>Nocturne of Shadow Note" }
 - { id: OOT_SONG_NOTE_TP_LIGHT, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_TP_LIGHT], flags: 0x80, draw: [NOTE, 0xc3], object: [oot, 0x00b6], name: "a <C2>Prelude of Light Note" }
 - { id: OOT_SONG_NOTE_ZELDA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_ZELDA], flags: 0x80, draw: [NOTE, 0x45], object: [oot, 0x00b6], name: "a <C2>Zelda's Nighty-Night Song Note" }
-- { id: OOT_SONG_NOTE_EPONA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_EPONA], flags: 0x80, draw: [NOTE, 0x44], object: [oot, 0x00b6], name: "an <C2>Bad Magic Horse's Song Note" }
-- { id: OOT_SONG_NOTE_SARIA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_SARIA], flags: 0x80, draw: [NOTE, 0x42], object: [oot, 0x00b6], name: "a <C2>Apology Song Note" }
+- { id: OOT_SONG_NOTE_EPONA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_EPONA], flags: 0x80, draw: [NOTE, 0x44], object: [oot, 0x00b6], name: "a <C2>Bad Magic Horse's Song Note" }
+- { id: OOT_SONG_NOTE_SARIA, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_SARIA], flags: 0x80, draw: [NOTE, 0x42], object: [oot, 0x00b6], name: "an <C2>Apology Song Note" }
 - { id: OOT_SONG_NOTE_SUN, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_SUN], flags: 0x80, draw: [NOTE, 0x43], object: [oot, 0x00b6], name: "a <C2>Sun's Song Note" }
 - { id: OOT_SONG_NOTE_TIME, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_TIME], flags: 0x80, draw: [NOTE, 0x41], object: [oot, 0x00b6], name: "a <C2>Song of Time Note" }
 - { id: OOT_SONG_NOTE_STORMS, type: MAJOR, add: [SONG_NOTE, NOTES_SONG_OOT_STORMS], flags: 0x80, draw: [NOTE, 0x40], object: [oot, 0x00b6], name: "a <C2>Song of Storms Note" }
