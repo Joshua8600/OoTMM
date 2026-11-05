@@ -346,6 +346,7 @@
 - { id: OOT_SOUL_ANIMAL_BUTTERFLY, type: SOUL, add: [OOT_SOUL, 0x3003], flags: 0x80, draw: [GS_SOUL, 6], object: [oot, 0x015c], name: "the <C1>Soul of Butterflies" }
 - { id: OOT_SOUL_MISC_GS, type: SOUL, add: [OOT_SOUL, 0x4000], flags: 0x80, draw: [GS_SOUL, 7], object: [oot, 0x015c], name: "the <C1>Soul of Gold Skulltulas" }
 - { id: OOT_SOUL_MISC_BUSINESS_SCRUB, type: SOUL, add: [OOT_SOUL, 0x4001], flags: 0x80, draw: [GS_SOUL, 7], object: [oot, 0x015c], name: "the <C1>Soul of Scammers" }
+- { id: OOT_SOUL_MISC_TREE, type: SOUL, add: [OOT_SOUL, 0x4002], flags: 0x80, draw: [GS_SOUL, 7], object: [oot, 0x015c], name: "the <C1>Soul of Oxygen Generators" }
 - { id: OOT_KEY_RING, type: KEY, add: [OOT_KEY_RING, 0xffff], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring" }
 - { id: OOT_KEY_RING_FOREST, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_FOREST], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (Deep Jungle)" }
 - { id: OOT_KEY_RING_FIRE, type: KEY, add: [OOT_KEY_RING, SCE_OOT_TEMPLE_FIRE], flags: 0x80, draw: [SMALL_KEY, 0], object: [oot, 0x00aa], name: "the <C0>Key Ring (Fire)" }
@@ -843,6 +844,7 @@
 - { id: MM_SOUL_ANIMAL_BUTTERFLY, type: SOUL, add: [MM_SOUL, 0x3003], flags: 0x80, draw: [GS_SOUL, 6], object: [mm, 0x0125], name: "the <C1>Soul of Butterflies" }
 - { id: MM_SOUL_MISC_GS, type: SOUL, add: [MM_SOUL, 0x4000], flags: 0xa0, draw: [GS_SOUL, 7], object: [mm, 0x0125], name: "the <C1>Soul of Swamp and Ocean Skulltulas" }
 - { id: MM_SOUL_MISC_BUSINESS_SCRUB, type: SOUL, add: [MM_SOUL, 0x4001], flags: 0xa0, draw: [GS_SOUL, 7], object: [mm, 0x0125], name: "the <C1>Soul of Scammers" }
+- { id: MM_SOUL_MISC_TREE, type: SOUL, add: [MM_SOUL, 0x4002], flags: 0xa0, draw: [GS_SOUL, 7], object: [mm, 0x0125], name: "the <C1>Soul of Oxygen Generators" }
 - { id: MM_KEY_RING, type: KEY, add: [MM_KEY_RING, 0xffff], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "the <C0>Key Ring" }
 - { id: MM_KEY_RING_WF, type: KEY, add: [MM_KEY_RING, 0], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "the <C0>Key Ring (Woodfall)" }
 - { id: MM_KEY_RING_SH, type: KEY, add: [MM_KEY_RING, 1], flags: 0xa0, draw: [SMALL_KEY, 0], object: [mm, 0x0086], name: "the <C0>Key Ring (Snowhead)" }
