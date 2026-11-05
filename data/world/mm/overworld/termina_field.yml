@@ -35,9 +35,9 @@
     "Clock Town East": "true"
     "Clock Town West": "true"
     "Road to Southern Swamp": "true"
-    "Behind Large Icicles": "north_icicles_cleared || short_hook_anywhere"
+    "Behind Large Icicles": "north_icicles_cleared || short_hook_anywhere || can_isg_tf"
     "Milk Road": "true"
-    "Great Bay Fence": "can_play_epona || (can_goron_bomb_jump && has_bombs) || short_hook_anywhere"
+    "Great Bay Fence": "can_jump_fences"
     "Road to Ikana Front": "true"
     "Astral Observatory Balcony": "has_mask_deku || short_hook_anywhere || (can_goron_bomb_jump && has_bombs)"
     "Grass Grotto": "has_shovel"
@@ -695,14 +695,14 @@
     NORTH_ICICLES_CLEARED: "has_arrows || (has_hot_water_distance && has(OWL_MOUNTAIN_VILLAGE)) || has_hot_water_farore || has_hot_water_mtn || has_hot_water_er || can_use_din"
   exits:
     "GLOBAL": "true"
-    "Termina Field": "north_icicles_cleared || short_hook_anywhere"
+    "Termina Field": "north_icicles_cleared || short_hook_anywhere || can_isg_ow"
     "Mountain Village Path Lower": "true"
 
 "Great Bay Fence":
   region: TERMINA_FIELD
   exits:
     "GLOBAL": "true"
-    "Termina Field": "can_play_epona || (can_goron_bomb_jump && has_bombs) || short_hook_anywhere"
+    "Termina Field": "can_jump_fences"
     "Great Bay Coast": "true"
   locations:
     "Termina Field Rock Near Ocean": "true"

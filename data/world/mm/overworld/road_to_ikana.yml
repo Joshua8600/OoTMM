@@ -6,7 +6,7 @@
     "GLOBAL": "true"
     "Termina Field": "true"
     "Road to Ikana Grotto": "has_shovel && can_break_red_boulders"
-    "Road to Ikana Center": "can_play_epona || short_hook_anywhere || (can_goron_bomb_jump && has_bombs)"
+    "Road to Ikana Center": "can_jump_fences"
   locations:
     "Road to Ikana Chest": "can_hookshot || (can_hookshot_short && trick(MM_HARD_HOOKSHOT))"
     "Road to Ikana Red Boulder": "can_break_red_boulders"
@@ -50,7 +50,7 @@
     IKANA_TREE_SPAWNED: "soul_poe_collector && (has_mask_garo || has_mask_gibdo || (has_mask_spooky && is_night))"
   exits:
     "GLOBAL": "true"
-    "Road to Ikana Front": "can_play_epona || short_hook_anywhere || (can_goron_bomb_jump && has_bombs)"
+    "Road to Ikana Front": "can_jump_fences"
     "Road to Ikana Top": "((ikana_tree_spawned && (can_hookshot || (can_hookshot_short && (trick(MM_HARD_HOOKSHOT) || is_adult)))) || short_hook_anywhere)"
     "Ikana Graveyard": "true"
   locations:

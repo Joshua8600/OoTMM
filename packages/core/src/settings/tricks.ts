@@ -821,6 +821,10 @@ export const TRICKS: Tricks = {
     tooltip: "Din's Fire is able to defeat the aliens and with careful usage of it can defend the ranch for the entire duration, needing only one refill of magic.",
     linkVideo: 'https://youtu.be/QMuKmQ7NGIE',
   },
+  MM_NO_SOT_RESET: {
+    game: 'mm',
+    name: 'Trick for NNL for the "CanResetTime" macro to not include SoT',
+  },
   GLITCH_OOT_EQUIP_SWAP: {
     game: 'oot',
     name: "Equip Swap (OoT)",

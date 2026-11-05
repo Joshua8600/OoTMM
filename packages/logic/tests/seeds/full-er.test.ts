@@ -10,7 +10,6 @@ test("Can make a seed - Full ER", async () => {
     erRegions: 'full',
     erRegionsShortcuts: true,
     erIndoors: 'full',
-    erIndoorsMajor: true,
     erIndoorsExtra: true,
     erOneWays: 'full',
     erOneWaysMajor: true,

@@ -13,7 +13,7 @@
     "Hyrule Field": "true"
     "Kakariko Trail Start": "setting(kakarikoGate, open) || event(KAKARIKO_GATE_OPEN) || (is_adult && !setting(kakarikoGate, closed)) || climb_anywhere || hookshot_anywhere"
     "Graveyard": "true"
-    "Kakariko Well": "is_adult || has_iron_boots || longshot_anywhere || event(WELL_DRAIN) || setting(openDungeonsOot, BotW)"
+    "Kakariko Well": "(is_child && can_swim) || is_adult || has_iron_boots || longshot_anywhere || event(WELL_DRAIN) || setting(openDungeonsOot, BotW)"
     "Skulltula House": "rusty_key(RUSTY_KEY_SKULLTULA_HOUSE)"
     "Shooting Gallery Adult": "(is_adult && is_day && rusty_key(RUSTY_KEY_ADULT_SHOOTING_GALLERY)) || (time_travel_at_will && trick(OOT_ADULT_GALLERY_TT))"
     "Kakariko Balcony": "(is_child && is_day && soul_cucco) || (is_adult && trick(OOT_PASS_COLLISION)) || climb_anywhere"
